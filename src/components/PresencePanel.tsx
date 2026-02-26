@@ -1,4 +1,4 @@
-import type { Seat, StatusCounts } from '../hooks/useSeatState'
+import type { StatusCounts } from '../hooks/useMembers'
 
 const MOCK_ROOMS = [
   { name: 'Cafe', active: 12, tags: ['#deep-work', '#design'] },
@@ -8,35 +8,33 @@ const MOCK_ROOMS = [
 ]
 
 interface Props {
-  seats: Seat[]
   counts: StatusCounts
+  onlineCount?: number
 }
 
-export function PresencePanel({ seats, counts }: Props) {
+export function PresencePanel({ counts, onlineCount }: Props) {
   return (
     <div className="panel">
       {/* Room info */}
-      <h2 className="font-serif text-xl text-[#5a4a3a] mb-1">Cafe</h2>
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="font-serif text-xl text-[#e8ddd0]">Cafe</h2>
+        {onlineCount !== undefined && onlineCount > 0 && (
+          <span className="online-badge">
+            <span className="online-badge__dot" />
+            {onlineCount} online
+          </span>
+        )}
+      </div>
       <div className="flex gap-1.5 mb-4">
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#e8dbc8] text-[#7a6b58]">#deep-work</span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#e8dbc8] text-[#7a6b58]">#design</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#2a2218] text-[#9a8b78]">#deep-work</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#2a2218] text-[#9a8b78]">#design</span>
       </div>
 
-      {/* Seat lamp grid */}
-      <div className="seat-grid--inline" aria-hidden="true">
-        {seats.map((seat) => (
-          <div
-            key={seat.id}
-            className={`seat-lamp seat-lamp--${seat.status}`}
-          />
-        ))}
-      </div>
-
-      {/* Status summary */}
+      {/* Status summary (compact) */}
       <div className="presence-summary">
-        {counts.focus > 0 && <span className="presence-chip presence-chip--focus">{counts.focus} focusing</span>}
+        {counts.focusing > 0 && <span className="presence-chip presence-chip--focus">{counts.focusing} focusing</span>}
         {counts.break > 0 && <span className="presence-chip presence-chip--break">{counts.break} on break</span>}
-        {counts.done_recently > 0 && <span className="presence-chip presence-chip--done">{counts.done_recently} done</span>}
+        {counts.idea > 0 && <span className="presence-chip presence-chip--idea">{counts.idea} ideas</span>}
         {counts.idle > 0 && <span className="presence-chip presence-chip--idle">{counts.idle} idle</span>}
       </div>
 
@@ -47,12 +45,12 @@ export function PresencePanel({ seats, counts }: Props) {
           {MOCK_ROOMS.map(room => (
             <li key={room.name} className="room-list-item">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-[#5a4a3a] font-medium">{room.name}</span>
+                <span className="text-sm text-[#e8ddd0] font-medium">{room.name}</span>
                 <span className="text-[11px] text-[#9a8b78]">{room.active} active</span>
               </div>
               <div className="flex gap-1">
                 {room.tags.map(tag => (
-                  <span key={tag} className="text-[9px] text-[#a89880]">{tag}</span>
+                  <span key={tag} className="text-[9px] text-[#7a6b58]">{tag}</span>
                 ))}
               </div>
             </li>

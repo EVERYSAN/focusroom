@@ -23,3 +23,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 3D model assets (licensed, not committed)
+public/models/

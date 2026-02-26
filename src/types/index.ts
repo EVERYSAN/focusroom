@@ -13,3 +13,13 @@ export interface Stats {
   focusMinutes: number
   notesCount: number
 }
+
+export type MemberStatus = 'focusing' | 'break' | 'idea' | 'idle'
+
+export interface Member {
+  id: string
+  nickname: string
+  avatar: string
+  status: MemberStatus
+  statusText?: string
+}

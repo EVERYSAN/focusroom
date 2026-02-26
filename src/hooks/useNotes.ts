@@ -178,12 +178,16 @@ export function useNotes() {
     return null
   }, [])
 
-  const visibleNotes = allNotes.slice(-MAX_VISIBLE)
-  const hiddenCount = Math.max(0, allNotes.length - MAX_VISIBLE)
+  const statusNotes = allNotes.filter(n => n.type !== 'idea')
+  const ideaNotes = allNotes.filter(n => n.type === 'idea')
+  const visibleNotes = statusNotes.slice(-MAX_VISIBLE)
+  const hiddenCount = Math.max(0, statusNotes.length - MAX_VISIBLE)
+  const recentIdeas = ideaNotes.slice(-5)
 
   return {
     visibleNotes,
     hiddenCount,
+    recentIdeas,
     addNote,
     stats,
     pauseFade,

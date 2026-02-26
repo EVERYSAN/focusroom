@@ -11,7 +11,7 @@ interface Props {
 export function ActivityFeed({ notes, hiddenCount, onPauseFade, onResumeFade }: Props) {
   return (
     <div className="panel">
-      <h2 className="font-serif text-xl text-[#5a4a3a] mb-4">Activity</h2>
+      <h2 className="font-serif text-xl text-[#e8ddd0] mb-4">Activity</h2>
 
       {hiddenCount > 0 && (
         <div className="text-xs text-[#9a8b78] mb-2">

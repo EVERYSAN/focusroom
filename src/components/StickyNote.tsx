@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import type { Note } from '../types'
 
 const TYPE_TAG_STYLES: Record<string, { color: string; label: string }> = {
-  start: { color: 'bg-blue-50/80 text-blue-700/70', label: 'Start' },
-  progress: { color: 'bg-amber-50/80 text-amber-700/70', label: 'Progress' },
-  done: { color: 'bg-green-50/80 text-green-700/70', label: 'Done' },
-  idea: { color: 'bg-purple-50/80 text-purple-700/70', label: 'Idea' },
+  start: { color: 'bg-blue-900/30 text-blue-300/80', label: 'Start' },
+  progress: { color: 'bg-amber-900/30 text-amber-300/80', label: 'Progress' },
+  done: { color: 'bg-green-900/30 text-green-300/80', label: 'Done' },
+  idea: { color: 'bg-purple-900/30 text-purple-300/80', label: 'Idea' },
 }
 
 interface Props {
@@ -37,7 +37,7 @@ export function StickyNote({ note, onMouseEnter, onMouseLeave }: Props) {
       <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${tag.color}`}>
         {tag.label}
       </span>
-      <p className="text-sm text-[#5a4a3a] mt-1.5 leading-relaxed">{note.text}</p>
+      <p className="text-sm text-[#d4c4a8] mt-1.5 leading-relaxed">{note.text}</p>
     </div>
   )
 }
