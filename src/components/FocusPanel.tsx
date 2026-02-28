@@ -4,16 +4,23 @@ import { IdeaCard } from './IdeaCard'
 import { StatsPanel } from './StatsPanel'
 import type { Room, PresenceMember, Stats, NoteType, Note } from '../types'
 
-type Filter = 'all' | 'following' | 'friends'
-
 interface Props {
   room: Room | undefined
   members: PresenceMember[]
   ideas: Note[]
   stats: Stats
   onPost: (type: NoteType, text: string) => Promise<string | null>
-  typingUsers: PresenceUser[]
-  onTypingChange: (isTyping: boolean) => void
+  elapsed: number
+  isRunning: boolean
+  onStart: () => void
+  onPause: () => void
+  onReset: () => void
+}
+
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0')
+  const s = (seconds % 60).toString().padStart(2, '0')
+  return `${m}:${s}`
 }
 
 export function FocusPanel({

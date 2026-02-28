@@ -181,9 +181,6 @@ export function useNotes(roomId: string) {
   const hiddenCount = Math.max(0, statusNotes.length - MAX_VISIBLE)
   const recentIdeas = ideaNotes.slice(-5)
 
-  // Separate ideas from recent notes for display
-  const recentIdeas = allNotes.filter(n => n.type === 'idea').slice(-3)
-
   return {
     visibleNotes,
     hiddenCount,

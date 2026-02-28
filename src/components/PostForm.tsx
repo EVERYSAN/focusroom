@@ -27,20 +27,6 @@ export function PostForm({ onPost, onTypingChange, categories, placeholder }: Pr
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isTypingRef = useRef(false)
 
-  const signalTyping = useCallback(() => {
-    if (!onTypingChange) return
-    if (!isTypingRef.current) {
-      isTypingRef.current = true
-      onTypingChange(true)
-    }
-    // Reset idle timer — stop typing after 2s of no input
-    if (typingTimer.current) clearTimeout(typingTimer.current)
-    typingTimer.current = setTimeout(() => {
-      isTypingRef.current = false
-      onTypingChange(false)
-    }, 2000)
-  }, [onTypingChange])
-
   const stopTyping = useCallback(() => {
     if (!onTypingChange) return
     if (typingTimer.current) clearTimeout(typingTimer.current)
