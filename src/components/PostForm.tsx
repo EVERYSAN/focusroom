@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import type { NoteType } from '../types'
+import { ja } from '../lib/i18n'
 
 const ALL_CATEGORIES: { value: NoteType; label: string; activeColor: string }[] = [
-  { value: 'start', label: 'Start', activeColor: 'bg-blue-50 text-blue-700 border-blue-200' },
-  { value: 'progress', label: 'Progress', activeColor: 'bg-amber-50 text-amber-700 border-amber-200' },
-  { value: 'done', label: 'Done', activeColor: 'bg-green-50 text-green-700 border-green-200' },
-  { value: 'idea', label: 'Idea', activeColor: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { value: 'start', label: ja.categories.start, activeColor: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { value: 'progress', label: ja.categories.progress, activeColor: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { value: 'done', label: ja.categories.done, activeColor: 'bg-green-50 text-green-700 border-green-200' },
+  { value: 'idea', label: ja.categories.idea, activeColor: 'bg-purple-50 text-purple-700 border-purple-200' },
 ]
 
 interface Props {
@@ -75,7 +76,7 @@ export function PostForm({ onPost, onTypingChange, categories, placeholder }: Pr
             onTypingChange?.(e.target.value.length > 0)
           }}
           onBlur={() => onTypingChange?.(false)}
-          placeholder={placeholder ?? 'What are you working on?'}
+          placeholder={placeholder ?? ja.postForm.defaultPlaceholder}
           maxLength={40}
           className="flex-1 px-3 py-2 rounded-lg border border-[#e8e0d8] bg-[#faf8f5] text-sm
                      text-[#4a3a2a] placeholder-[#b0a090] outline-none
@@ -87,7 +88,7 @@ export function PostForm({ onPost, onTypingChange, categories, placeholder }: Pr
                      hover:bg-[#e8e0d8] transition-colors cursor-pointer"
           disabled={posting}
         >
-          {posting ? '...' : 'Post'}
+          {posting ? ja.postForm.posting : ja.postForm.post}
         </button>
       </div>
 

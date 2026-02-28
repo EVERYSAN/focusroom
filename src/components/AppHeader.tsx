@@ -6,9 +6,9 @@ export function AppHeader() {
         <span className="app-header__brand">FocusRoom</span>
       </div>
       <div className="flex items-center gap-1">
-        <button className="app-header__icon" aria-label="Search">🔍</button>
-        <button className="app-header__icon" aria-label="Notifications">🔔</button>
-        <button className="app-header__icon" aria-label="Settings">⚙️</button>
+        <button className="app-header__icon" aria-label="検索">🔍</button>
+        <button className="app-header__icon" aria-label="通知">🔔</button>
+        <button className="app-header__icon" aria-label="設定">⚙️</button>
       </div>
     </header>
   )
