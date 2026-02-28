@@ -45,5 +45,26 @@ create policy "Anyone can read focus_sessions"
 create policy "Anyone can insert focus_sessions"
   on focus_sessions for insert with check (true);
 
--- 4. Enable Realtime for room_updates
+-- 4. rooms table
+create table rooms (
+  id text primary key,
+  name text not null,
+  description text,
+  tags text[] default '{}',
+  created_at timestamptz not null default now()
+);
+
+alter table rooms enable row level security;
+
+create policy "Anyone can read rooms"
+  on rooms for select using (true);
+
+insert into rooms (id, name, description, tags) values
+  ('cafe',   'Cafe',   'The main co-working space',    ARRAY['#deepwork','#design']),
+  ('lab',    'Lab',    'Engineering and backend work',  ARRAY['#engineering','#backend']),
+  ('studio', 'Studio', 'Art and creative projects',     ARRAY['#art','#creative']),
+  ('garden', 'Garden', 'Reading and quiet thinking',    ARRAY['#reading','#thinking']);
+
+-- 5. Enable Realtime
 alter publication supabase_realtime add table room_updates;
+alter publication supabase_realtime add table rooms;

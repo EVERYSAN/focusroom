@@ -1,19 +1,26 @@
 import { useState } from 'react'
 import type { NoteType } from '../types'
 
-const CATEGORIES: { value: NoteType; label: string; color: string }[] = [
-  { value: 'start', label: 'Start', color: 'bg-blue-50/70 text-blue-800/70 border-blue-200/50' },
-  { value: 'progress', label: 'Progress', color: 'bg-amber-50/70 text-amber-800/70 border-amber-200/50' },
-  { value: 'done', label: 'Done', color: 'bg-green-50/70 text-green-800/70 border-green-200/50' },
-  { value: 'idea', label: 'Idea', color: 'bg-purple-50/70 text-purple-800/70 border-purple-200/50' },
+const ALL_CATEGORIES: { value: NoteType; label: string; activeColor: string }[] = [
+  { value: 'start', label: 'Start', activeColor: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { value: 'progress', label: 'Progress', activeColor: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { value: 'done', label: 'Done', activeColor: 'bg-green-50 text-green-700 border-green-200' },
+  { value: 'idea', label: 'Idea', activeColor: 'bg-purple-50 text-purple-700 border-purple-200' },
 ]
 
 interface Props {
   onPost: (type: NoteType, text: string) => Promise<string | null>
+  onTypingChange?: (isTyping: boolean) => void
+  categories?: NoteType[]
+  placeholder?: string
 }
 
-export function PostForm({ onPost }: Props) {
-  const [type, setType] = useState<NoteType>('start')
+export function PostForm({ onPost, onTypingChange, categories, placeholder }: Props) {
+  const visibleCats = categories
+    ? ALL_CATEGORIES.filter(c => categories.includes(c.value))
+    : ALL_CATEGORIES
+
+  const [type, setType] = useState<NoteType>(visibleCats[0].value)
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [posting, setPosting] = useState(false)
@@ -30,26 +37,32 @@ export function PostForm({ onPost }: Props) {
     }
     setText('')
     setError(null)
+    onTypingChange?.(false)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-sm">
-      {/* Category selector */}
-      <div className="flex gap-1.5 mb-3">
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.value}
-            type="button"
-            onClick={() => setType(cat.value)}
-            className={`
-              text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer
-              ${type === cat.value ? cat.color + ' font-medium' : 'bg-white/40 text-[#9a8b78] border-[#d5c9b8]'}
-            `}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
+    <form onSubmit={handleSubmit} className="w-full">
+      {/* Category selector — hide if only 1 category */}
+      {visibleCats.length > 1 && (
+        <div className="flex gap-1.5 mb-2">
+          {visibleCats.map(cat => (
+            <button
+              key={cat.value}
+              type="button"
+              onClick={() => setType(cat.value)}
+              className={`
+                text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer
+                ${type === cat.value
+                  ? cat.activeColor + ' font-medium'
+                  : 'bg-[#faf8f5] text-[#8a7a6a] border-[#e8e0d8] hover:bg-[#f5f0ea]'
+                }
+              `}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Text input */}
       <div className="flex gap-2">
@@ -59,17 +72,19 @@ export function PostForm({ onPost }: Props) {
           onChange={e => {
             setText(e.target.value)
             if (error) setError(null)
+            onTypingChange?.(e.target.value.length > 0)
           }}
-          placeholder="What are you working on?"
+          onBlur={() => onTypingChange?.(false)}
+          placeholder={placeholder ?? 'What are you working on?'}
           maxLength={40}
-          className="flex-1 px-3 py-2 rounded-lg border border-[#d5c9b8] bg-white/50 text-sm
-                     text-[#4a3f35] placeholder-[#b8a994] outline-none
-                     focus:border-[#b8a994] transition-colors"
+          className="flex-1 px-3 py-2 rounded-lg border border-[#e8e0d8] bg-[#faf8f5] text-sm
+                     text-[#4a3a2a] placeholder-[#b0a090] outline-none
+                     focus:border-[#c8a060] transition-colors"
         />
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-[#e0d5c4]/70 text-sm text-[#5a4a3a]
-                     hover:bg-[#d5c9b8]/80 transition-colors cursor-pointer"
+          className="px-4 py-2 rounded-lg bg-[#f0ece6] text-sm text-[#6a5a4a] font-medium
+                     hover:bg-[#e8e0d8] transition-colors cursor-pointer"
           disabled={posting}
         >
           {posting ? '...' : 'Post'}
@@ -77,11 +92,11 @@ export function PostForm({ onPost }: Props) {
       </div>
 
       {/* Char count + error */}
-      <div className="flex justify-between mt-1.5 px-1">
-        <span className={`text-[11px] ${error ? 'text-red-400' : 'text-transparent'}`}>
+      <div className="flex justify-between mt-1 px-1">
+        <span className={`text-[11px] ${error ? 'text-red-500' : 'text-transparent'}`}>
           {error || '.'}
         </span>
-        <span className={`text-[11px] ${text.length > 35 ? 'text-amber-600/70' : 'text-[#c4b5a2]'}`}>
+        <span className={`text-[11px] ${text.length > 35 ? 'text-amber-600' : 'text-[#c8b8a8]'}`}>
           {text.length}/40
         </span>
       </div>
