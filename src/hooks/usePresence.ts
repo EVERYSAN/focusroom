@@ -1,120 +1,60 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { getDisplayName } from '../lib/userId'
+import type { PresenceMember, FocusStatus } from '../types'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
-export interface PresenceUser {
-  userId: string
-  isTyping: boolean
-  joinedAt: string
-}
-
-function getUserId(): string {
-  let id = localStorage.getItem('focus-room-user-id')
-  if (!id) {
-    id = crypto.randomUUID()
-    localStorage.setItem('focus-room-user-id', id)
-  }
-  return id
-}
-
-export function usePresence() {
-  const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([])
-  const [joinEvents, setJoinEvents] = useState<string[]>([])
-  const [leaveEvents, setLeaveEvents] = useState<string[]>([])
+export function usePresence(roomId: string, userId: string) {
+  const [members, setMembers] = useState<PresenceMember[]>([])
   const channelRef = useRef<RealtimeChannel | null>(null)
-  const userId = useRef(getUserId())
-  // Skip first effect run in StrictMode (mount→unmount→mount)
-  const isFirstMount = useRef(true)
-
-  const clearJoinEvent = useCallback((id: string) => {
-    setJoinEvents(prev => prev.filter(e => e !== id))
-  }, [])
-
-  const clearLeaveEvent = useCallback((id: string) => {
-    setLeaveEvents(prev => prev.filter(e => e !== id))
-  }, [])
 
   useEffect(() => {
-    // In StrictMode dev, skip the first mount (it will be immediately unmounted)
-    if (isFirstMount.current) {
-      isFirstMount.current = false
-      return () => {
-        // This cleanup runs when StrictMode unmounts the first render
-        // Don't do anything — let the second mount handle setup
-      }
-    }
+    const displayName = getDisplayName(userId)
 
-    const uid = userId.current
-
-    const channel = supabase.channel('room-presence', {
-      config: { presence: { key: uid } },
+    const channel = supabase.channel(`room:${roomId}`, {
+      config: { presence: { key: userId } },
     })
+
+    channelRef.current = channel
+
+    const myState: PresenceMember = {
+      userId,
+      displayName,
+      focusStatus: 'idle',
+      joinedAt: new Date().toISOString(),
+    }
 
     channel
       .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState<PresenceUser>()
-        const users: PresenceUser[] = []
-        for (const key of Object.keys(state)) {
-          const presences = state[key]
-          if (presences && presences.length > 0) {
-            users.push(presences[0] as unknown as PresenceUser)
-          }
-        }
-        setOnlineUsers(users)
-      })
-      .on('presence', { event: 'join' }, ({ key }) => {
-        if (key !== uid) {
-          setJoinEvents(prev => [...prev, key])
-        }
-      })
-      .on('presence', { event: 'leave' }, ({ key }) => {
-        if (key !== uid) {
-          setLeaveEvents(prev => [...prev, key])
-        }
+        const state = channel.presenceState<PresenceMember>()
+        const all = Object.values(state).flat()
+        setMembers(all)
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          await channel.track({
-            userId: uid,
-            isTyping: false,
-            joinedAt: new Date().toISOString(),
-          })
+          await channel.track(myState)
         }
       })
-
-    channelRef.current = channel
 
     return () => {
       channel.untrack()
       supabase.removeChannel(channel)
       channelRef.current = null
     }
-  }, [])
+  }, [roomId, userId])
 
-  const setTyping = useCallback(async (isTyping: boolean) => {
+  /** Update own focus status (e.g., when starting/stopping timer) */
+  const updateStatus = useCallback(async (focusStatus: FocusStatus) => {
     const channel = channelRef.current
     if (!channel) return
+
     await channel.track({
-      userId: userId.current,
-      isTyping,
+      userId,
+      displayName: getDisplayName(userId),
+      focusStatus,
       joinedAt: new Date().toISOString(),
     })
-  }, [])
+  }, [userId])
 
-  const typingUsers = onlineUsers.filter(
-    u => u.isTyping && u.userId !== userId.current
-  )
-
-  const onlineCount = onlineUsers.length
-
-  return {
-    onlineCount,
-    typingUsers,
-    setTyping,
-    joinEvents,
-    leaveEvents,
-    clearJoinEvent,
-    clearLeaveEvent,
-    userId: userId.current,
-  }
+  return { members, updateStatus }
 }

@@ -1,38 +1,71 @@
+import { useState } from 'react'
 import type { Note } from '../types'
-import { StickyNote } from './StickyNote'
+import { ActivityEntryRow } from './ActivityEntry'
+import { IdeaCard } from './IdeaCard'
+
+type Filter = 'all' | 'following' | 'friends'
 
 interface Props {
   notes: Note[]
   hiddenCount: number
+  ideas: Note[]
   onPauseFade: (id: string) => void
   onResumeFade: (id: string) => void
 }
 
-export function ActivityFeed({ notes, hiddenCount, onPauseFade, onResumeFade }: Props) {
+export function ActivityFeed({ notes, hiddenCount, ideas, onPauseFade, onResumeFade }: Props) {
+  const [filter, setFilter] = useState<Filter>('all')
+
   return (
     <div className="panel">
-      <h2 className="font-serif text-xl text-[#e8ddd0] mb-4">Activity</h2>
+      <h2 className="font-serif text-lg font-semibold text-[#4a3a2a] mb-3">Activity</h2>
 
+      {/* Filter tabs */}
+      <div className="filter-tabs">
+        {(['all', 'following', 'friends'] as const).map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`filter-tab ${filter === f ? 'filter-tab--active' : ''}`}
+          >
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Burst badge */}
       {hiddenCount > 0 && (
-        <div className="text-xs text-[#9a8b78] mb-2">
-          +{hiddenCount} updates
+        <div className="mb-3">
+          <span className="burst-badge">+{hiddenCount} updates</span>
         </div>
       )}
 
-      <div className="activity-feed">
+      {/* Activity entries */}
+      <div
+        className="activity-feed"
+        onMouseEnter={() => notes.forEach(n => onPauseFade(n.id))}
+        onMouseLeave={() => notes.forEach(n => onResumeFade(n.id))}
+      >
         {notes.length === 0 ? (
-          <p className="text-sm text-[#b8a994]">No recent updates</p>
+          <p className="text-sm text-[#b0a090] py-4 text-center">
+            No recent updates in this room
+          </p>
         ) : (
           notes.map(note => (
-            <StickyNote
-              key={note.id}
-              note={note}
-              onMouseEnter={onPauseFade}
-              onMouseLeave={onResumeFade}
-            />
+            <ActivityEntryRow key={note.id} note={note} />
           ))
         )}
       </div>
+
+      {/* Ideas section */}
+      {ideas.length > 0 && (
+        <div className="ideas-section">
+          <h3 className="text-xs text-[#8a7a6a] uppercase tracking-wider mb-2">
+            💡 Ideas
+          </h3>
+          {ideas.map(idea => <IdeaCard key={idea.id} note={idea} />)}
+        </div>
+      )}
     </div>
   )
 }

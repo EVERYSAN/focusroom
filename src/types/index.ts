@@ -3,6 +3,7 @@ export type NoteType = 'start' | 'progress' | 'done' | 'idea'
 export interface Note {
   id: string
   user_id: string
+  room_id: string
   type: NoteType
   text: string
   created_at: string
@@ -14,12 +15,28 @@ export interface Stats {
   notesCount: number
 }
 
-export type MemberStatus = 'focusing' | 'break' | 'idea' | 'idle'
-
-export interface Member {
+export interface Room {
   id: string
-  nickname: string
-  avatar: string
-  status: MemberStatus
-  statusText?: string
+  name: string
+  description: string | null
+  tags: string[]
+}
+
+export type FocusStatus = 'idle' | 'focusing' | 'break'
+
+export interface PresenceMember {
+  userId: string
+  displayName: string
+  focusStatus: FocusStatus
+  joinedAt: string
+}
+
+export interface ActivityEntry {
+  id: string
+  userId: string
+  displayName: string
+  type: NoteType
+  text: string
+  roomId: string
+  createdAt: string
 }

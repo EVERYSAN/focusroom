@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import type { Note } from '../types'
+import { relativeTime } from '../lib/time'
 
 const TYPE_TAG_STYLES: Record<string, { color: string; label: string }> = {
-  start: { color: 'bg-blue-900/30 text-blue-300/80', label: 'Start' },
-  progress: { color: 'bg-amber-900/30 text-amber-300/80', label: 'Progress' },
-  done: { color: 'bg-green-900/30 text-green-300/80', label: 'Done' },
-  idea: { color: 'bg-purple-900/30 text-purple-300/80', label: 'Idea' },
+  start: { color: 'bg-blue-50 text-blue-700', label: 'Start' },
+  progress: { color: 'bg-amber-50 text-amber-700', label: 'Progress' },
+  done: { color: 'bg-green-50 text-green-700', label: 'Done' },
+  idea: { color: 'bg-purple-50 text-purple-700', label: 'Idea' },
 }
 
 interface Props {
@@ -18,7 +19,6 @@ export function StickyNote({ note, onMouseEnter, onMouseLeave }: Props) {
   const [visible, setVisible] = useState(false)
   const tag = TYPE_TAG_STYLES[note.type]
 
-  // Enter animation
   useEffect(() => {
     const t = requestAnimationFrame(() => setVisible(true))
     return () => cancelAnimationFrame(t)
@@ -34,10 +34,13 @@ export function StickyNote({ note, onMouseEnter, onMouseLeave }: Props) {
       onMouseEnter={() => onMouseEnter(note.id)}
       onMouseLeave={() => onMouseLeave(note.id)}
     >
-      <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${tag.color}`}>
-        {tag.label}
-      </span>
-      <p className="text-sm text-[#d4c4a8] mt-1.5 leading-relaxed">{note.text}</p>
+      <div className="flex items-center justify-between mb-1">
+        <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${tag.color}`}>
+          {tag.label}
+        </span>
+        <span className="text-[10px] text-[#b0a090]">{relativeTime(note.created_at)}</span>
+      </div>
+      <p className="text-sm text-[#4a3a2a] leading-relaxed">{note.text}</p>
     </div>
   )
 }

@@ -1,21 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { getUserId } from '../lib/userId'
 import type { Note, NoteType, Stats } from '../types'
 
 const MAX_VISIBLE = 5
-const FADE_DELAY = 12000
+const FADE_DELAY = 12_000
 const COOLDOWN_MS = 10 * 60 * 1000
 
-function getUserId(): string {
-  let id = localStorage.getItem('focus-room-user-id')
-  if (!id) {
-    id = crypto.randomUUID()
-    localStorage.setItem('focus-room-user-id', id)
-  }
-  return id
-}
-
-export function useNotes() {
+export function useNotes(roomId: string) {
   const [allNotes, setAllNotes] = useState<Note[]>([])
   const [stats, setStats] = useState<Stats>({
     focusSessions: 0,
@@ -70,15 +62,20 @@ export function useNotes() {
     }
   }, [])
 
-  // Fetch recent notes + subscribe to realtime
+  // Fetch recent notes + subscribe to realtime — re-runs on roomId change
   useEffect(() => {
-    // Load recent notes (last 30 min)
+    // Clear state from previous room
+    setAllNotes([])
+    fadeTimers.current.forEach(timer => clearTimeout(timer))
+    fadeTimers.current.clear()
+    pausedNotes.current.clear()
+
     const loadRecent = async () => {
       const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
       const { data } = await supabase
         .from('room_updates')
         .select('id, room_id, user_id, type, text, created_at')
-        .eq('room_id', 'default')
+        .eq('room_id', roomId)
         .gte('created_at', thirtyMinAgo)
         .order('created_at', { ascending: true })
         .limit(20)
@@ -90,16 +87,16 @@ export function useNotes() {
 
     loadRecent()
 
-    // Realtime subscription
+    // Realtime subscription for this room
     const channel = supabase
-      .channel('room_updates')
+      .channel(`room_updates:${roomId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'room_updates',
-          filter: 'room_id=eq.default',
+          filter: `room_id=eq.${roomId}`,
         },
         payload => {
           const note = payload.new as Note
@@ -115,9 +112,9 @@ export function useNotes() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [roomId])
 
-  // Load today's stats
+  // Load today's stats (global, not per-room)
   useEffect(() => {
     const loadStats = async () => {
       const todayStart = new Date()
@@ -163,7 +160,7 @@ export function useNotes() {
     if (/https?:\/\/|www\./i.test(trimmed)) return 'URLs are not allowed'
 
     const { error } = await supabase.from('room_updates').insert({
-      room_id: 'default',
+      room_id: roomId,
       user_id: userId.current,
       type,
       text: trimmed,
@@ -176,13 +173,16 @@ export function useNotes() {
 
     lastPostTime.current = now
     return null
-  }, [])
+  }, [roomId])
 
   const statusNotes = allNotes.filter(n => n.type !== 'idea')
   const ideaNotes = allNotes.filter(n => n.type === 'idea')
   const visibleNotes = statusNotes.slice(-MAX_VISIBLE)
   const hiddenCount = Math.max(0, statusNotes.length - MAX_VISIBLE)
   const recentIdeas = ideaNotes.slice(-5)
+
+  // Separate ideas from recent notes for display
+  const recentIdeas = allNotes.filter(n => n.type === 'idea').slice(-3)
 
   return {
     visibleNotes,

@@ -1,61 +1,81 @@
-import type { StatusCounts } from '../hooks/useMembers'
-
-const MOCK_ROOMS = [
-  { name: 'Cafe', active: 12, tags: ['#deep-work', '#design'] },
-  { name: 'Lab', active: 8, tags: ['#engineering', '#backend'] },
-  { name: 'Garden', active: 5, tags: ['#writing', '#reading'] },
-  { name: 'Studio', active: 3, tags: ['#art', '#creative'] },
-]
+import type { Room, PresenceMember } from '../types'
 
 interface Props {
-  counts: StatusCounts
-  onlineCount?: number
+  rooms: Room[]
+  currentRoomId: string
+  onRoomSelect: (roomId: string) => void
+  members: PresenceMember[]
 }
 
-export function PresencePanel({ counts, onlineCount }: Props) {
+function getInitials(name: string): string {
+  return name.replace('Guest #', '').slice(0, 2)
+}
+
+export function PresencePanel({ rooms, currentRoomId, onRoomSelect, members }: Props) {
   return (
     <div className="panel">
-      {/* Room info */}
-      <div className="flex items-center justify-between mb-1">
-        <h2 className="font-serif text-xl text-[#e8ddd0]">Cafe</h2>
-        {onlineCount !== undefined && onlineCount > 0 && (
-          <span className="online-badge">
-            <span className="online-badge__dot" />
-            {onlineCount} online
-          </span>
+      {/* Room list */}
+      <h2 className="font-serif text-lg font-semibold text-[#4a3a2a] mb-3">Rooms</h2>
+      <ul className="room-list">
+        {rooms.map(room => (
+          <li
+            key={room.id}
+            className={`room-list-item ${room.id === currentRoomId ? 'room-list-item--active' : ''}`}
+            onClick={() => onRoomSelect(room.id)}
+          >
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="flex items-center gap-1.5">
+                <span className="text-sm text-[#4a3a2a] font-medium">{room.name}</span>
+                {room.id === currentRoomId && (
+                  <span className="text-green-500 text-xs">✓</span>
+                )}
+              </span>
+              {room.id === currentRoomId && (
+                <span className="text-[11px] text-[#8a7a6a]">
+                  {members.length} active
+                </span>
+              )}
+            </div>
+            <div className="flex gap-1.5">
+              {room.tags.map(tag => (
+                <span key={tag} className="text-[10px] text-[#b0a090]">{tag}</span>
+              ))}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {/* Friends Online */}
+      <div className="friends-online">
+        <h3 className="text-xs text-[#8a7a6a] uppercase tracking-wider mb-2">
+          Online in Room
+        </h3>
+        {members.length === 0 ? (
+          <p className="text-xs text-[#b0a090]">No one here yet</p>
+        ) : (
+          <div className="flex">
+            {members.slice(0, 6).map(m => (
+              <div
+                key={m.userId}
+                className="friends-online__avatar"
+                title={m.displayName}
+              >
+                {getInitials(m.displayName)}
+              </div>
+            ))}
+            {members.length > 6 && (
+              <div className="friends-online__avatar text-[10px]">
+                +{members.length - 6}
+              </div>
+            )}
+          </div>
         )}
       </div>
-      <div className="flex gap-1.5 mb-4">
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#2a2218] text-[#9a8b78]">#deep-work</span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#2a2218] text-[#9a8b78]">#design</span>
-      </div>
 
-      {/* Status summary (compact) */}
-      <div className="presence-summary">
-        {counts.focusing > 0 && <span className="presence-chip presence-chip--focus">{counts.focusing} focusing</span>}
-        {counts.break > 0 && <span className="presence-chip presence-chip--break">{counts.break} on break</span>}
-        {counts.idea > 0 && <span className="presence-chip presence-chip--idea">{counts.idea} ideas</span>}
-        {counts.idle > 0 && <span className="presence-chip presence-chip--idle">{counts.idle} idle</span>}
-      </div>
-
-      {/* Room discovery */}
-      <div className="mt-6">
-        <h3 className="text-xs text-[#9a8b78] uppercase tracking-wider mb-3">Rooms</h3>
-        <ul className="room-list">
-          {MOCK_ROOMS.map(room => (
-            <li key={room.name} className="room-list-item">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-[#e8ddd0] font-medium">{room.name}</span>
-                <span className="text-[11px] text-[#9a8b78]">{room.active} active</span>
-              </div>
-              <div className="flex gap-1">
-                {room.tags.map(tag => (
-                  <span key={tag} className="text-[9px] text-[#7a6b58]">{tag}</span>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
+      {/* Search */}
+      <div className="search-bar">
+        <span className="text-[#b0a090] text-sm">🔍</span>
+        <input type="text" placeholder="Search rooms..." readOnly />
       </div>
     </div>
   )
