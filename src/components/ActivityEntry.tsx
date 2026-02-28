@@ -1,5 +1,6 @@
 import type { Note, NoteType } from '../types'
 import { relativeTime } from '../lib/time'
+import { ja } from '../lib/i18n'
 
 const TYPE_COLORS: Record<NoteType, string> = {
   start: 'bg-blue-400',
@@ -9,10 +10,10 @@ const TYPE_COLORS: Record<NoteType, string> = {
 }
 
 const TYPE_LABELS: Record<NoteType, string> = {
-  start: 'started',
-  progress: 'is working on',
-  done: 'finished',
-  idea: 'shared an insight',
+  start: ja.activityTypes.start,
+  progress: ja.activityTypes.progress,
+  done: ja.activityTypes.done,
+  idea: ja.activityTypes.idea,
 }
 
 function getInitials(userId: string): string {

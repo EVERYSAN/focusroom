@@ -49,6 +49,7 @@ function App() {
           onStart={start}
           onPause={pause}
           onReset={reset}
+          selfUserId={userId.current}
         />
         <ActivityFeed
           notes={visibleNotes}

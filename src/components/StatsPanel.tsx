@@ -1,4 +1,5 @@
 import type { Stats } from '../types'
+import { ja } from '../lib/i18n'
 
 interface Props {
   stats: Stats
@@ -7,9 +8,9 @@ interface Props {
 export function StatsPanel({ stats }: Props) {
   return (
     <div className="flex gap-6">
-      <StatItem label="Sessions" value={stats.focusSessions} />
-      <StatItem label="Focus min" value={stats.focusMinutes} />
-      <StatItem label="Notes" value={stats.notesCount} />
+      <StatItem label={ja.stats.sessions} value={stats.focusSessions} />
+      <StatItem label={ja.stats.focusMinutes} value={stats.focusMinutes} />
+      <StatItem label={ja.stats.notes} value={stats.notesCount} />
     </div>
   )
 }

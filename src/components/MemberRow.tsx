@@ -1,10 +1,11 @@
 import type { PresenceMember, FocusStatus } from '../types'
 import { relativeTime } from '../lib/time'
+import { ja } from '../lib/i18n'
 
 const STATUS_LABEL: Record<FocusStatus, string> = {
-  focusing: 'Focusing',
-  break: 'On break',
-  idle: 'Idle',
+  focusing: ja.memberStatus.focusing,
+  break: ja.memberStatus.break,
+  idle: ja.memberStatus.idle,
 }
 
 const STATUS_DOT: Record<FocusStatus, string> = {

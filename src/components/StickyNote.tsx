@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { Note } from '../types'
 import { relativeTime } from '../lib/time'
+import { ja } from '../lib/i18n'
 
 const TYPE_TAG_STYLES: Record<string, { color: string; label: string }> = {
-  start: { color: 'bg-blue-50 text-blue-700', label: 'Start' },
-  progress: { color: 'bg-amber-50 text-amber-700', label: 'Progress' },
-  done: { color: 'bg-green-50 text-green-700', label: 'Done' },
-  idea: { color: 'bg-purple-50 text-purple-700', label: 'Idea' },
+  start: { color: 'bg-blue-50 text-blue-700', label: ja.categories.start },
+  progress: { color: 'bg-amber-50 text-amber-700', label: ja.categories.progress },
+  done: { color: 'bg-green-50 text-green-700', label: ja.categories.done },
+  idea: { color: 'bg-purple-50 text-purple-700', label: ja.categories.idea },
 }
 
 interface Props {

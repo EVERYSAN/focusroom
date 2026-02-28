@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Note } from '../types'
 import { ActivityEntryRow } from './ActivityEntry'
 import { IdeaCard } from './IdeaCard'
+import { ja } from '../lib/i18n'
 
 type Filter = 'all' | 'following' | 'friends'
 
@@ -18,17 +19,17 @@ export function ActivityFeed({ notes, hiddenCount, ideas, onPauseFade, onResumeF
 
   return (
     <div className="panel">
-      <h2 className="font-serif text-lg font-semibold text-[#4a3a2a] mb-3">Activity</h2>
+      <h2 className="font-serif text-lg font-semibold text-[#4a3a2a] mb-3">{ja.activity.title}</h2>
 
       {/* Filter tabs */}
       <div className="filter-tabs">
-        {(['all', 'following', 'friends'] as const).map(f => (
+        {([['all', ja.activity.all], ['following', ja.activity.following], ['friends', ja.activity.friends]] as const).map(([f, label]) => (
           <button
             key={f}
-            onClick={() => setFilter(f)}
+            onClick={() => setFilter(f as Filter)}
             className={`filter-tab ${filter === f ? 'filter-tab--active' : ''}`}
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {label}
           </button>
         ))}
       </div>
@@ -36,7 +37,7 @@ export function ActivityFeed({ notes, hiddenCount, ideas, onPauseFade, onResumeF
       {/* Burst badge */}
       {hiddenCount > 0 && (
         <div className="mb-3">
-          <span className="burst-badge">+{hiddenCount} updates</span>
+          <span className="burst-badge">{ja.activity.updates(hiddenCount)}</span>
         </div>
       )}
 
@@ -48,7 +49,7 @@ export function ActivityFeed({ notes, hiddenCount, ideas, onPauseFade, onResumeF
       >
         {notes.length === 0 ? (
           <p className="text-sm text-[#b0a090] py-4 text-center">
-            No recent updates in this room
+            {ja.activity.noUpdates}
           </p>
         ) : (
           notes.map(note => (
@@ -61,7 +62,7 @@ export function ActivityFeed({ notes, hiddenCount, ideas, onPauseFade, onResumeF
       {ideas.length > 0 && (
         <div className="ideas-section">
           <h3 className="text-xs text-[#8a7a6a] uppercase tracking-wider mb-2">
-            💡 Ideas
+            {ja.activity.ideas}
           </h3>
           {ideas.map(idea => <IdeaCard key={idea.id} note={idea} />)}
         </div>

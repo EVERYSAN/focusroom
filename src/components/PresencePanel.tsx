@@ -1,4 +1,5 @@
 import type { Room, PresenceMember } from '../types'
+import { ja } from '../lib/i18n'
 
 interface Props {
   rooms: Room[]
@@ -15,7 +16,7 @@ export function PresencePanel({ rooms, currentRoomId, onRoomSelect, members }: P
   return (
     <div className="panel">
       {/* Room list */}
-      <h2 className="font-serif text-lg font-semibold text-[#4a3a2a] mb-3">Rooms</h2>
+      <h2 className="font-serif text-lg font-semibold text-[#4a3a2a] mb-3">{ja.presence.rooms}</h2>
       <ul className="room-list">
         {rooms.map(room => (
           <li
@@ -32,7 +33,7 @@ export function PresencePanel({ rooms, currentRoomId, onRoomSelect, members }: P
               </span>
               {room.id === currentRoomId && (
                 <span className="text-[11px] text-[#8a7a6a]">
-                  {members.length} active
+                  {ja.presence.active(members.length)}
                 </span>
               )}
             </div>
@@ -48,10 +49,10 @@ export function PresencePanel({ rooms, currentRoomId, onRoomSelect, members }: P
       {/* Friends Online */}
       <div className="friends-online">
         <h3 className="text-xs text-[#8a7a6a] uppercase tracking-wider mb-2">
-          Online in Room
+          {ja.presence.onlineInRoom}
         </h3>
         {members.length === 0 ? (
-          <p className="text-xs text-[#b0a090]">No one here yet</p>
+          <p className="text-xs text-[#b0a090]">{ja.presence.noOneHere}</p>
         ) : (
           <div className="flex">
             {members.slice(0, 6).map(m => (
@@ -75,7 +76,7 @@ export function PresencePanel({ rooms, currentRoomId, onRoomSelect, members }: P
       {/* Search */}
       <div className="search-bar">
         <span className="text-[#b0a090] text-sm">🔍</span>
-        <input type="text" placeholder="Search rooms..." readOnly />
+        <input type="text" placeholder={ja.presence.searchRooms} readOnly />
       </div>
     </div>
   )
