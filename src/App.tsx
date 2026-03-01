@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { AppHeader } from './components/AppHeader'
 import { PresencePanel } from './components/PresencePanel'
-import { FocusPanel } from './components/FocusPanel'
+import { FocusPanel, type Tab } from './components/FocusPanel'
 import { ActivityFeed } from './components/ActivityFeed'
 import { QuantumCityCanvas } from './components/QuantumCityCanvas'
 import { useNotes } from './hooks/useNotes'
@@ -12,7 +12,9 @@ import { getUserId } from './lib/userId'
 
 function App() {
   const [currentRoomId, setCurrentRoomId] = useState('cafe')
+  const [activeTab, setActiveTab] = useState<Tab>('focus')
   const userId = useRef(getUserId())
+  const isFocusMode = activeTab === 'focus'
 
   const { rooms } = useRooms()
   const { members, updateStatus } = usePresence(currentRoomId, userId.current)
@@ -39,13 +41,15 @@ function App() {
       />
 
       <AppHeader />
-      <div className="layout-grid">
-        <PresencePanel
-          rooms={rooms}
-          currentRoomId={currentRoomId}
-          onRoomSelect={setCurrentRoomId}
-          members={members}
-        />
+      <div className={`layout-grid ${isFocusMode ? 'layout-grid--focus' : ''}`}>
+        {!isFocusMode && (
+          <PresencePanel
+            rooms={rooms}
+            currentRoomId={currentRoomId}
+            onRoomSelect={setCurrentRoomId}
+            members={members}
+          />
+        )}
         <FocusPanel
           room={currentRoom}
           members={members}
@@ -58,14 +62,18 @@ function App() {
           onPause={pause}
           onReset={reset}
           selfUserId={userId.current}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
-        <ActivityFeed
-          notes={visibleNotes}
-          hiddenCount={hiddenCount}
-          ideas={recentIdeas}
-          onPauseFade={pauseFade}
-          onResumeFade={resumeFade}
-        />
+        {!isFocusMode && (
+          <ActivityFeed
+            notes={visibleNotes}
+            hiddenCount={hiddenCount}
+            ideas={recentIdeas}
+            onPauseFade={pauseFade}
+            onResumeFade={resumeFade}
+          />
+        )}
       </div>
     </>
   )
