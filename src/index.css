@@ -512,6 +512,48 @@ body {
   animation-delay: var(--phase, 0s);
 }
 
+/* ── Quantum Spotlight — subtle glow on selected member ── */
+
+.spotlight-member {
+  --breathe-low: 1;                       /* override breathe to stay bright */
+}
+
+.spotlight-member > div:first-child > div:first-child {
+  box-shadow: 0 0 12px 2px rgba(120, 140, 200, 0.25);
+  transition: box-shadow 0.6s ease;
+}
+
+/* Caption overlay */
+.spotlight-caption {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  z-index: 5;
+}
+
+.spotlight-caption--visible {
+  opacity: 1;
+}
+
+.spotlight-caption__line1 {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.spotlight-caption__line2 {
+  font-size: 9px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 /* ── Status Badge ── */
 
 .status-dot {
