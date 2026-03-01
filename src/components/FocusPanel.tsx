@@ -158,7 +158,7 @@ export function FocusPanel({
 
           <button
             className="px-5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.07] transition-colors cursor-pointer backdrop-blur-sm"
-            onClick={isRunning ? onPause : onStart}
+            onClick={() => { onStart(); onTabChange('people') }}
           >
             {ja.actions.joinQuietly}
           </button>
