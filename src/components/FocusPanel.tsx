@@ -3,6 +3,7 @@ import { PostForm } from './PostForm'
 import { IdeaCard } from './IdeaCard'
 import { StatsPanel } from './StatsPanel'
 import { WelcomeSection } from './WelcomeSection'
+import { QuantumCityCanvas } from './QuantumCityCanvas'
 import { useFriendHeuristic } from '../hooks/useFriendHeuristic'
 import { ja } from '../lib/i18n'
 import type { Room, PresenceMember, Stats, NoteType, Note, FocusStatus } from '../types'
@@ -217,73 +218,73 @@ export function FocusPanel({
 
       {/* ── 集中 Tab ── */}
       {activeTab === 'focus' && (
-        <>
-          <WelcomeSection pickWelcomeName={pickWelcomeName} />
+        <div className="quantum-city-wrap">
+          {/* Canvas particle background */}
+          <QuantumCityCanvas
+            memberCount={displayMembers.length}
+            spotlight={{
+              name: spotlight.member?.displayName,
+              label: spotlight.label,
+            }}
+          />
 
-          {/* User Grid — Visual Centerpiece */}
-          <div className="py-6">
-            <div className="grid grid-cols-3 gap-4 justify-items-center max-h-[320px] overflow-y-auto">
-              {displayMembers.map((m, i) => {
-                const isSpot = i === spotlight.spotlightIndex
-                return (
-                  <div
-                    key={m.userId}
-                    className={`relative flex flex-col items-center gap-1.5 memberDot ${m.__ghost ? 'ghost' : ''} ${isSpot ? 'spotlight-member' : ''}`}
-                    style={{
-                      '--breathe': `${5.5 + (i % 5) * 0.25}s`,
-                      '--phase': `-${(i * 1.7) % 6}s`,
-                    } as React.CSSProperties}
-                  >
-                    <div className="relative">
-                      <div className={`w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-lg font-semibold ${isSpot ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
-                        {getInitials(m.displayName)}
+          {/* UI layer — above particles */}
+          <div className="quantum-city-content">
+            <WelcomeSection pickWelcomeName={pickWelcomeName} />
+
+            {/* User Grid — Visual Centerpiece */}
+            <div className="py-6">
+              <div className="grid grid-cols-3 gap-4 justify-items-center max-h-[320px] overflow-y-auto">
+                {displayMembers.map((m, i) => {
+                  const isSpot = i === spotlight.spotlightIndex
+                  return (
+                    <div
+                      key={m.userId}
+                      className={`relative flex flex-col items-center gap-1.5 memberDot ${m.__ghost ? 'ghost' : ''} ${isSpot ? 'spotlight-member' : ''}`}
+                      style={{
+                        '--breathe': `${5.5 + (i % 5) * 0.25}s`,
+                        '--phase': `-${(i * 1.7) % 6}s`,
+                      } as React.CSSProperties}
+                    >
+                      <div className="relative">
+                        <div className={`w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-lg font-semibold ${isSpot ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
+                          {getInitials(m.displayName)}
+                        </div>
+                        <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--bg-panel)] ${STATUS_DOT[m.focusStatus]}`} />
                       </div>
-                      <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--bg-panel)] ${STATUS_DOT[m.focusStatus]}`} />
+                      <span className="text-xs text-[var(--text-primary)] font-medium truncate max-w-[80px] text-center">
+                        {m.displayName}
+                      </span>
+                      <span className="text-[10px] text-[var(--text-muted)]">
+                        {STATUS_LABEL[m.focusStatus]}
+                      </span>
                     </div>
-                    <span className="text-xs text-[var(--text-primary)] font-medium truncate max-w-[80px] text-center">
-                      {m.displayName}
-                    </span>
-                    <span className="text-[10px] text-[var(--text-muted)]">
-                      {STATUS_LABEL[m.focusStatus]}
-                    </span>
+                  )
+                })}
+              </div>
+            </div>
 
-                    {/* Spotlight Caption — absolute, pointer-events:none */}
-                    {isSpot && spotlight.member && (
-                      <div className={`spotlight-caption ${spotlight.phase === 'in' ? 'spotlight-caption--visible' : ''}`}>
-                        <div className="spotlight-caption__line1">
-                          {ja.spotlight.focusing(spotlight.member.displayName)}
-                        </div>
-                        <div className="spotlight-caption__line2">
-                          {spotlight.label}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+            {/* Join Quietly Button */}
+            <div className="flex justify-center mb-4">
+              <button
+                className="px-6 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                onClick={isRunning ? onPause : onStart}
+              >
+                {ja.actions.joinQuietly}
+              </button>
+            </div>
+
+            {/* Post form for focus updates */}
+            <div className="mt-3 w-full">
+              <PostForm onPost={onPost} categories={['start', 'progress', 'done']} placeholder={ja.postForm.focusPlaceholder} />
+            </div>
+
+            {/* Stats */}
+            <div className="mt-4 flex justify-center">
+              <StatsPanel stats={stats} />
             </div>
           </div>
-
-          {/* Join Quietly Button */}
-          <div className="flex justify-center mb-4">
-            <button
-              className="px-6 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-              onClick={isRunning ? onPause : onStart}
-            >
-              {ja.actions.joinQuietly}
-            </button>
-          </div>
-
-          {/* Post form for focus updates */}
-          <div className="mt-3 w-full">
-            <PostForm onPost={onPost} categories={['start', 'progress', 'done']} placeholder={ja.postForm.focusPlaceholder} />
-          </div>
-
-          {/* Stats */}
-          <div className="mt-4 flex justify-center">
-            <StatsPanel stats={stats} />
-          </div>
-        </>
+        </div>
       )}
 
       {/* ── ひらめき Tab ── */}
