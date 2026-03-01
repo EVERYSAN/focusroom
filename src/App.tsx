@@ -29,9 +29,9 @@ function App() {
   }, [isRunning, updateStatus])
 
   return (
-    <>
+    <div className="ambient-bg">
       <AppHeader />
-      <div className="layout-grid">
+      <div className="layout-grid ambient-content">
         <PresencePanel
           rooms={rooms}
           currentRoomId={currentRoomId}
@@ -59,7 +59,7 @@ function App() {
           onResumeFade={resumeFade}
         />
       </div>
-    </>
+    </div>
   )
 }
 

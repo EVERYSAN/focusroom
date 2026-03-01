@@ -157,10 +157,14 @@ export function FocusPanel({
           {/* User Grid — Visual Centerpiece */}
           <div className="py-6">
             <div className="grid grid-cols-3 gap-4 justify-items-center max-h-[320px] overflow-y-auto">
-              {displayMembers.map(m => (
+              {displayMembers.map((m, i) => (
                 <div
                   key={m.userId}
-                  className={`flex flex-col items-center gap-1.5 ${m.__ghost ? 'ghost-member' : ''}`}
+                  className={`flex flex-col items-center gap-1.5 memberDot ${m.__ghost ? 'ghost' : ''}`}
+                  style={{
+                    '--breathe': `${5.5 + (i % 5) * 0.25}s`,
+                    '--phase': `-${(i * 1.7) % 6}s`,
+                  } as React.CSSProperties}
                 >
                   <div className="relative">
                     <div className="w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-lg font-semibold text-[var(--text-secondary)]">
