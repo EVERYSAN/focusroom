@@ -31,8 +31,8 @@ interface Particle {
 
 /* ── Constants ── */
 
-const MIN_PARTICLES = 30
-const MAX_PARTICLES = 140
+const MIN_PARTICLES = 50
+const MAX_PARTICLES = 180
 const SPOTLIGHT_COUNT = 3
 const ROTATE_INTERVAL_MIN = 12_000
 const ROTATE_INTERVAL_MAX = 16_000
@@ -47,8 +47,13 @@ function gaussRand(): number {
   return Math.max(-3, Math.min(3, n))
 }
 
-function centeredRand(): number {
-  return Math.max(0.02, Math.min(0.98, 0.5 + gaussRand() * 0.18))
+/** Spread particles across entire viewport with mild center bias */
+function spreadRand(): number {
+  // 70% uniform spread, 30% center-biased for density feel
+  if (Math.random() < 0.7) {
+    return 0.05 + Math.random() * 0.90
+  }
+  return Math.max(0.05, Math.min(0.95, 0.5 + gaussRand() * 0.25))
 }
 
 function pickHue(): number {
@@ -63,8 +68,8 @@ function pickHue(): number {
 function createParticle(): Particle {
   const r = 1.5 + Math.random() * 2.5 + (Math.random() < 0.12 ? Math.random() * 2 : 0)
   return {
-    x: centeredRand(),
-    y: centeredRand(),
+    x: spreadRand(),
+    y: spreadRand(),
     r,
     hue: pickHue(),
     sat: 15 + Math.random() * 25,
@@ -72,8 +77,8 @@ function createParticle(): Particle {
     alpha: 0.3 + Math.random() * 0.5,
     dAlpha: (Math.random() - 0.5) * 0.006,
     dHue: (Math.random() - 0.5) * 0.1,
-    jitterX: (Math.random() - 0.5) * 0.00008,
-    jitterY: (Math.random() - 0.5) * 0.00008,
+    jitterX: (Math.random() - 0.5) * 0.00015,
+    jitterY: (Math.random() - 0.5) * 0.00015,
   }
 }
 
@@ -178,12 +183,11 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
     spotIndicesRef.current = [a, b, c]
     setSpotlights(buildSpotlightEntries())
 
-    // Sizing
+    // Sizing — full viewport
     const resize = () => {
       const dpr = window.devicePixelRatio || 1
-      const rect = canvas.parentElement!.getBoundingClientRect()
-      const w = rect.width
-      const h = rect.height
+      const w = window.innerWidth
+      const h = window.innerHeight
       canvas.width = w * dpr
       canvas.height = h * dpr
       canvas.style.width = `${w}px`
@@ -192,8 +196,7 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
       sizeRef.current = { w, h }
     }
     resize()
-    const ro = new ResizeObserver(resize)
-    ro.observe(canvas.parentElement!)
+    window.addEventListener('resize', resize)
 
     // Draw loop
     const draw = () => {
@@ -262,7 +265,7 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
     return () => {
       cancelAnimationFrame(rafRef.current)
       clearTimeout(spotTimerRef.current)
-      ro.disconnect()
+      window.removeEventListener('resize', resize)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -282,11 +285,10 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
       <canvas
         ref={canvasRef}
         style={{
-          position: 'absolute',
+          position: 'fixed',
           inset: 0,
           zIndex: 0,
           pointerEvents: 'none',
-          borderRadius: 'inherit',
         }}
       />
       {/* Fixed-position 3-line spotlight overlay (glass) */}

@@ -118,6 +118,15 @@ body {
   top: 72px;
 }
 
+/* Center panel on 集中 tab: fully transparent, no card */
+.panel--transparent {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
 /* ── Room List ── */
 
 .room-list {

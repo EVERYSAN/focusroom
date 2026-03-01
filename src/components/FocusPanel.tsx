@@ -3,7 +3,6 @@ import { PostForm } from './PostForm'
 import { IdeaCard } from './IdeaCard'
 import { StatsPanel } from './StatsPanel'
 import { WelcomeSection } from './WelcomeSection'
-import { QuantumCityCanvas } from './QuantumCityCanvas'
 import { useFriendHeuristic } from '../hooks/useFriendHeuristic'
 import { ja } from '../lib/i18n'
 import type { Room, PresenceMember, Stats, NoteType, Note, FocusStatus } from '../types'
@@ -107,7 +106,6 @@ export function FocusPanel({
   useFriendHeuristic(members, selfUserId)
 
   const displayMembers = useMemo(() => buildDisplayMembers(members), [members])
-  const memberNames = useMemo(() => displayMembers.map(m => m.displayName), [displayMembers])
   const headlineName = useHeadlineRotation(displayMembers)
 
   const pickWelcomeName = () => headlineName
@@ -121,7 +119,7 @@ export function FocusPanel({
   ]
 
   return (
-    <div className="panel">
+    <div className={`panel ${activeTab === 'focus' ? 'panel--transparent' : ''}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-serif text-xl font-semibold text-[var(--text-primary)]">
@@ -150,28 +148,19 @@ export function FocusPanel({
         ))}
       </div>
 
-      {/* ── 集中 Tab — 空気だけ ── */}
+      {/* ── 集中 Tab — 空気だけ（背景は全画面Canvas） ── */}
       {activeTab === 'focus' && (
-        <div className="quantum-city-wrap quantum-city-wrap--hero">
-          <QuantumCityCanvas
-            memberCount={displayMembers.length}
-            memberNames={memberNames}
-          />
-          <div className="quantum-city-content quantum-city-content--hero">
-            <WelcomeSection pickWelcomeName={pickWelcomeName} />
+        <div className="py-8 flex flex-col items-center gap-6 min-h-[360px]">
+          <WelcomeSection pickWelcomeName={pickWelcomeName} />
 
-            <div className="flex-1" />
+          <div className="flex-1" />
 
-            {/* Join Quietly — small, bottom */}
-            <div className="flex justify-center pb-4">
-              <button
-                className="px-5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.07] transition-colors cursor-pointer backdrop-blur-sm"
-                onClick={isRunning ? onPause : onStart}
-              >
-                {ja.actions.joinQuietly}
-              </button>
-            </div>
-          </div>
+          <button
+            className="px-5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.07] transition-colors cursor-pointer backdrop-blur-sm"
+            onClick={isRunning ? onPause : onStart}
+          >
+            {ja.actions.joinQuietly}
+          </button>
         </div>
       )}
 
