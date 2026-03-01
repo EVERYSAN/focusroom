@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { PostForm } from './PostForm'
 import { IdeaCard } from './IdeaCard'
 import { StatsPanel } from './StatsPanel'
@@ -8,6 +8,35 @@ import { ja } from '../lib/i18n'
 import type { Room, PresenceMember, Stats, NoteType, Note, FocusStatus } from '../types'
 
 type Tab = 'focus' | 'ideas' | 'today' | 'tools'
+
+/* ── Ghost (display-only pseudo users) ── */
+
+type DisplayMember = PresenceMember & { __ghost?: boolean }
+
+const MIN_DISPLAY = 10
+const MAX_DISPLAY = 12
+
+// Stable ghost pool — generated once, never changes between renders
+const GHOST_POOL: DisplayMember[] = Array.from({ length: MAX_DISPLAY }, (_, i) => {
+  const hex = (i + 10).toString(16).toUpperCase().padStart(2, '0')
+  return {
+    userId: `ghost-${hex}`,
+    displayName: `Guest #${hex}${String.fromCharCode(65 + (i % 26))}${i}`,
+    focusStatus: 'focusing' as FocusStatus,
+    joinedAt: new Date(Date.now() - (i + 1) * 3 * 60_000).toISOString(), // staggered
+    __ghost: true,
+  }
+})
+
+function buildDisplayMembers(members: PresenceMember[]): DisplayMember[] {
+  const real: DisplayMember[] = members.slice(0, MAX_DISPLAY)
+  const target = Math.min(MAX_DISPLAY, Math.max(MIN_DISPLAY, real.length))
+  const need = Math.max(0, target - real.length)
+  if (need === 0) return real
+  return [...real, ...GHOST_POOL.slice(0, need)]
+}
+
+/* ── Helpers ── */
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)
@@ -31,6 +60,28 @@ const STATUS_LABEL: Record<FocusStatus, string> = {
   idle: ja.memberStatus.idle,
 }
 
+/* ── Headline rotation (12s cycle over displayMembers) ── */
+
+function useHeadlineRotation(displayMembers: DisplayMember[]) {
+  const [index, setIndex] = useState(0)
+  const membersRef = useRef(displayMembers)
+  membersRef.current = displayMembers
+
+  useEffect(() => {
+    if (membersRef.current.length === 0) return
+    setIndex(0)
+    const id = setInterval(() => {
+      setIndex(prev => (prev + 1) % (membersRef.current.length || 1))
+    }, 12_000)
+    return () => clearInterval(id)
+  }, [displayMembers.length])
+
+  if (displayMembers.length === 0) return null
+  return displayMembers[index % displayMembers.length]?.displayName ?? null
+}
+
+/* ── Component ── */
+
 interface Props {
   room: Room | undefined
   members: PresenceMember[]
@@ -52,7 +103,14 @@ export function FocusPanel({
 }: Props) {
   const roomName = room?.name ?? 'Room'
   const [activeTab, setActiveTab] = useState<Tab>('focus')
-  const { pickWelcomeName } = useFriendHeuristic(members, selfUserId)
+  // Friend heuristic still runs (tracks seen users in localStorage) but
+  // the headline now rotates over displayMembers (including ghosts).
+  useFriendHeuristic(members, selfUserId)
+
+  const displayMembers = useMemo(() => buildDisplayMembers(members), [members])
+  const headlineName = useHeadlineRotation(displayMembers)
+
+  const pickWelcomeName = () => headlineName
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'focus', label: ja.tabs.focus },
@@ -98,30 +156,27 @@ export function FocusPanel({
 
           {/* User Grid — Visual Centerpiece */}
           <div className="py-6">
-            {members.length === 0 ? (
-              <p className="text-sm text-[var(--text-muted)] py-4 text-center">
-                {ja.focusPanel.waitingForOthers}
-              </p>
-            ) : (
-              <div className="grid grid-cols-3 gap-4 justify-items-center max-h-[280px] overflow-y-auto">
-                {members.map(m => (
-                  <div key={m.userId} className="flex flex-col items-center gap-1.5">
-                    <div className="relative">
-                      <div className="w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-lg font-semibold text-[var(--text-secondary)]">
-                        {getInitials(m.displayName)}
-                      </div>
-                      <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--bg-panel)] ${STATUS_DOT[m.focusStatus]}`} />
+            <div className="grid grid-cols-3 gap-4 justify-items-center max-h-[320px] overflow-y-auto">
+              {displayMembers.map(m => (
+                <div
+                  key={m.userId}
+                  className={`flex flex-col items-center gap-1.5 ${m.__ghost ? 'ghost-member' : ''}`}
+                >
+                  <div className="relative">
+                    <div className="w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-lg font-semibold text-[var(--text-secondary)]">
+                      {getInitials(m.displayName)}
                     </div>
-                    <span className="text-xs text-[var(--text-primary)] font-medium truncate max-w-[80px] text-center">
-                      {m.displayName}
-                    </span>
-                    <span className="text-[10px] text-[var(--text-muted)]">
-                      {STATUS_LABEL[m.focusStatus]}
-                    </span>
+                    <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--bg-panel)] ${STATUS_DOT[m.focusStatus]}`} />
                   </div>
-                ))}
-              </div>
-            )}
+                  <span className="text-xs text-[var(--text-primary)] font-medium truncate max-w-[80px] text-center">
+                    {m.displayName}
+                  </span>
+                  <span className="text-[10px] text-[var(--text-muted)]">
+                    {STATUS_LABEL[m.focusStatus]}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Join Quietly Button */}
