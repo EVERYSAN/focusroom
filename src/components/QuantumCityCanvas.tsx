@@ -155,8 +155,11 @@ export function QuantumCityCanvas({ memberCount, spotlight }: Props) {
       const { w, h } = sizeRef.current
       if (w === 0 || h === 0) { rafRef.current = requestAnimationFrame(draw); return }
 
-      // Trail: dim previous frame
-      ctx.fillStyle = 'rgba(15, 17, 21, 0.12)'
+      // ── Full clear every frame (no residual trails) ──
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.globalAlpha = 1
+      ctx.clearRect(0, 0, w, h)
+      ctx.fillStyle = '#0f1115'
       ctx.fillRect(0, 0, w, h)
 
       const particles = particlesRef.current
@@ -189,11 +192,11 @@ export function QuantumCityCanvas({ memberCount, spotlight }: Props) {
 
         // Determine draw params
         let r = p.r
-        let blur = p.r * 4
+        let blur = p.r * 2.5
         let alpha = p.alpha
         if (isSpot) {
           r += 1.5
-          blur += 6
+          blur += 4
           alpha = clamp(alpha + 0.15, 0, 1)
         }
 
