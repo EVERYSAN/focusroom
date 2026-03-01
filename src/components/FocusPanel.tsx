@@ -7,7 +7,7 @@ import { useFriendHeuristic } from '../hooks/useFriendHeuristic'
 import { ja } from '../lib/i18n'
 import type { Room, PresenceMember, Stats, NoteType, Note, FocusStatus } from '../types'
 
-type Tab = 'focus' | 'people' | 'ideas' | 'today' | 'tools'
+export type Tab = 'focus' | 'people' | 'ideas' | 'today' | 'tools'
 
 /* ── Ghost (display-only pseudo users) ── */
 
@@ -94,15 +94,16 @@ interface Props {
   onPause: () => void
   onReset: () => void
   selfUserId: string
+  activeTab: Tab
+  onTabChange: (t: Tab) => void
 }
 
 export function FocusPanel({
   room, members, ideas, stats, onPost,
   elapsed, isRunning, onStart, onPause, onReset,
-  selfUserId,
+  selfUserId, activeTab, onTabChange,
 }: Props) {
   const roomName = room?.name ?? 'Room'
-  const [activeTab, setActiveTab] = useState<Tab>('focus')
   useFriendHeuristic(members, selfUserId)
 
   const displayMembers = useMemo(() => buildDisplayMembers(members), [members])
@@ -140,7 +141,7 @@ export function FocusPanel({
         {tabs.map(t => (
           <button
             key={t.key}
-            onClick={() => setActiveTab(t.key)}
+            onClick={() => onTabChange(t.key)}
             className={`filter-tab ${activeTab === t.key ? 'filter-tab--active' : ''}`}
           >
             {t.label}
