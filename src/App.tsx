@@ -42,6 +42,7 @@ function App() {
           room={currentRoom}
           members={members}
           ideas={recentIdeas}
+          notes={visibleNotes}
           stats={stats}
           onPost={addNote}
           elapsed={elapsed}

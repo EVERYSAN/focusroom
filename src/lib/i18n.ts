@@ -88,4 +88,10 @@ export const ja = {
     break: '休憩中',
     idle: '待機中',
   },
+
+  spotlight: {
+    focusing: (name: string) => `${name}さんが集中しています`,
+    nowLabel: (label: string) => `いま：${label}`,
+    nowDefault: 'いま：作業中',
+  },
 } as const

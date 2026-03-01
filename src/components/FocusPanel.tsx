@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { PostForm } from './PostForm'
 import { IdeaCard } from './IdeaCard'
 import { StatsPanel } from './StatsPanel'
@@ -80,12 +80,77 @@ function useHeadlineRotation(displayMembers: DisplayMember[]) {
   return displayMembers[index % displayMembers.length]?.displayName ?? null
 }
 
+/* ── Quantum Spotlight (12-16s rotation, pick 1 member) ── */
+
+const SPOTLIGHT_MIN = 12_000
+const SPOTLIGHT_MAX = 16_000
+
+const NOTE_TYPE_LABEL: Record<NoteType, string> = {
+  start: '作業開始',
+  progress: '作業中',
+  done: '完了',
+  idea: 'ひらめき',
+}
+
+function useSpotlight(displayMembers: DisplayMember[], notes: Note[]) {
+  const [spotlightIndex, setSpotlightIndex] = useState(0)
+  // 0 = invisible, 1 = visible — drives CSS opacity transition
+  const [phase, setPhase] = useState<'in' | 'out'>('in')
+  const membersRef = useRef(displayMembers)
+  const notesRef = useRef(notes)
+  membersRef.current = displayMembers
+  notesRef.current = notes
+
+  const advance = useCallback(() => {
+    // fade-out first, then switch after 600ms, then fade-in
+    setPhase('out')
+    setTimeout(() => {
+      setSpotlightIndex(prev => {
+        const len = membersRef.current.length
+        if (len === 0) return 0
+        return (prev + 1) % len
+      })
+      setPhase('in')
+    }, 600)
+  }, [])
+
+  useEffect(() => {
+    if (displayMembers.length === 0) return
+    const randomInterval = () =>
+      SPOTLIGHT_MIN + Math.random() * (SPOTLIGHT_MAX - SPOTLIGHT_MIN)
+    let timer: ReturnType<typeof setTimeout>
+    const schedule = () => {
+      timer = setTimeout(() => {
+        advance()
+        schedule()
+      }, randomInterval())
+    }
+    schedule()
+    return () => clearTimeout(timer)
+  }, [displayMembers.length, advance])
+
+  const member = displayMembers[spotlightIndex % (displayMembers.length || 1)] ?? null
+
+  // Find latest note by this member for label
+  const latestNote = useMemo(() => {
+    if (!member) return null
+    return notes.find(n => n.user_id === member.userId) ?? null
+  }, [member, notes])
+
+  const label = latestNote
+    ? ja.spotlight.nowLabel(NOTE_TYPE_LABEL[latestNote.type])
+    : ja.spotlight.nowDefault
+
+  return { spotlightIndex, member, label, phase }
+}
+
 /* ── Component ── */
 
 interface Props {
   room: Room | undefined
   members: PresenceMember[]
   ideas: Note[]
+  notes: Note[]
   stats: Stats
   onPost: (type: NoteType, text: string) => Promise<string | null>
   elapsed: number
@@ -97,7 +162,7 @@ interface Props {
 }
 
 export function FocusPanel({
-  room, members, ideas, stats, onPost,
+  room, members, ideas, notes, stats, onPost,
   elapsed, isRunning, onStart, onPause, onReset,
   selfUserId,
 }: Props) {
@@ -109,6 +174,7 @@ export function FocusPanel({
 
   const displayMembers = useMemo(() => buildDisplayMembers(members), [members])
   const headlineName = useHeadlineRotation(displayMembers)
+  const spotlight = useSpotlight(displayMembers, notes)
 
   const pickWelcomeName = () => headlineName
 
@@ -157,29 +223,44 @@ export function FocusPanel({
           {/* User Grid — Visual Centerpiece */}
           <div className="py-6">
             <div className="grid grid-cols-3 gap-4 justify-items-center max-h-[320px] overflow-y-auto">
-              {displayMembers.map((m, i) => (
-                <div
-                  key={m.userId}
-                  className={`flex flex-col items-center gap-1.5 memberDot ${m.__ghost ? 'ghost' : ''}`}
-                  style={{
-                    '--breathe': `${5.5 + (i % 5) * 0.25}s`,
-                    '--phase': `-${(i * 1.7) % 6}s`,
-                  } as React.CSSProperties}
-                >
-                  <div className="relative">
-                    <div className="w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-lg font-semibold text-[var(--text-secondary)]">
-                      {getInitials(m.displayName)}
+              {displayMembers.map((m, i) => {
+                const isSpot = i === spotlight.spotlightIndex
+                return (
+                  <div
+                    key={m.userId}
+                    className={`relative flex flex-col items-center gap-1.5 memberDot ${m.__ghost ? 'ghost' : ''} ${isSpot ? 'spotlight-member' : ''}`}
+                    style={{
+                      '--breathe': `${5.5 + (i % 5) * 0.25}s`,
+                      '--phase': `-${(i * 1.7) % 6}s`,
+                    } as React.CSSProperties}
+                  >
+                    <div className="relative">
+                      <div className={`w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-lg font-semibold ${isSpot ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
+                        {getInitials(m.displayName)}
+                      </div>
+                      <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--bg-panel)] ${STATUS_DOT[m.focusStatus]}`} />
                     </div>
-                    <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--bg-panel)] ${STATUS_DOT[m.focusStatus]}`} />
+                    <span className="text-xs text-[var(--text-primary)] font-medium truncate max-w-[80px] text-center">
+                      {m.displayName}
+                    </span>
+                    <span className="text-[10px] text-[var(--text-muted)]">
+                      {STATUS_LABEL[m.focusStatus]}
+                    </span>
+
+                    {/* Spotlight Caption — absolute, pointer-events:none */}
+                    {isSpot && spotlight.member && (
+                      <div className={`spotlight-caption ${spotlight.phase === 'in' ? 'spotlight-caption--visible' : ''}`}>
+                        <div className="spotlight-caption__line1">
+                          {ja.spotlight.focusing(spotlight.member.displayName)}
+                        </div>
+                        <div className="spotlight-caption__line2">
+                          {spotlight.label}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <span className="text-xs text-[var(--text-primary)] font-medium truncate max-w-[80px] text-center">
-                    {m.displayName}
-                  </span>
-                  <span className="text-[10px] text-[var(--text-muted)]">
-                    {STATUS_LABEL[m.focusStatus]}
-                  </span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
