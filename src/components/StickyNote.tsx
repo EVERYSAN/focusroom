@@ -4,10 +4,10 @@ import { relativeTime } from '../lib/time'
 import { ja } from '../lib/i18n'
 
 const TYPE_TAG_STYLES: Record<string, { color: string; label: string }> = {
-  start: { color: 'bg-blue-50 text-blue-700', label: ja.categories.start },
-  progress: { color: 'bg-amber-50 text-amber-700', label: ja.categories.progress },
-  done: { color: 'bg-green-50 text-green-700', label: ja.categories.done },
-  idea: { color: 'bg-purple-50 text-purple-700', label: ja.categories.idea },
+  start: { color: 'bg-blue-950 text-blue-300', label: ja.categories.start },
+  progress: { color: 'bg-amber-950 text-amber-300', label: ja.categories.progress },
+  done: { color: 'bg-green-950 text-green-300', label: ja.categories.done },
+  idea: { color: 'bg-purple-950 text-purple-300', label: ja.categories.idea },
 }
 
 interface Props {
@@ -39,9 +39,9 @@ export function StickyNote({ note, onMouseEnter, onMouseLeave }: Props) {
         <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${tag.color}`}>
           {tag.label}
         </span>
-        <span className="text-[10px] text-[#b0a090]">{relativeTime(note.created_at)}</span>
+        <span className="text-[10px] text-[var(--text-muted)]">{relativeTime(note.created_at)}</span>
       </div>
-      <p className="text-sm text-[#4a3a2a] leading-relaxed">{note.text}</p>
+      <p className="text-sm text-[var(--text-primary)] leading-relaxed">{note.text}</p>
     </div>
   )
 }

@@ -3,10 +3,10 @@ import type { NoteType } from '../types'
 import { ja } from '../lib/i18n'
 
 const ALL_CATEGORIES: { value: NoteType; label: string; activeColor: string }[] = [
-  { value: 'start', label: ja.categories.start, activeColor: 'bg-blue-50 text-blue-700 border-blue-200' },
-  { value: 'progress', label: ja.categories.progress, activeColor: 'bg-amber-50 text-amber-700 border-amber-200' },
-  { value: 'done', label: ja.categories.done, activeColor: 'bg-green-50 text-green-700 border-green-200' },
-  { value: 'idea', label: ja.categories.idea, activeColor: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { value: 'start', label: ja.categories.start, activeColor: 'bg-blue-950 text-blue-300 border-blue-800' },
+  { value: 'progress', label: ja.categories.progress, activeColor: 'bg-amber-950 text-amber-300 border-amber-800' },
+  { value: 'done', label: ja.categories.done, activeColor: 'bg-green-950 text-green-300 border-green-800' },
+  { value: 'idea', label: ja.categories.idea, activeColor: 'bg-purple-950 text-purple-300 border-purple-800' },
 ]
 
 interface Props {
@@ -55,7 +55,7 @@ export function PostForm({ onPost, onTypingChange, categories, placeholder }: Pr
                 text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer
                 ${type === cat.value
                   ? cat.activeColor + ' font-medium'
-                  : 'bg-[#faf8f5] text-[#8a7a6a] border-[#e8e0d8] hover:bg-[#f5f0ea]'
+                  : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-primary)] hover:bg-[var(--bg-hover)]'
                 }
               `}
             >
@@ -78,14 +78,14 @@ export function PostForm({ onPost, onTypingChange, categories, placeholder }: Pr
           onBlur={() => onTypingChange?.(false)}
           placeholder={placeholder ?? ja.postForm.defaultPlaceholder}
           maxLength={40}
-          className="flex-1 px-3 py-2 rounded-lg border border-[#e8e0d8] bg-[#faf8f5] text-sm
-                     text-[#4a3a2a] placeholder-[#b0a090] outline-none
-                     focus:border-[#c8a060] transition-colors"
+          className="flex-1 px-3 py-2 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-input)] text-sm
+                     text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none
+                     focus:border-[var(--border-focus)] transition-colors"
         />
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-[#f0ece6] text-sm text-[#6a5a4a] font-medium
-                     hover:bg-[#e8e0d8] transition-colors cursor-pointer"
+          className="px-4 py-2 rounded-lg bg-[var(--bg-surface)] text-sm text-[var(--text-secondary)] font-medium
+                     hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
           disabled={posting}
         >
           {posting ? ja.postForm.posting : ja.postForm.post}
@@ -97,7 +97,7 @@ export function PostForm({ onPost, onTypingChange, categories, placeholder }: Pr
         <span className={`text-[11px] ${error ? 'text-red-500' : 'text-transparent'}`}>
           {error || '.'}
         </span>
-        <span className={`text-[11px] ${text.length > 35 ? 'text-amber-600' : 'text-[#c8b8a8]'}`}>
+        <span className={`text-[11px] ${text.length > 35 ? 'text-amber-500' : 'text-[var(--text-muted)]'}`}>
           {text.length}/40
         </span>
       </div>
