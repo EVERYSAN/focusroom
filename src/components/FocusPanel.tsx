@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { PostForm } from './PostForm'
 import { IdeaCard } from './IdeaCard'
 import { StatsPanel } from './StatsPanel'
@@ -81,77 +81,12 @@ function useHeadlineRotation(displayMembers: DisplayMember[]) {
   return displayMembers[index % displayMembers.length]?.displayName ?? null
 }
 
-/* ── Quantum Spotlight (12-16s rotation, pick 1 member) ── */
-
-const SPOTLIGHT_MIN = 12_000
-const SPOTLIGHT_MAX = 16_000
-
-const NOTE_TYPE_LABEL: Record<NoteType, string> = {
-  start: '作業開始',
-  progress: '作業中',
-  done: '完了',
-  idea: 'ひらめき',
-}
-
-function useSpotlight(displayMembers: DisplayMember[], notes: Note[]) {
-  const [spotlightIndex, setSpotlightIndex] = useState(0)
-  // 0 = invisible, 1 = visible — drives CSS opacity transition
-  const [phase, setPhase] = useState<'in' | 'out'>('in')
-  const membersRef = useRef(displayMembers)
-  const notesRef = useRef(notes)
-  membersRef.current = displayMembers
-  notesRef.current = notes
-
-  const advance = useCallback(() => {
-    // fade-out first, then switch after 600ms, then fade-in
-    setPhase('out')
-    setTimeout(() => {
-      setSpotlightIndex(prev => {
-        const len = membersRef.current.length
-        if (len === 0) return 0
-        return (prev + 1) % len
-      })
-      setPhase('in')
-    }, 600)
-  }, [])
-
-  useEffect(() => {
-    if (displayMembers.length === 0) return
-    const randomInterval = () =>
-      SPOTLIGHT_MIN + Math.random() * (SPOTLIGHT_MAX - SPOTLIGHT_MIN)
-    let timer: ReturnType<typeof setTimeout>
-    const schedule = () => {
-      timer = setTimeout(() => {
-        advance()
-        schedule()
-      }, randomInterval())
-    }
-    schedule()
-    return () => clearTimeout(timer)
-  }, [displayMembers.length, advance])
-
-  const member = displayMembers[spotlightIndex % (displayMembers.length || 1)] ?? null
-
-  // Find latest note by this member for label
-  const latestNote = useMemo(() => {
-    if (!member) return null
-    return notes.find(n => n.user_id === member.userId) ?? null
-  }, [member, notes])
-
-  const label = latestNote
-    ? ja.spotlight.nowLabel(NOTE_TYPE_LABEL[latestNote.type])
-    : ja.spotlight.nowDefault
-
-  return { spotlightIndex, member, label, phase }
-}
-
 /* ── Component ── */
 
 interface Props {
   room: Room | undefined
   members: PresenceMember[]
   ideas: Note[]
-  notes: Note[]
   stats: Stats
   onPost: (type: NoteType, text: string) => Promise<string | null>
   elapsed: number
@@ -163,19 +98,17 @@ interface Props {
 }
 
 export function FocusPanel({
-  room, members, ideas, notes, stats, onPost,
+  room, members, ideas, stats, onPost,
   elapsed, isRunning, onStart, onPause, onReset,
   selfUserId,
 }: Props) {
   const roomName = room?.name ?? 'Room'
   const [activeTab, setActiveTab] = useState<Tab>('focus')
-  // Friend heuristic still runs (tracks seen users in localStorage) but
-  // the headline now rotates over displayMembers (including ghosts).
   useFriendHeuristic(members, selfUserId)
 
   const displayMembers = useMemo(() => buildDisplayMembers(members), [members])
+  const memberNames = useMemo(() => displayMembers.map(m => m.displayName), [displayMembers])
   const headlineName = useHeadlineRotation(displayMembers)
-  const spotlight = useSpotlight(displayMembers, notes)
 
   const pickWelcomeName = () => headlineName
 
@@ -219,21 +152,20 @@ export function FocusPanel({
 
       {/* ── 集中 Tab — 空気だけ ── */}
       {activeTab === 'focus' && (
-        <div className="quantum-city-wrap">
+        <div className="quantum-city-wrap quantum-city-wrap--hero">
           <QuantumCityCanvas
             memberCount={displayMembers.length}
-            spotlight={{
-              name: spotlight.member?.displayName,
-              label: spotlight.label,
-            }}
+            memberNames={memberNames}
           />
-          <div className="quantum-city-content">
+          <div className="quantum-city-content quantum-city-content--hero">
             <WelcomeSection pickWelcomeName={pickWelcomeName} />
 
-            {/* Join Quietly — the only action */}
-            <div className="flex justify-center py-8">
+            <div className="flex-1" />
+
+            {/* Join Quietly — small, bottom */}
+            <div className="flex justify-center pb-4">
               <button
-                className="px-6 py-2.5 rounded-xl bg-[var(--bg-surface)]/60 border border-[var(--border-primary)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors cursor-pointer backdrop-blur-sm"
+                className="px-5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.07] transition-colors cursor-pointer backdrop-blur-sm"
                 onClick={isRunning ? onPause : onStart}
               >
                 {ja.actions.joinQuietly}

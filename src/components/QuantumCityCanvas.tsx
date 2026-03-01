@@ -1,37 +1,44 @@
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, useState } from 'react'
 import { ja } from '../lib/i18n'
 
 /* ── Types ── */
 
+interface SpotlightEntry {
+  name: string
+  label: string
+  opacity: number   // 0→1 fade state
+}
+
 interface Props {
   memberCount: number
-  spotlight?: { name?: string; label?: string }
+  /** Display names for spotlight — canvas picks from these */
+  memberNames: string[]
 }
 
 interface Particle {
-  x: number          // ratio 0-1 (mapped to canvas on draw)
+  x: number          // ratio 0-1
   y: number          // ratio 0-1
   r: number          // radius px (CSS pixels)
   hue: number
   sat: number
   lit: number
   alpha: number
-  dAlpha: number     // brightness drift per frame
-  dHue: number       // hue drift per frame
-  jitterX: number    // micro-sway velocity
+  dAlpha: number
+  dHue: number
+  jitterX: number
   jitterY: number
 }
 
 /* ── Constants ── */
 
 const MIN_PARTICLES = 30
-const MAX_PARTICLES = 120
-const SPOTLIGHT_INTERVAL_MIN = 12_000
-const SPOTLIGHT_INTERVAL_MAX = 16_000
+const MAX_PARTICLES = 140
+const SPOTLIGHT_COUNT = 3
+const ROTATE_INTERVAL_MIN = 12_000
+const ROTATE_INTERVAL_MAX = 16_000
 
 /* ── Helpers ── */
 
-/** Box-Muller: returns value ~N(0,1), clamped to [-3,3] */
 function gaussRand(): number {
   let u = 0, v = 0
   while (u === 0) u = Math.random()
@@ -40,18 +47,17 @@ function gaussRand(): number {
   return Math.max(-3, Math.min(3, n))
 }
 
-/** Center-biased position: mean=0.5, spread covers ~0.1-0.9 */
 function centeredRand(): number {
   return Math.max(0.02, Math.min(0.98, 0.5 + gaussRand() * 0.18))
 }
 
 function pickHue(): number {
   const roll = Math.random()
-  if (roll < 0.05) return 280 + Math.random() * 15     // rare purple
-  if (roll < 0.10) return 120 + Math.random() * 20     // rare green
-  if (roll < 0.55) return 200 + Math.random() * 40     // blue-white (dominant)
-  if (roll < 0.80) return 20  + Math.random() * 25     // warm amber
-  return Math.random() * 360                             // near-white / wild
+  if (roll < 0.05) return 280 + Math.random() * 15
+  if (roll < 0.10) return 120 + Math.random() * 20
+  if (roll < 0.55) return 200 + Math.random() * 40
+  if (roll < 0.80) return 20  + Math.random() * 25
+  return Math.random() * 360
 }
 
 function createParticle(): Particle {
@@ -75,62 +81,102 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v))
 }
 
+/** Pick a random index not in `exclude`, from range [0, len) */
+function pickUnique(len: number, exclude: number[]): number {
+  if (len <= exclude.length) return 0
+  let idx: number
+  do { idx = Math.floor(Math.random() * len) } while (exclude.includes(idx))
+  return idx
+}
+
 /* ── Component ── */
 
-export function QuantumCityCanvas({ memberCount, spotlight }: Props) {
+export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const overlayRef = useRef<HTMLDivElement>(null)
   const particlesRef = useRef<Particle[]>([])
-  const spotlightIdxRef = useRef(0)
-  const spotlightPhaseRef = useRef<'in' | 'out'>('in')
-  const spotlightTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const rafRef = useRef(0)
   const sizeRef = useRef({ w: 0, h: 0 })
 
-  // Target particle count from memberCount
+  // 3-spotlight indices into particle array
+  const spotIndicesRef = useRef<number[]>([0, 1, 2])
+  const spotTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  // Spotlight text state (React-rendered)
+  const [spotlights, setSpotlights] = useState<SpotlightEntry[]>([])
+  const memberNamesRef = useRef(memberNames)
+  memberNamesRef.current = memberNames
+
   const targetCount = clamp(memberCount * 3, MIN_PARTICLES, MAX_PARTICLES)
 
-  /* ── Particle pool management ── */
+  /* ── Particle pool ── */
   const syncParticleCount = useCallback((target: number) => {
-    const particles = particlesRef.current
-    while (particles.length < target) {
-      particles.push(createParticle())
-    }
-    while (particles.length > target) {
-      particles.pop()
-    }
+    const p = particlesRef.current
+    while (p.length < target) p.push(createParticle())
+    while (p.length > target) p.pop()
   }, [])
 
-  /* ── Spotlight rotation ── */
-  const advanceSpotlight = useCallback(() => {
-    spotlightPhaseRef.current = 'out'
-    setTimeout(() => {
-      const len = particlesRef.current.length
-      if (len > 0) {
-        spotlightIdxRef.current = Math.floor(Math.random() * len)
+  /* ── Build spotlight text entries from current indices ── */
+  const buildSpotlightEntries = useCallback((): SpotlightEntry[] => {
+    const names = memberNamesRef.current
+    const indices = spotIndicesRef.current
+    return indices.map(idx => {
+      const name = names[idx % (names.length || 1)] ?? undefined
+      return {
+        name: name
+          ? ja.spotlight.focusing(name)
+          : ja.welcome.someoneFocusing,
+        label: ja.spotlight.nowDefault,
+        opacity: 1,
       }
-      spotlightPhaseRef.current = 'in'
-    }, 600)
+    })
   }, [])
 
-  const scheduleSpotlight = useCallback(() => {
-    const delay = SPOTLIGHT_INTERVAL_MIN +
-      Math.random() * (SPOTLIGHT_INTERVAL_MAX - SPOTLIGHT_INTERVAL_MIN)
-    spotlightTimerRef.current = setTimeout(() => {
-      advanceSpotlight()
-      scheduleSpotlight()
-    }, delay)
-  }, [advanceSpotlight])
+  /* ── Rotate 1 of 3 spotlights ── */
+  const rotateOneSpotlight = useCallback(() => {
+    const len = particlesRef.current.length
+    if (len < SPOTLIGHT_COUNT) return
+    const indices = spotIndicesRef.current
 
-  /* ── Canvas setup + animation loop ── */
+    // Pick which slot to replace (0, 1, or 2)
+    const slot = Math.floor(Math.random() * SPOTLIGHT_COUNT)
+
+    // Fade out the slot being replaced
+    setSpotlights(prev => prev.map((s, i) => i === slot ? { ...s, opacity: 0 } : s))
+
+    // After fade-out, swap index and fade in
+    setTimeout(() => {
+      const others = indices.filter((_, i) => i !== slot)
+      indices[slot] = pickUnique(len, others)
+      spotIndicesRef.current = [...indices]
+      setSpotlights(buildSpotlightEntries())
+    }, 400)
+  }, [buildSpotlightEntries])
+
+  const scheduleRotation = useCallback(() => {
+    const delay = ROTATE_INTERVAL_MIN +
+      Math.random() * (ROTATE_INTERVAL_MAX - ROTATE_INTERVAL_MIN)
+    spotTimerRef.current = setTimeout(() => {
+      rotateOneSpotlight()
+      scheduleRotation()
+    }, delay)
+  }, [rotateOneSpotlight])
+
+  /* ── Canvas setup + animation ── */
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Init particles
     syncParticleCount(targetCount)
+
+    // Init spotlight indices (unique)
+    const len = particlesRef.current.length
+    const a = pickUnique(len, [])
+    const b = pickUnique(len, [a])
+    const c = pickUnique(len, [a, b])
+    spotIndicesRef.current = [a, b, c]
+    setSpotlights(buildSpotlightEntries())
 
     // Sizing
     const resize = () => {
@@ -146,16 +192,15 @@ export function QuantumCityCanvas({ memberCount, spotlight }: Props) {
       sizeRef.current = { w, h }
     }
     resize()
-
     const ro = new ResizeObserver(resize)
     ro.observe(canvas.parentElement!)
 
-    // Animation
+    // Draw loop
     const draw = () => {
       const { w, h } = sizeRef.current
       if (w === 0 || h === 0) { rafRef.current = requestAnimationFrame(draw); return }
 
-      // ── Full clear every frame (no residual trails) ──
+      // Full clear
       ctx.globalCompositeOperation = 'source-over'
       ctx.globalAlpha = 1
       ctx.clearRect(0, 0, w, h)
@@ -163,8 +208,7 @@ export function QuantumCityCanvas({ memberCount, spotlight }: Props) {
       ctx.fillRect(0, 0, w, h)
 
       const particles = particlesRef.current
-      const spotIdx = spotlightIdxRef.current
-      const spotPhase = spotlightPhaseRef.current
+      const spotSet = new Set(spotIndicesRef.current)
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i]
@@ -173,7 +217,6 @@ export function QuantumCityCanvas({ memberCount, spotlight }: Props) {
         p.alpha += p.dAlpha
         if (p.alpha > 0.82 || p.alpha < 0.18) p.dAlpha *= -1
         p.alpha = clamp(p.alpha, 0.15, 0.85)
-
         p.hue += p.dHue
         if (p.hue > 360) p.hue -= 360
         if (p.hue < 0) p.hue += 360
@@ -188,20 +231,18 @@ export function QuantumCityCanvas({ memberCount, spotlight }: Props) {
 
         const px = p.x * w
         const py = p.y * h
-        const isSpot = i === spotIdx
+        const isSpot = spotSet.has(i)
 
-        // Determine draw params
         let r = p.r
         let blur = p.r * 2.5
         let alpha = p.alpha
         if (isSpot) {
           r += 1.5
-          blur += 4
-          alpha = clamp(alpha + 0.15, 0, 1)
+          blur += 3
+          alpha = clamp(alpha + 0.12, 0, 1)
         }
 
         const color = `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${alpha})`
-
         ctx.save()
         ctx.globalCompositeOperation = 'lighter'
         ctx.shadowBlur = blur
@@ -213,39 +254,28 @@ export function QuantumCityCanvas({ memberCount, spotlight }: Props) {
         ctx.restore()
       }
 
-      // Update spotlight overlay position
-      if (overlayRef.current && particles.length > 0) {
-        const sp = particles[spotIdx]
-        if (sp) {
-          const el = overlayRef.current
-          el.style.left = `${sp.x * w + 14}px`
-          el.style.top = `${sp.y * h - 10}px`
-          el.style.opacity = spotPhase === 'in' ? '1' : '0'
-        }
-      }
-
       rafRef.current = requestAnimationFrame(draw)
     }
     rafRef.current = requestAnimationFrame(draw)
-
-    // Start spotlight rotation
-    scheduleSpotlight()
+    scheduleRotation()
 
     return () => {
       cancelAnimationFrame(rafRef.current)
-      clearTimeout(spotlightTimerRef.current)
+      clearTimeout(spotTimerRef.current)
       ro.disconnect()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // React to memberCount changes → adjust particle pool
+  // Sync particle count on memberCount change
   useEffect(() => {
     syncParticleCount(targetCount)
   }, [targetCount, syncParticleCount])
 
-  const spotName = spotlight?.name
-  const spotLabel = spotlight?.label
+  // Keep spotlight text in sync when names change
+  useEffect(() => {
+    setSpotlights(buildSpotlightEntries())
+  }, [memberNames.length, buildSpotlightEntries])
 
   return (
     <>
@@ -259,20 +289,18 @@ export function QuantumCityCanvas({ memberCount, spotlight }: Props) {
           borderRadius: 'inherit',
         }}
       />
-      {/* Spotlight HTML overlay */}
-      <div
-        ref={overlayRef}
-        className="quantum-spotlight-overlay"
-        style={{ opacity: 0 }}
-      >
-        <div className="quantum-spotlight-overlay__line1">
-          {spotName
-            ? ja.spotlight.focusing(spotName)
-            : ja.welcome.someoneFocusing}
-        </div>
-        <div className="quantum-spotlight-overlay__line2">
-          {spotLabel ?? ja.spotlight.nowDefault}
-        </div>
+      {/* Fixed-position 3-line spotlight overlay (glass) */}
+      <div className="quantum-spotlight-panel">
+        {spotlights.map((s, i) => (
+          <div
+            key={i}
+            className="quantum-spotlight-panel__row"
+            style={{ opacity: s.opacity, transitionDelay: `${i * 80}ms` }}
+          >
+            <span className="quantum-spotlight-panel__name">{s.name}</span>
+            <span className="quantum-spotlight-panel__label">{s.label}</span>
+          </div>
+        ))}
       </div>
     </>
   )

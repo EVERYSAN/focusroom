@@ -563,30 +563,64 @@ body {
   border-radius: inherit;
 }
 
+/* Hero mode: canvas fills most of the panel */
+.quantum-city-wrap--hero {
+  min-height: min(72vh, 720px);
+  border-radius: 16px;
+}
+
 .quantum-city-content {
   position: relative;
   z-index: 1;
 }
 
-/* Spotlight HTML overlay (positioned by JS) */
-.quantum-spotlight-overlay {
+.quantum-city-content--hero {
+  display: flex;
+  flex-direction: column;
+  min-height: min(72vh, 720px);
+}
+
+/* ── Spotlight glass panel (fixed position, 3 rows) ── */
+
+.quantum-spotlight-panel {
   position: absolute;
+  bottom: 48px;
+  left: 16px;
   z-index: 2;
   pointer-events: none;
-  white-space: nowrap;
-  transition: opacity 0.6s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(15, 17, 21, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  max-width: 260px;
 }
 
-.quantum-spotlight-overlay__line1 {
+.quantum-spotlight-panel__row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+.quantum-spotlight-panel__name {
   font-size: 10px;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.quantum-spotlight-overlay__line2 {
+.quantum-spotlight-panel__label {
   font-size: 9px;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 /* ── Status Badge ── */
