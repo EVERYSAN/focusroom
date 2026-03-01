@@ -7,6 +7,7 @@ export const ja = {
 
   tabs: {
     focus: '集中',
+    people: '人',
     ideas: 'ひらめき',
     today: '今日やったこと',
     tools: 'ツール',
