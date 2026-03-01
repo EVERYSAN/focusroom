@@ -50,8 +50,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(20, 24, 32, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   height: 56px;
   display: flex;
   align-items: center;
@@ -82,12 +84,14 @@ body {
 }
 
 .app-header__icon:hover {
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ── Layout Grid ── */
 
 .layout-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 240px 1fr 300px;
   gap: 16px;
@@ -101,11 +105,11 @@ body {
 /* ── Panel ── */
 
 .panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-primary);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.2),
-    0 1px 2px rgba(0, 0, 0, 0.1);
+  background: rgba(20, 24, 32, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   border-radius: 14px;
   padding: 20px;
   height: fit-content;
@@ -134,12 +138,12 @@ body {
 }
 
 .room-list-item:hover {
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .room-list-item--active {
-  background: var(--bg-surface);
-  border-color: var(--border-primary);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Friends Online ── */
@@ -147,21 +151,21 @@ body {
 .friends-online {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .friends-online__avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
-  border: 2px solid var(--bg-panel);
+  border: 2px solid rgba(20, 24, 32, 0.6);
   margin-right: -8px;
   position: relative;
 }
@@ -175,8 +179,8 @@ body {
   gap: 8px;
   padding: 8px 12px;
   border-radius: 10px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .search-bar input {
@@ -199,7 +203,7 @@ body {
   align-items: center;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .member-row:last-child {
@@ -232,7 +236,7 @@ body {
   align-items: flex-start;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .activity-entry:last-child {
@@ -243,7 +247,7 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,7 +263,7 @@ body {
   display: flex;
   gap: 2px;
   padding: 3px;
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   margin-bottom: 16px;
 }
@@ -282,9 +286,9 @@ body {
 }
 
 .filter-tab--active {
-  background: var(--bg-panel);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Ideas Section ── */
@@ -292,7 +296,7 @@ body {
 .ideas-section {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .idea-card {
@@ -301,8 +305,8 @@ body {
   gap: 8px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   margin-bottom: 6px;
 }
 
@@ -360,7 +364,7 @@ body {
 .welcome-section {
   text-align: center;
   padding: 20px 12px 16px;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   margin-bottom: 16px;
 }
 
@@ -408,8 +412,8 @@ body {
 .focus-timer__btn {
   padding: 6px 20px;
   border-radius: 8px;
-  border: 1px solid var(--border-primary);
-  background: var(--bg-surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
   font-size: 13px;
   font-family: var(--font-sans);
@@ -418,30 +422,31 @@ body {
 }
 
 .focus-timer__btn:hover {
-  background: var(--bg-hover);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .focus-timer__btn--secondary {
   background: transparent;
-  border-color: var(--border-primary);
+  border-color: rgba(255, 255, 255, 0.06);
   color: var(--text-secondary);
 }
 
 .focus-timer__btn--secondary:hover {
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* ── Paper Card (sticky notes in feed) ── */
 
 .paper-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-primary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .paper-card:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ── Burst Badge ── */
@@ -452,39 +457,17 @@ body {
   gap: 4px;
   padding: 4px 10px;
   border-radius: 9999px;
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 500;
 }
 
-/* ── Ambient Background (深夜の自習室) ── */
+/* ── Ambient classes (legacy — canvas replaces these) ── */
 
 .ambient-bg {
   position: relative;
   min-height: 100vh;
-}
-
-.ambient-bg::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 60% 50% at 50% 38%, rgba(30, 40, 60, 0.35) 0%, transparent 70%),
-    radial-gradient(ellipse 80% 80% at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.45) 100%);
-}
-
-.ambient-bg::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  background-repeat: repeat;
 }
 
 .ambient-content {
@@ -554,39 +537,15 @@ body {
   line-height: 1.4;
 }
 
-/* ── Quantum City Lights — layout ── */
-
-.quantum-city-wrap {
-  position: relative;
-  overflow: hidden;
-  min-height: 420px;
-  border-radius: inherit;
-}
-
-/* Hero mode: canvas fills most of the panel */
-.quantum-city-wrap--hero {
-  min-height: min(72vh, 720px);
-  border-radius: 16px;
-}
-
-.quantum-city-content {
-  position: relative;
-  z-index: 1;
-}
-
-.quantum-city-content--hero {
-  display: flex;
-  flex-direction: column;
-  min-height: min(72vh, 720px);
-}
+/* (quantum-city-wrap/content classes removed — canvas is now full-screen fixed) */
 
 /* ── Spotlight glass panel (fixed position, 3 rows) ── */
 
 .quantum-spotlight-panel {
-  position: absolute;
-  bottom: 48px;
-  left: 16px;
-  z-index: 2;
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 10;
   pointer-events: none;
   display: flex;
   flex-direction: column;
