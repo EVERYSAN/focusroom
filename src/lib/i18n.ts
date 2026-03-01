@@ -9,6 +9,7 @@ export const ja = {
     focus: '集中',
     ideas: 'ひらめき',
     today: '今日やったこと',
+    tools: 'ツール',
   },
 
   focusPanel: {
@@ -33,6 +34,7 @@ export const ja = {
     startFocus: '集中を始める',
     pauseFocus: '一時停止',
     shareInsight: '💡 ひらめきを共有',
+    joinQuietly: 'そっと参加する',
   },
 
   postForm: {

@@ -29,17 +29,17 @@ export function ActivityEntryRow({ note }: { note: Note }) {
         {getInitials(note.user_id)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] text-[#4a3a2a] leading-snug">
+        <p className="text-[13px] text-[var(--text-primary)] leading-snug">
           <span className="font-medium">Guest #{note.user_id.slice(0, 4).toUpperCase()}</span>
           {' '}{label}
           {note.type !== 'idea' && (
-            <span className="text-[#8a7a6a]"> &ldquo;{note.text}&rdquo;</span>
+            <span className="text-[var(--text-secondary)]"> &ldquo;{note.text}&rdquo;</span>
           )}
           {note.type === 'idea' && (
-            <span className="text-[#8a7a6a]">: {note.text}</span>
+            <span className="text-[var(--text-secondary)]">: {note.text}</span>
           )}
         </p>
-        <span className="text-[11px] text-[#b0a090]">{relativeTime(note.created_at)}</span>
+        <span className="text-[11px] text-[var(--text-muted)]">{relativeTime(note.created_at)}</span>
       </div>
       <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${TYPE_COLORS[note.type]}`} />
     </div>

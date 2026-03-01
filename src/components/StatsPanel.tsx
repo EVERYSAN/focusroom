@@ -18,8 +18,8 @@ export function StatsPanel({ stats }: Props) {
 function StatItem({ label, value }: { label: string; value: number }) {
   return (
     <div className="text-center">
-      <div className="font-serif text-2xl font-light text-[#4a3a2a]">{value}</div>
-      <div className="text-[11px] text-[#8a7a6a] uppercase tracking-wider">{label}</div>
+      <div className="font-serif text-2xl font-light text-[var(--text-primary)]">{value}</div>
+      <div className="text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">{label}</div>
     </div>
   )
 }

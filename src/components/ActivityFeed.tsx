@@ -19,7 +19,7 @@ export function ActivityFeed({ notes, hiddenCount, ideas, onPauseFade, onResumeF
 
   return (
     <div className="panel">
-      <h2 className="font-serif text-lg font-semibold text-[#4a3a2a] mb-3">{ja.activity.title}</h2>
+      <h2 className="font-serif text-lg font-semibold text-[var(--text-primary)] mb-3">{ja.activity.title}</h2>
 
       {/* Filter tabs */}
       <div className="filter-tabs">
@@ -48,7 +48,7 @@ export function ActivityFeed({ notes, hiddenCount, ideas, onPauseFade, onResumeF
         onMouseLeave={() => notes.forEach(n => onResumeFade(n.id))}
       >
         {notes.length === 0 ? (
-          <p className="text-sm text-[#b0a090] py-4 text-center">
+          <p className="text-sm text-[var(--text-muted)] py-4 text-center">
             {ja.activity.noUpdates}
           </p>
         ) : (
@@ -61,7 +61,7 @@ export function ActivityFeed({ notes, hiddenCount, ideas, onPauseFade, onResumeF
       {/* Ideas section */}
       {ideas.length > 0 && (
         <div className="ideas-section">
-          <h3 className="text-xs text-[#8a7a6a] uppercase tracking-wider mb-2">
+          <h3 className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-2">
             {ja.activity.ideas}
           </h3>
           {ideas.map(idea => <IdeaCard key={idea.id} note={idea} />)}

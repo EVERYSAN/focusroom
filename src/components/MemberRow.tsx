@@ -21,21 +21,21 @@ function getInitials(name: string): string {
 export function MemberRow({ member }: { member: PresenceMember }) {
   return (
     <div className="member-row">
-      <div className="w-10 h-10 rounded-full bg-[#f5f0ea] flex items-center justify-center text-sm font-semibold text-[#8a7a6a] shrink-0">
+      <div className="w-10 h-10 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-sm font-semibold text-[var(--text-secondary)] shrink-0">
         {getInitials(member.displayName)}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm text-[#4a3a2a] font-semibold truncate">
+          <span className="text-sm text-[var(--text-primary)] font-semibold truncate">
             {member.displayName}
           </span>
           <span className={`status-dot ${STATUS_DOT[member.focusStatus]}`} />
         </div>
-        <span className="block text-[12px] text-[#8a7a6a]">
+        <span className="block text-[12px] text-[var(--text-secondary)]">
           {STATUS_LABEL[member.focusStatus]}
         </span>
       </div>
-      <span className="text-[11px] text-[#b0a090] shrink-0">
+      <span className="text-[11px] text-[var(--text-muted)] shrink-0">
         {relativeTime(member.joinedAt)}
       </span>
     </div>
