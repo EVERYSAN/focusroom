@@ -8,7 +8,7 @@ import { useFriendHeuristic } from '../hooks/useFriendHeuristic'
 import { ja } from '../lib/i18n'
 import type { Room, PresenceMember, Stats, NoteType, Note, FocusStatus } from '../types'
 
-type Tab = 'focus' | 'ideas' | 'today' | 'tools'
+type Tab = 'focus' | 'people' | 'ideas' | 'today' | 'tools'
 
 /* ── Ghost (display-only pseudo users) ── */
 
@@ -181,6 +181,7 @@ export function FocusPanel({
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'focus', label: ja.tabs.focus },
+    { key: 'people', label: ja.tabs.people },
     { key: 'ideas', label: ja.tabs.ideas },
     { key: 'today', label: ja.tabs.today },
     { key: 'tools', label: ja.tabs.tools },
@@ -216,10 +217,9 @@ export function FocusPanel({
         ))}
       </div>
 
-      {/* ── 集中 Tab ── */}
+      {/* ── 集中 Tab — 空気だけ ── */}
       {activeTab === 'focus' && (
         <div className="quantum-city-wrap">
-          {/* Canvas particle background */}
           <QuantumCityCanvas
             memberCount={displayMembers.length}
             spotlight={{
@@ -227,62 +227,58 @@ export function FocusPanel({
               label: spotlight.label,
             }}
           />
-
-          {/* UI layer — above particles */}
           <div className="quantum-city-content">
             <WelcomeSection pickWelcomeName={pickWelcomeName} />
 
-            {/* User Grid — Visual Centerpiece */}
-            <div className="py-6">
-              <div className="grid grid-cols-3 gap-4 justify-items-center max-h-[320px] overflow-y-auto">
-                {displayMembers.map((m, i) => {
-                  const isSpot = i === spotlight.spotlightIndex
-                  return (
-                    <div
-                      key={m.userId}
-                      className={`relative flex flex-col items-center gap-1.5 memberDot ${m.__ghost ? 'ghost' : ''} ${isSpot ? 'spotlight-member' : ''}`}
-                      style={{
-                        '--breathe': `${5.5 + (i % 5) * 0.25}s`,
-                        '--phase': `-${(i * 1.7) % 6}s`,
-                      } as React.CSSProperties}
-                    >
-                      <div className="relative">
-                        <div className={`w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-lg font-semibold ${isSpot ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
-                          {getInitials(m.displayName)}
-                        </div>
-                        <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--bg-panel)] ${STATUS_DOT[m.focusStatus]}`} />
-                      </div>
-                      <span className="text-xs text-[var(--text-primary)] font-medium truncate max-w-[80px] text-center">
-                        {m.displayName}
-                      </span>
-                      <span className="text-[10px] text-[var(--text-muted)]">
-                        {STATUS_LABEL[m.focusStatus]}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Join Quietly Button */}
-            <div className="flex justify-center mb-4">
+            {/* Join Quietly — the only action */}
+            <div className="flex justify-center py-8">
               <button
-                className="px-6 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-primary)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-[var(--bg-surface)]/60 border border-[var(--border-primary)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors cursor-pointer backdrop-blur-sm"
                 onClick={isRunning ? onPause : onStart}
               >
                 {ja.actions.joinQuietly}
               </button>
             </div>
+          </div>
+        </div>
+      )}
 
-            {/* Post form for focus updates */}
-            <div className="mt-3 w-full">
-              <PostForm onPost={onPost} categories={['start', 'progress', 'done']} placeholder={ja.postForm.focusPlaceholder} />
-            </div>
+      {/* ── 人 Tab — member grid ── */}
+      {activeTab === 'people' && (
+        <div className="py-4">
+          <div className="grid grid-cols-3 gap-4 justify-items-center max-h-[420px] overflow-y-auto">
+            {displayMembers.map((m, i) => (
+              <div
+                key={m.userId}
+                className={`flex flex-col items-center gap-1.5 memberDot ${m.__ghost ? 'ghost' : ''}`}
+                style={{
+                  '--breathe': `${5.5 + (i % 5) * 0.25}s`,
+                  '--phase': `-${(i * 1.7) % 6}s`,
+                } as React.CSSProperties}
+              >
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-full bg-[var(--bg-surface)] flex items-center justify-center text-lg font-semibold text-[var(--text-secondary)]">
+                    {getInitials(m.displayName)}
+                  </div>
+                  <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--bg-panel)] ${STATUS_DOT[m.focusStatus]}`} />
+                </div>
+                <span className="text-xs text-[var(--text-primary)] font-medium truncate max-w-[80px] text-center">
+                  {m.displayName}
+                </span>
+                <span className="text-[10px] text-[var(--text-muted)]">
+                  {STATUS_LABEL[m.focusStatus]}
+                </span>
+              </div>
+            ))}
+          </div>
 
-            {/* Stats */}
-            <div className="mt-4 flex justify-center">
-              <StatsPanel stats={stats} />
-            </div>
+          {/* Post form in people tab */}
+          <div className="mt-6 w-full">
+            <PostForm onPost={onPost} categories={['start', 'progress', 'done']} placeholder={ja.postForm.focusPlaceholder} />
+          </div>
+
+          <div className="mt-4 flex justify-center">
+            <StatsPanel stats={stats} />
           </div>
         </div>
       )}
