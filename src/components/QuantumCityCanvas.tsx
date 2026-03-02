@@ -245,40 +245,27 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
     whisperVisibleRef.current[slot] = false
   }, [])
 
-  /* ── Whisper cycle: fade 2 out, then fade 2 new in ── */
-  const cycleWhispers = useCallback(() => {
-    const visible = whisperVisibleRef.current
-    // Find 2 visible slots to fade out (or any if fewer visible)
-    const visibleSlots = [0, 1, 2, 3].filter(i => visible[i])
-    const hiddenSlots = [0, 1, 2, 3].filter(i => !visible[i])
+  /* ── Rotate 1 whisper at a time (calm, one-by-one) ── */
+  const rotateOneWhisper = useCallback(() => {
+    const slot = Math.floor(Math.random() * WHISPER_SLOTS)
 
-    // Fade out up to 2
-    const toHide = visibleSlots.slice(0, 2)
-    toHide.forEach(s => hideWhisper(s))
+    // Fade out this slot
+    hideWhisper(slot)
 
-    // After fade-out completes (900ms), show 2 new
+    // After fade-out (900ms), show with new content
     setTimeout(() => {
-      // Slots that are now hidden (including ones we just hid)
-      const nowHidden = [0, 1, 2, 3].filter(i => !whisperVisibleRef.current[i])
-      const toShow = nowHidden.slice(0, 2)
-      toShow.forEach(s => showWhisper(s))
+      showWhisper(slot)
     }, 1000)
-
-    // Also show any currently hidden slots that weren't part of the swap
-    // (for initial ramp-up to reach 2 visible)
-    if (visibleSlots.length === 0 && hiddenSlots.length > 0) {
-      hiddenSlots.slice(0, 2).forEach(s => showWhisper(s))
-    }
   }, [showWhisper, hideWhisper])
 
   const scheduleWhisperCycle = useCallback(() => {
     const delay = WHISPER_INTERVAL_MIN +
       Math.random() * (WHISPER_INTERVAL_MAX - WHISPER_INTERVAL_MIN)
     whisperTimerRef.current = setTimeout(() => {
-      cycleWhispers()
+      rotateOneWhisper()
       scheduleWhisperCycle()
     }, delay)
-  }, [cycleWhispers])
+  }, [rotateOneWhisper])
 
   /* ── Canvas setup + animation ── */
   useEffect(() => {
@@ -297,11 +284,11 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
     const d = pickUnique(len, [a, b, c])
     whisperIndicesRef.current = [a, b, c, d]
 
-    // Show first 2 whispers after a brief delay
-    setTimeout(() => {
-      showWhisper(0)
-      showWhisper(1)
-    }, 800)
+    // Stagger whisper appearances one by one
+    setTimeout(() => showWhisper(0), 800)
+    setTimeout(() => showWhisper(1), 4_000)
+    setTimeout(() => showWhisper(2), 9_000)
+    setTimeout(() => showWhisper(3), 15_000)
 
     // Sizing — full viewport
     const resize = () => {
@@ -399,12 +386,12 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
         const py = p.y * h
 
         // Center the halo on the particle (offset up slightly)
-        let lx = px - 90  // half of 180px width
-        let ly = py - 50
+        let lx = px - 120  // half of 240px width
+        let ly = py - 55
 
         // Edge clamping
-        lx = Math.max(4, Math.min(w - 184, lx))
-        ly = Math.max(4, Math.min(h - 70, ly))
+        lx = Math.max(4, Math.min(w - 244, lx))
+        ly = Math.max(4, Math.min(h - 80, ly))
 
         labelTargets.push({ x: lx, y: ly })
       }
