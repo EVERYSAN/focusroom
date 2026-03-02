@@ -121,35 +121,38 @@ export function FocusPanel({
 
   return (
     <div className={`panel ${activeTab === 'focus' ? 'panel--transparent' : ''}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-serif text-xl font-semibold text-[var(--text-primary)]">
-          {ja.focusPanel.inRoom(roomName)}
-        </h2>
-        <div className="flex items-center gap-2">
-          <button className="text-xs text-[var(--text-secondary)] border border-[var(--border-primary)] rounded-lg px-3 py-1.5 hover:bg-[var(--bg-surface)] transition-colors cursor-pointer">
-            {ja.focusPanel.filter}
-          </button>
-          <button className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer text-lg">
-            •••
-          </button>
-        </div>
-      </div>
+      {/* Header + Tabs — hidden in focus mode */}
+      {activeTab !== 'focus' && (
+        <>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-serif text-xl font-semibold text-[var(--text-primary)]">
+              {ja.focusPanel.inRoom(roomName)}
+            </h2>
+            <div className="flex items-center gap-2">
+              <button className="text-xs text-[var(--text-secondary)] border border-[var(--border-primary)] rounded-lg px-3 py-1.5 hover:bg-[var(--bg-surface)] transition-colors cursor-pointer">
+                {ja.focusPanel.filter}
+              </button>
+              <button className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer text-lg">
+                •••
+              </button>
+            </div>
+          </div>
 
-      {/* Tab Switcher */}
-      <div className="filter-tabs mb-4">
-        {tabs.map(t => (
-          <button
-            key={t.key}
-            onClick={() => onTabChange(t.key)}
-            className={`filter-tab ${activeTab === t.key ? 'filter-tab--active' : ''}`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+          <div className="filter-tabs mb-4">
+            {tabs.map(t => (
+              <button
+                key={t.key}
+                onClick={() => onTabChange(t.key)}
+                className={`filter-tab ${activeTab === t.key ? 'filter-tab--active' : ''}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
-      {/* ── 集中 Tab — 空気だけ（背景は全画面Canvas） ── */}
+      {/* ── 集中 Tab — 量子 + ウェルカム + 参加ボタンだけ ── */}
       {activeTab === 'focus' && (
         <div className="py-8 flex flex-col items-center gap-6 min-h-[360px]">
           <WelcomeSection pickWelcomeName={pickWelcomeName} />

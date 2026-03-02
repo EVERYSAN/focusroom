@@ -41,7 +41,7 @@ function App() {
         recentPosts={visibleNotes}
       />
 
-      <AppHeader />
+      {!isFocusMode && <AppHeader />}
       <div className={`layout-grid ${isFocusMode ? 'layout-grid--focus' : ''}`}>
         {!isFocusMode && (
           <PresencePanel
