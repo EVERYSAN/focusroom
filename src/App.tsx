@@ -38,6 +38,7 @@ function App() {
       <QuantumCityCanvas
         memberCount={members.length > 0 ? members.length : 10}
         memberNames={memberNames.length > 0 ? memberNames : ['Guest']}
+        recentPosts={visibleNotes}
       />
 
       <AppHeader />

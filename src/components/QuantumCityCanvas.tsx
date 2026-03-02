@@ -6,13 +6,37 @@ import { ja } from '../lib/i18n'
 interface SpotlightEntry {
   name: string
   label: string
+  postText: string
   opacity: number
+}
+
+interface RecentPost {
+  user_id: string
+  text: string
+  type: string
 }
 
 interface Props {
   memberCount: number
   memberNames: string[]
+  recentPosts?: RecentPost[]
 }
+
+/* ── Default focus posts — 淡々とした作業の気配 ── */
+const DEFAULT_FOCUS_POSTS = [
+  'とりあえず5分だけ手を動かす',
+  '資料を開いて見出しだけ作る',
+  '画面を閉じて、目の前の作業に戻る',
+  '今はただ、机に向かう',
+  'メモを1行だけ書く',
+  'コードを読むだけでもOK',
+  '最初の一歩だけやる',
+  'タブを1つ閉じる',
+  '手を止めずに、まず書く',
+  '考えすぎない。手を動かす',
+  '深呼吸して、次の1行',
+  'ひとまず開く。それだけでいい',
+]
 
 interface Particle {
   x: number          // ratio 0-1
@@ -117,7 +141,7 @@ function pickUnique(len: number, exclude: number[]): number {
 
 /* ── Component ── */
 
-export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
+export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
   const rafRef = useRef(0)
@@ -139,6 +163,9 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
   const memberNamesRef = useRef(memberNames)
   memberNamesRef.current = memberNames
 
+  const recentPostsRef = useRef(recentPosts)
+  recentPostsRef.current = recentPosts
+
   const targetCount = clamp(memberCount * 6, MIN_PARTICLES, MAX_PARTICLES)
 
   /* ── Particle pool ── */
@@ -148,17 +175,32 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
     while (p.length > target) p.pop()
   }, [])
 
-  /* ── Build spotlight text entries ── */
+  /* ── Build spotlight text entries (with post text) ── */
   const buildSpotlightEntries = useCallback((): SpotlightEntry[] => {
     const names = memberNamesRef.current
     const indices = spotIndicesRef.current
+    const posts = recentPostsRef.current ?? []
+
     return indices.map(idx => {
       const name = names[idx % (names.length || 1)] ?? undefined
+
+      // Try to find a real post for this spotlight slot
+      let postText: string
+      const focusPosts = posts.filter(p => p.type !== 'idea')
+      if (focusPosts.length > 0) {
+        // Pick a post deterministically based on slot index (stable per rotation)
+        postText = focusPosts[idx % focusPosts.length].text
+      } else {
+        // Fallback: deterministic pick from defaults
+        postText = DEFAULT_FOCUS_POSTS[idx % DEFAULT_FOCUS_POSTS.length]
+      }
+
       return {
         name: name
           ? ja.spotlight.focusing(name)
           : ja.welcome.someoneFocusing,
         label: ja.spotlight.nowDefault,
+        postText,
         opacity: 1,
       }
     })
@@ -172,8 +214,10 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
       if (!el) return
       const nameEl = el.querySelector('.spot-label__name')
       const subEl = el.querySelector('.spot-label__sub')
+      const postEl = el.querySelector('.spot-label__post')
       if (nameEl) nameEl.textContent = entry.name
       if (subEl) subEl.textContent = entry.label
+      if (postEl) postEl.textContent = entry.postText
       el.style.opacity = String(entry.opacity)
     })
   }, [])
@@ -327,24 +371,24 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
         let lx = px + 14
         let ly = py - 14
 
-        // Edge detection: flip if near edges (label ~160px wide, ~36px tall)
-        if (lx + 160 > w) lx = px - 174
+        // Edge detection: flip if near edges (label ~170px wide, ~56px tall)
+        if (lx + 170 > w) lx = px - 184
         if (ly < 4) ly = py + 14
-        if (ly + 36 > h) ly = py - 50
-        lx = Math.max(4, Math.min(w - 164, lx))
-        ly = Math.max(4, Math.min(h - 40, ly))
+        if (ly + 56 > h) ly = py - 70
+        lx = Math.max(4, Math.min(w - 174, lx))
+        ly = Math.max(4, Math.min(h - 60, ly))
 
         labelTargets.push({ x: lx, y: ly })
       }
 
-      // Overlap avoidance: push apart if within 36px vertically
+      // Overlap avoidance: push apart if within 56px vertically
       for (let i = 0; i < labelTargets.length; i++) {
         for (let j = i + 1; j < labelTargets.length; j++) {
           const dy = Math.abs(labelTargets[j].y - labelTargets[i].y)
           const dx = Math.abs(labelTargets[j].x - labelTargets[i].x)
-          if (dy < 36 && dx < 160) {
-            labelTargets[i].y -= 12
-            labelTargets[j].y += 12
+          if (dy < 56 && dx < 170) {
+            labelTargets[i].y -= 18
+            labelTargets[j].y += 18
           }
         }
       }
@@ -386,10 +430,10 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
     syncParticleCount(targetCount)
   }, [targetCount, syncParticleCount])
 
-  // Keep spotlight text in sync when names change
+  // Keep spotlight text in sync when names or posts change
   useEffect(() => {
     writeLabelText(buildSpotlightEntries())
-  }, [memberNames.length, buildSpotlightEntries, writeLabelText])
+  }, [memberNames.length, recentPosts?.length, buildSpotlightEntries, writeLabelText])
 
   return (
     <>
@@ -412,6 +456,7 @@ export function QuantumCityCanvas({ memberCount, memberNames }: Props) {
         >
           <span className="spot-label__name" />
           <span className="spot-label__sub" />
+          <span className="spot-label__post" />
         </div>
       ))}
     </>
