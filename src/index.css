@@ -523,7 +523,7 @@ body {
 
 /* ── Floating Spotlight Labels (positioned by rAF, follow particles) ── */
 
-/* ── Whisper: halo of light + text ── */
+/* ── Whisper: halo of light + text (no card, no box) ── */
 
 .whisper {
   position: fixed;
@@ -536,15 +536,25 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 48px 32px 32px;
-  width: 240px;
-  background: radial-gradient(
-    ellipse 120px 100px at center 40%,
-    rgba(140, 160, 255, 0.12) 0%,
-    rgba(130, 150, 240, 0.05) 40%,
-    rgba(0, 0, 0, 0.00) 100%
-  );
+  overflow: visible;
   opacity: 0;
+}
+
+/* Halo — radial glow behind text, no rectangular shape */
+.whisper::before {
+  content: "";
+  position: absolute;
+  inset: -40px -56px;
+  background: radial-gradient(
+    circle,
+    rgba(140, 160, 255, 0.14) 0%,
+    rgba(140, 160, 255, 0.06) 32%,
+    rgba(0, 0, 0, 0) 62%
+  );
+  filter: blur(2px);
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .whisper--in {
@@ -558,22 +568,20 @@ body {
 }
 
 .whisper__name {
-  font-size: 11px;
-  color: #cfd3dc;
-  line-height: 1.4;
-  text-shadow: 0 0 10px rgba(140, 160, 255, 0.25);
+  font-size: 12px;
+  font-weight: 500;
+  color: #d6dbe6;
+  line-height: 1.2;
+  text-shadow: 0 0 10px rgba(140, 160, 255, 0.18);
 }
 
 .whisper__post {
   font-size: 11px;
-  color: #b8beca;
-  line-height: 1.4;
+  color: #aab1bf;
+  line-height: 1.25;
   margin-top: 2px;
-  text-shadow: 0 0 8px rgba(140, 160, 255, 0.18);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  opacity: 0.9;
+  text-shadow: 0 0 10px rgba(140, 160, 255, 0.18);
 }
 
 /* ── Status Badge ── */

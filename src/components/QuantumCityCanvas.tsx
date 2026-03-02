@@ -385,13 +385,13 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
         const px = p.x * w
         const py = p.y * h
 
-        // Center the halo on the particle (offset up slightly)
-        let lx = px - 120  // half of 240px width
-        let ly = py - 55
+        // Position text near particle (offset up-left slightly)
+        let lx = px - 60
+        let ly = py - 36
 
-        // Edge clamping
-        lx = Math.max(4, Math.min(w - 244, lx))
-        ly = Math.max(4, Math.min(h - 80, ly))
+        // Edge clamping with 16px viewport padding
+        lx = Math.max(16, Math.min(w - 160, lx))
+        ly = Math.max(16, Math.min(h - 50, ly))
 
         labelTargets.push({ x: lx, y: ly })
       }
