@@ -3,10 +3,9 @@ import { ja } from '../lib/i18n'
 
 /* ── Types ── */
 
-interface SpotlightEntry {
+interface WhisperEntry {
   name: string
   postText: string
-  opacity: number
 }
 
 interface RecentPost {
@@ -63,10 +62,10 @@ interface Particle {
 
 const MIN_PARTICLES = 60
 const MAX_PARTICLES = 220
-const SPOTLIGHT_COUNT = 3
-const ROTATE_INTERVAL_MIN = 12_000
-const ROTATE_INTERVAL_MAX = 16_000
-const LABEL_SMOOTH = 0.12    // EMA smoothing for label positions
+const WHISPER_SLOTS = 4
+const WHISPER_INTERVAL_MIN = 18_000
+const WHISPER_INTERVAL_MAX = 28_000
+const LABEL_SMOOTH = 0.10    // EMA smoothing for whisper positions
 
 /* ── Helpers ── */
 
@@ -154,17 +153,17 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
   const rafRef = useRef(0)
   const sizeRef = useRef({ w: 0, h: 0 })
 
-  // 3-spotlight indices into particle array
-  const spotIndicesRef = useRef<number[]>([0, 1, 2])
-  const spotTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  // Whisper state: which particle each slot tracks, and whether it's visible
+  const whisperIndicesRef = useRef<number[]>([0, 1, 2, 3])
+  const whisperVisibleRef = useRef<boolean[]>([false, false, false, false])
+  const whisperTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const whisperSeqRef = useRef(0) // tracks which ghost/post to use next
 
-  // Spotlight: DOM-ref driven (no React state, 60fps)
-  const spotTextRef = useRef<SpotlightEntry[]>([])
-  const labelRefs = useRef<(HTMLDivElement | null)[]>([null, null, null])
+  // Whisper: DOM-ref driven (no React state, 60fps)
+  const labelRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null])
   const prevPosRef = useRef([
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
+    { x: 0, y: 0 }, { x: 0, y: 0 },
+    { x: 0, y: 0 }, { x: 0, y: 0 },
   ])
 
   const memberNamesRef = useRef(memberNames)
@@ -182,79 +181,104 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
     while (p.length > target) p.pop()
   }, [])
 
-  /* ── Build spotlight text entries (2-line: name + post) ── */
-  const buildSpotlightEntries = useCallback((): SpotlightEntry[] => {
+  /* ── Build a single whisper entry ── */
+  const buildWhisperEntry = useCallback((seq: number): WhisperEntry => {
     const names = memberNamesRef.current
-    const indices = spotIndicesRef.current
     const posts = recentPostsRef.current ?? []
 
-    return indices.map(idx => {
-      // Use real name, or pick a ghost name for "人がいる感"
-      const realName = names[idx % (names.length || 1)]
-      const isGuest = !realName || realName === 'Guest' || realName.startsWith('Guest #')
-      const displayName = isGuest
-        ? GHOST_NAMES[idx % GHOST_NAMES.length]
-        : realName
+    // Pick name
+    const realName = names[seq % (names.length || 1)]
+    const isGuest = !realName || realName === 'Guest' || realName.startsWith('Guest #')
+    const displayName = isGuest
+      ? GHOST_NAMES[seq % GHOST_NAMES.length]
+      : realName
 
-      // Line 2: real post if available, else default
-      let postText: string
-      const focusPosts = posts.filter(p => p.type !== 'idea')
-      if (focusPosts.length > 0) {
-        postText = focusPosts[idx % focusPosts.length].text
-      } else {
-        postText = DEFAULT_FOCUS_POSTS[idx % DEFAULT_FOCUS_POSTS.length]
-      }
+    // Pick post
+    const focusPosts = posts.filter(p => p.type !== 'idea')
+    const postText = focusPosts.length > 0
+      ? focusPosts[seq % focusPosts.length].text
+      : DEFAULT_FOCUS_POSTS[seq % DEFAULT_FOCUS_POSTS.length]
 
-      return {
-        name: ja.spotlight.focusing(displayName),
-        postText,
-        opacity: 1,
-      }
-    })
+    return {
+      name: ja.spotlight.focusing(displayName),
+      postText,
+    }
   }, [])
 
-  /** Write spotlight text directly to DOM (bypass React) */
-  const writeLabelText = useCallback((entries: SpotlightEntry[]) => {
-    spotTextRef.current = entries
-    entries.forEach((entry, i) => {
-      const el = labelRefs.current[i]
-      if (!el) return
-      const nameEl = el.querySelector('.spot-label__name')
-      const postEl = el.querySelector('.spot-label__post')
-      if (nameEl) nameEl.textContent = entry.name
-      if (postEl) postEl.textContent = entry.postText
-      el.style.opacity = String(entry.opacity)
-    })
-  }, [])
-
-  /* ── Rotate 1 of 3 spotlights ── */
-  const rotateOneSpotlight = useCallback(() => {
-    const len = particlesRef.current.length
-    if (len < SPOTLIGHT_COUNT) return
-    const indices = spotIndicesRef.current
-    const slot = Math.floor(Math.random() * SPOTLIGHT_COUNT)
-
-    // Fade out
+  /** Write whisper text + trigger fade class on a single slot */
+  const showWhisper = useCallback((slot: number) => {
     const el = labelRefs.current[slot]
-    if (el) el.style.opacity = '0'
+    if (!el) return
 
-    // After fade-out, swap index and fade in
+    const seq = whisperSeqRef.current++
+    const entry = buildWhisperEntry(seq)
+
+    // Assign to a new particle
+    const len = particlesRef.current.length
+    const others = whisperIndicesRef.current.filter((_, i) => i !== slot)
+    whisperIndicesRef.current[slot] = pickUnique(len, others)
+
+    // Reset position for smooth start
+    const p = particlesRef.current[whisperIndicesRef.current[slot]]
+    if (p) {
+      const { w, h } = sizeRef.current
+      prevPosRef.current[slot] = { x: p.x * w, y: p.y * h - 20 }
+    }
+
+    // Write text
+    const nameEl = el.querySelector('.whisper__name')
+    const postEl = el.querySelector('.whisper__post')
+    if (nameEl) nameEl.textContent = entry.name
+    if (postEl) postEl.textContent = entry.postText
+
+    // Fade in
+    el.classList.remove('whisper--out')
+    el.classList.add('whisper--in')
+    whisperVisibleRef.current[slot] = true
+  }, [buildWhisperEntry])
+
+  const hideWhisper = useCallback((slot: number) => {
+    const el = labelRefs.current[slot]
+    if (!el) return
+    el.classList.remove('whisper--in')
+    el.classList.add('whisper--out')
+    whisperVisibleRef.current[slot] = false
+  }, [])
+
+  /* ── Whisper cycle: fade 2 out, then fade 2 new in ── */
+  const cycleWhispers = useCallback(() => {
+    const visible = whisperVisibleRef.current
+    // Find 2 visible slots to fade out (or any if fewer visible)
+    const visibleSlots = [0, 1, 2, 3].filter(i => visible[i])
+    const hiddenSlots = [0, 1, 2, 3].filter(i => !visible[i])
+
+    // Fade out up to 2
+    const toHide = visibleSlots.slice(0, 2)
+    toHide.forEach(s => hideWhisper(s))
+
+    // After fade-out completes (900ms), show 2 new
     setTimeout(() => {
-      const others = indices.filter((_, i) => i !== slot)
-      indices[slot] = pickUnique(len, others)
-      spotIndicesRef.current = [...indices]
-      writeLabelText(buildSpotlightEntries())
-    }, 400)
-  }, [buildSpotlightEntries, writeLabelText])
+      // Slots that are now hidden (including ones we just hid)
+      const nowHidden = [0, 1, 2, 3].filter(i => !whisperVisibleRef.current[i])
+      const toShow = nowHidden.slice(0, 2)
+      toShow.forEach(s => showWhisper(s))
+    }, 1000)
 
-  const scheduleRotation = useCallback(() => {
-    const delay = ROTATE_INTERVAL_MIN +
-      Math.random() * (ROTATE_INTERVAL_MAX - ROTATE_INTERVAL_MIN)
-    spotTimerRef.current = setTimeout(() => {
-      rotateOneSpotlight()
-      scheduleRotation()
+    // Also show any currently hidden slots that weren't part of the swap
+    // (for initial ramp-up to reach 2 visible)
+    if (visibleSlots.length === 0 && hiddenSlots.length > 0) {
+      hiddenSlots.slice(0, 2).forEach(s => showWhisper(s))
+    }
+  }, [showWhisper, hideWhisper])
+
+  const scheduleWhisperCycle = useCallback(() => {
+    const delay = WHISPER_INTERVAL_MIN +
+      Math.random() * (WHISPER_INTERVAL_MAX - WHISPER_INTERVAL_MIN)
+    whisperTimerRef.current = setTimeout(() => {
+      cycleWhispers()
+      scheduleWhisperCycle()
     }, delay)
-  }, [rotateOneSpotlight])
+  }, [cycleWhispers])
 
   /* ── Canvas setup + animation ── */
   useEffect(() => {
@@ -265,17 +289,19 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
 
     syncParticleCount(targetCount)
 
-    // Init spotlight indices (unique)
+    // Init whisper indices (unique)
     const len = particlesRef.current.length
     const a = pickUnique(len, [])
     const b = pickUnique(len, [a])
     const c = pickUnique(len, [a, b])
-    spotIndicesRef.current = [a, b, c]
+    const d = pickUnique(len, [a, b, c])
+    whisperIndicesRef.current = [a, b, c, d]
 
-    // Write initial text after refs are ready
-    requestAnimationFrame(() => {
-      writeLabelText(buildSpotlightEntries())
-    })
+    // Show first 2 whispers after a brief delay
+    setTimeout(() => {
+      showWhisper(0)
+      showWhisper(1)
+    }, 800)
 
     // Sizing — full viewport
     const resize = () => {
@@ -305,7 +331,7 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
       ctx.fillRect(0, 0, w, h)
 
       const particles = particlesRef.current
-      const spotSet = new Set(spotIndicesRef.current)
+      const whisperSet = new Set(whisperIndicesRef.current)
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i]
@@ -328,7 +354,7 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
 
         const px = p.x * w
         const py = p.y * h
-        const isSpot = spotSet.has(i)
+        const isWhisper = whisperSet.has(i)
 
         let r = p.r
         // shadowBlur scales with particle size tier
@@ -342,10 +368,10 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
         }
         let alpha = p.alpha
 
-        if (isSpot) {
-          r += 1.5
-          blur += 3
-          alpha = clamp(alpha + 0.12, 0, 1)
+        if (isWhisper) {
+          r += 1.2
+          blur += 2
+          alpha = clamp(alpha + 0.08, 0, 1)
         }
 
         const color = `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${alpha})`
@@ -360,47 +386,44 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
         ctx.restore()
       }
 
-      /* ── Position spotlight labels (direct DOM, no React) ── */
-      const spotIndices = spotIndicesRef.current
+      /* ── Position whisper labels (direct DOM, no React) ── */
+      const indices = whisperIndicesRef.current
       const labelTargets: { x: number; y: number }[] = []
 
-      for (let s = 0; s < SPOTLIGHT_COUNT; s++) {
-        const idx = spotIndices[s]
+      for (let s = 0; s < WHISPER_SLOTS; s++) {
+        const idx = indices[s]
         const p = particles[idx]
         if (!p) { labelTargets.push({ x: 0, y: 0 }); continue }
 
         const px = p.x * w
         const py = p.y * h
 
-        // Default: offset right-up from particle
-        let lx = px + 14
-        let ly = py - 14
+        // Center the halo on the particle (offset up slightly)
+        let lx = px - 90  // half of 180px width
+        let ly = py - 50
 
-        // Edge detection: flip if near edges (label ~180px wide, ~42px tall)
-        if (lx + 180 > w) lx = px - 194
-        if (ly < 4) ly = py + 14
-        if (ly + 42 > h) ly = py - 56
+        // Edge clamping
         lx = Math.max(4, Math.min(w - 184, lx))
-        ly = Math.max(4, Math.min(h - 46, ly))
+        ly = Math.max(4, Math.min(h - 70, ly))
 
         labelTargets.push({ x: lx, y: ly })
       }
 
-      // Overlap avoidance: push apart if within 44px vertically
+      // Overlap avoidance: push apart if within 60px vertically
       for (let i = 0; i < labelTargets.length; i++) {
         for (let j = i + 1; j < labelTargets.length; j++) {
           const dy = Math.abs(labelTargets[j].y - labelTargets[i].y)
           const dx = Math.abs(labelTargets[j].x - labelTargets[i].x)
-          if (dy < 44 && dx < 180) {
-            labelTargets[i].y -= 14
-            labelTargets[j].y += 14
+          if (dy < 60 && dx < 160) {
+            labelTargets[i].y -= 20
+            labelTargets[j].y += 20
           }
         }
       }
 
       // Smooth (EMA) and write transform to DOM
       const prev = prevPosRef.current
-      for (let s = 0; s < SPOTLIGHT_COUNT; s++) {
+      for (let s = 0; s < WHISPER_SLOTS; s++) {
         const el = labelRefs.current[s]
         if (!el || !labelTargets[s]) continue
         const t = labelTargets[s]
@@ -420,11 +443,11 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
       rafRef.current = requestAnimationFrame(draw)
     }
     rafRef.current = requestAnimationFrame(draw)
-    scheduleRotation()
+    scheduleWhisperCycle()
 
     return () => {
       cancelAnimationFrame(rafRef.current)
-      clearTimeout(spotTimerRef.current)
+      clearTimeout(whisperTimerRef.current)
       window.removeEventListener('resize', resize)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -434,11 +457,6 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
   useEffect(() => {
     syncParticleCount(targetCount)
   }, [targetCount, syncParticleCount])
-
-  // Keep spotlight text in sync when names or posts change
-  useEffect(() => {
-    writeLabelText(buildSpotlightEntries())
-  }, [memberNames.length, recentPosts?.length, buildSpotlightEntries, writeLabelText])
 
   return (
     <>
@@ -451,16 +469,16 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
           pointerEvents: 'none',
         }}
       />
-      {/* 3 floating spotlight labels — positioned by rAF, not React */}
-      {[0, 1, 2].map(i => (
+      {/* 4 whisper slots — halo + text, positioned by rAF */}
+      {[0, 1, 2, 3].map(i => (
         <div
           key={i}
           ref={el => { labelRefs.current[i] = el }}
-          className="spot-label"
-          style={{ transform: 'translate(0px, 0px)', opacity: 0 }}
+          className="whisper"
+          style={{ transform: 'translate(0px, 0px)' }}
         >
-          <span className="spot-label__name" />
-          <span className="spot-label__post" />
+          <span className="whisper__name" />
+          <span className="whisper__post" />
         </div>
       ))}
     </>
