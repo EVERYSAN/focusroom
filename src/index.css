@@ -552,17 +552,11 @@ body {
   text-overflow: ellipsis;
 }
 
-.spot-label__sub {
-  font-size: 9px;
-  color: var(--text-muted);
-  line-height: 1.3;
-}
-
 .spot-label__post {
   font-size: 9px;
   color: #aab1bf;
   line-height: 1.4;
-  margin-top: 2px;
+  margin-top: 1px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
