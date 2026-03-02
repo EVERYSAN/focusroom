@@ -5,7 +5,6 @@ import { ja } from '../lib/i18n'
 
 interface SpotlightEntry {
   name: string
-  label: string
   postText: string
   opacity: number
 }
@@ -36,6 +35,14 @@ const DEFAULT_FOCUS_POSTS = [
   '考えすぎない。手を動かす',
   '深呼吸して、次の1行',
   'ひとまず開く。それだけでいい',
+]
+
+/* ── Realistic display names (used when no real members) ── */
+const GHOST_NAMES = [
+  'yuki_design', 'ken_codes', 'mio_writes',
+  'sora_dev', 'haru_pm', 'riku_data',
+  'aoi_uiux', 'tomo_eng', 'nana_create',
+  'ren_build', 'saki_plan', 'kota_ship',
 ]
 
 interface Particle {
@@ -175,31 +182,31 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
     while (p.length > target) p.pop()
   }, [])
 
-  /* ── Build spotlight text entries (with post text) ── */
+  /* ── Build spotlight text entries (2-line: name + post) ── */
   const buildSpotlightEntries = useCallback((): SpotlightEntry[] => {
     const names = memberNamesRef.current
     const indices = spotIndicesRef.current
     const posts = recentPostsRef.current ?? []
 
     return indices.map(idx => {
-      const name = names[idx % (names.length || 1)] ?? undefined
+      // Use real name, or pick a ghost name for "人がいる感"
+      const realName = names[idx % (names.length || 1)]
+      const isGuest = !realName || realName === 'Guest' || realName.startsWith('Guest #')
+      const displayName = isGuest
+        ? GHOST_NAMES[idx % GHOST_NAMES.length]
+        : realName
 
-      // Try to find a real post for this spotlight slot
+      // Line 2: real post if available, else default
       let postText: string
       const focusPosts = posts.filter(p => p.type !== 'idea')
       if (focusPosts.length > 0) {
-        // Pick a post deterministically based on slot index (stable per rotation)
         postText = focusPosts[idx % focusPosts.length].text
       } else {
-        // Fallback: deterministic pick from defaults
         postText = DEFAULT_FOCUS_POSTS[idx % DEFAULT_FOCUS_POSTS.length]
       }
 
       return {
-        name: name
-          ? ja.spotlight.focusing(name)
-          : ja.welcome.someoneFocusing,
-        label: ja.spotlight.nowDefault,
+        name: ja.spotlight.focusing(displayName),
         postText,
         opacity: 1,
       }
@@ -213,10 +220,8 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
       const el = labelRefs.current[i]
       if (!el) return
       const nameEl = el.querySelector('.spot-label__name')
-      const subEl = el.querySelector('.spot-label__sub')
       const postEl = el.querySelector('.spot-label__post')
       if (nameEl) nameEl.textContent = entry.name
-      if (subEl) subEl.textContent = entry.label
       if (postEl) postEl.textContent = entry.postText
       el.style.opacity = String(entry.opacity)
     })
@@ -371,24 +376,24 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
         let lx = px + 14
         let ly = py - 14
 
-        // Edge detection: flip if near edges (label ~170px wide, ~56px tall)
-        if (lx + 170 > w) lx = px - 184
+        // Edge detection: flip if near edges (label ~180px wide, ~42px tall)
+        if (lx + 180 > w) lx = px - 194
         if (ly < 4) ly = py + 14
-        if (ly + 56 > h) ly = py - 70
-        lx = Math.max(4, Math.min(w - 174, lx))
-        ly = Math.max(4, Math.min(h - 60, ly))
+        if (ly + 42 > h) ly = py - 56
+        lx = Math.max(4, Math.min(w - 184, lx))
+        ly = Math.max(4, Math.min(h - 46, ly))
 
         labelTargets.push({ x: lx, y: ly })
       }
 
-      // Overlap avoidance: push apart if within 56px vertically
+      // Overlap avoidance: push apart if within 44px vertically
       for (let i = 0; i < labelTargets.length; i++) {
         for (let j = i + 1; j < labelTargets.length; j++) {
           const dy = Math.abs(labelTargets[j].y - labelTargets[i].y)
           const dx = Math.abs(labelTargets[j].x - labelTargets[i].x)
-          if (dy < 56 && dx < 170) {
-            labelTargets[i].y -= 18
-            labelTargets[j].y += 18
+          if (dy < 44 && dx < 180) {
+            labelTargets[i].y -= 14
+            labelTargets[j].y += 14
           }
         }
       }
@@ -455,7 +460,6 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
           style={{ transform: 'translate(0px, 0px)', opacity: 0 }}
         >
           <span className="spot-label__name" />
-          <span className="spot-label__sub" />
           <span className="spot-label__post" />
         </div>
       ))}
