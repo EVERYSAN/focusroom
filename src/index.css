@@ -8,7 +8,7 @@
 /* ── Dark Theme Variables ── */
 
 :root {
-  --bg-page: #0f1115;
+  --bg-page: #1a1510;
   --bg-panel: #1a1f2b;
   --bg-surface: #222730;
   --bg-hover: #252a35;
@@ -592,6 +592,35 @@ body {
 .fragment--out {
   transition: opacity 1.5s ease;
   opacity: 0;
+}
+
+/* ── Desk Fragment: fixed-slot ambient text ── */
+
+.desk-fragment {
+  z-index: 2;
+  pointer-events: none;
+  font-size: 11px;
+  font-family: var(--font-serif);
+  color: #8b7355;
+  line-height: 1.2;
+  opacity: 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  animation: desk-fragment-breathe 8s ease-in-out infinite;
+}
+
+.desk-fragment--in {
+  transition: opacity 1.5s ease;
+  opacity: 0.45;
+}
+
+.desk-fragment--out {
+  transition: opacity 1.5s ease;
+  opacity: 0;
+}
+
+@keyframes desk-fragment-breathe {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(2px); }
 }
 
 /* ── Status Badge ── */

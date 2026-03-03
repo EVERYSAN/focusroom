@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { AppHeader } from './components/AppHeader'
 import { PresencePanel } from './components/PresencePanel'
 import { FocusPanel, type Tab } from './components/FocusPanel'
 import { ActivityFeed } from './components/ActivityFeed'
-import { QuantumCityCanvas } from './components/QuantumCityCanvas'
+import { DeskScene } from './components/DeskScene'
+import { DeskOverlay } from './components/DeskOverlay'
 import { useNotes } from './hooks/useNotes'
 import { useRooms } from './hooks/useRooms'
 import { usePresence } from './hooks/usePresence'
@@ -25,7 +26,6 @@ function App() {
   const { elapsed, isRunning, start, pause, reset } = useFocusTimer(userId.current)
 
   const currentRoom = rooms.find(r => r.id === currentRoomId)
-  const memberNames = useMemo(() => members.map(m => m.displayName), [members])
 
   // Sync focus status with Presence when timer starts/stops
   useEffect(() => {
@@ -34,12 +34,14 @@ function App() {
 
   return (
     <>
-      {/* Quantum nightscape — full-screen fixed background */}
-      <QuantumCityCanvas
+      {/* Desk scene — full-screen 3D background */}
+      <DeskScene
         memberCount={members.length > 0 ? members.length : 10}
-        memberNames={memberNames.length > 0 ? memberNames : ['Guest']}
-        recentPosts={visibleNotes}
         isHome={isFocusMode}
+      />
+      <DeskOverlay
+        isHome={isFocusMode}
+        recentPosts={visibleNotes}
       />
 
       {!isFocusMode && <AppHeader />}
