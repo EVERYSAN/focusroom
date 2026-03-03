@@ -39,6 +39,7 @@ function App() {
         memberCount={members.length > 0 ? members.length : 10}
         memberNames={memberNames.length > 0 ? memberNames : ['Guest']}
         recentPosts={visibleNotes}
+        isHome={isFocusMode}
       />
 
       {!isFocusMode && <AppHeader />}

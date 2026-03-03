@@ -584,6 +584,33 @@ body {
   text-shadow: 0 0 10px rgba(140, 160, 255, 0.18);
 }
 
+/* ── Fragment: anonymous text shards (home only) ── */
+
+.fragment {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 8;
+  pointer-events: none;
+  will-change: transform, opacity;
+  font-size: 11px;
+  color: #8b92a0;
+  line-height: 1.2;
+  text-shadow: 0 0 8px rgba(140, 160, 255, 0.10);
+  opacity: 0;
+  overflow: visible;
+}
+
+.fragment--in {
+  transition: opacity 1.2s ease;
+  opacity: 0.5;
+}
+
+.fragment--out {
+  transition: opacity 1.5s ease;
+  opacity: 0;
+}
+
 /* ── Status Badge ── */
 
 .status-dot {

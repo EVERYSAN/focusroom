@@ -18,6 +18,7 @@ interface Props {
   memberCount: number
   memberNames: string[]
   recentPosts?: RecentPost[]
+  isHome?: boolean          // true = pre-join landing (show fragments, hide whispers)
 }
 
 /* ── Default focus posts — 淡々とした作業の気配 ── */
@@ -35,6 +36,41 @@ const DEFAULT_FOCUS_POSTS = [
   '深呼吸して、次の1行',
   'ひとまず開く。それだけでいい',
 ]
+
+/* ── Home fragments — already-fragmented ambient text ── */
+const DEFAULT_HOME_FRAGMENTS = [
+  '5分だけ',
+  'まず書く',
+  '手を動かす',
+  '机に向かう',
+  '深呼吸',
+  '1行だけ',
+  'タブを閉じる',
+  '開くだけでいい',
+  '考えすぎない',
+  '次の1行',
+  'メモを1行',
+  '一歩だけ',
+]
+
+/** Truncate a post into an anonymous fragment (max 18 chars, strip subject) */
+function fragmentize(text: string): string {
+  let t = text.trim()
+  // Strip leading subject + particle (は/が/を/も/の + optional comma/space)
+  t = t.replace(/^[^\u3000-\u9FFF]*?[はがをもの][、,\s]?/u, '')
+  if (t.length === 0) t = text.trim()
+  // Cut at first punctuation within 18 chars
+  const cut = t.slice(0, 18)
+  const puncIdx = cut.search(/[。、！？!?,]/)
+  if (puncIdx > 0) return cut.slice(0, puncIdx)
+  return cut
+}
+
+const FRAG_SLOTS = 3
+const FRAG_FADE_MIN = 8_000
+const FRAG_FADE_MAX = 14_000
+const FRAG_SPAWN_MIN = 10_000
+const FRAG_SPAWN_MAX = 20_000
 
 /* ── Realistic display names (used when no real members) ── */
 const GHOST_NAMES = [
@@ -147,7 +183,7 @@ function pickUnique(len: number, exclude: number[]): number {
 
 /* ── Component ── */
 
-export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Props) {
+export function QuantumCityCanvas({ memberCount, memberNames, recentPosts, isHome = true }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
   const rafRef = useRef(0)
@@ -165,6 +201,17 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
     { x: 0, y: 0 }, { x: 0, y: 0 },
     { x: 0, y: 0 }, { x: 0, y: 0 },
   ])
+
+  // Fragment state (home-only): 3 slots, each tracking a particle
+  const fragRefs = useRef<(HTMLDivElement | null)[]>([null, null, null])
+  const fragIndicesRef = useRef<number[]>([0, 1, 2])
+  const fragPrevPosRef = useRef([{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }])
+  const fragTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const fragSpawnRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const fragSeqRef = useRef(0)
+
+  const isHomeRef = useRef(isHome)
+  isHomeRef.current = isHome
 
   const memberNamesRef = useRef(memberNames)
   memberNamesRef.current = memberNames
@@ -266,6 +313,90 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
       scheduleWhisperCycle()
     }, delay)
   }, [rotateOneWhisper])
+
+  /* ── Fragment system (home only) ── */
+
+  const pickFragmentText = useCallback((): string => {
+    const posts = recentPostsRef.current ?? []
+    const focus = posts.filter(p => p.type !== 'idea')
+    const seq = fragSeqRef.current++
+    if (focus.length > 0) {
+      const raw = focus[seq % focus.length].text
+      return fragmentize(raw)
+    }
+    return DEFAULT_HOME_FRAGMENTS[seq % DEFAULT_HOME_FRAGMENTS.length]
+  }, [])
+
+  const showFragment = useCallback((slot: number) => {
+    const el = fragRefs.current[slot]
+    if (!el || !isHomeRef.current) return
+
+    const text = pickFragmentText()
+    el.textContent = text
+
+    // Assign to a random particle (avoid whisper particles)
+    const len = particlesRef.current.length
+    const exclude = [...whisperIndicesRef.current, ...fragIndicesRef.current.filter((_, i) => i !== slot)]
+    fragIndicesRef.current[slot] = pickUnique(len, exclude)
+
+    // Reset position
+    const p = particlesRef.current[fragIndicesRef.current[slot]]
+    if (p) {
+      const { w, h } = sizeRef.current
+      fragPrevPosRef.current[slot] = { x: p.x * w, y: p.y * h - 10 }
+    }
+
+    // Fade in
+    el.classList.remove('fragment--out')
+    el.classList.add('fragment--in')
+
+    // Schedule auto-fade-out
+    const fadeDelay = FRAG_FADE_MIN + Math.random() * (FRAG_FADE_MAX - FRAG_FADE_MIN)
+    fragTimersRef.current[slot] = setTimeout(() => {
+      el.classList.remove('fragment--in')
+      el.classList.add('fragment--out')
+    }, fadeDelay)
+  }, [pickFragmentText])
+
+  const hideAllFragments = useCallback(() => {
+    for (let i = 0; i < FRAG_SLOTS; i++) {
+      const el = fragRefs.current[i]
+      if (el) {
+        el.classList.remove('fragment--in')
+        el.classList.add('fragment--out')
+      }
+    }
+    fragTimersRef.current.forEach(t => clearTimeout(t))
+    fragTimersRef.current = []
+    clearTimeout(fragSpawnRef.current)
+  }, [])
+
+  const scheduleFragSpawn = useCallback(() => {
+    const delay = FRAG_SPAWN_MIN + Math.random() * (FRAG_SPAWN_MAX - FRAG_SPAWN_MIN)
+    fragSpawnRef.current = setTimeout(() => {
+      if (!isHomeRef.current) return
+      const slot = Math.floor(Math.random() * FRAG_SLOTS)
+      showFragment(slot)
+      scheduleFragSpawn()
+    }, delay)
+  }, [showFragment])
+
+  // React to isHome changes: clear fragments on join, start on return
+  useEffect(() => {
+    if (isHome) {
+      // Stagger initial fragments
+      setTimeout(() => showFragment(0), 1_500)
+      setTimeout(() => showFragment(1), 6_000)
+      setTimeout(() => showFragment(2), 12_000)
+      scheduleFragSpawn()
+    } else {
+      hideAllFragments()
+    }
+    return () => {
+      hideAllFragments()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHome])
 
   /* ── Canvas setup + animation ── */
   useEffect(() => {
@@ -427,6 +558,32 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
         el.style.transform = `translate(${Math.round(prev[s].x)}px, ${Math.round(prev[s].y)}px)`
       }
 
+      /* ── Position fragment labels (home only) ── */
+      const fIndices = fragIndicesRef.current
+      const fPrev = fragPrevPosRef.current
+      for (let s = 0; s < FRAG_SLOTS; s++) {
+        const el = fragRefs.current[s]
+        if (!el) continue
+        const idx = fIndices[s]
+        const p = particles[idx]
+        if (!p) continue
+
+        const px = p.x * w
+        const py = p.y * h
+        let lx = px - 40
+        let ly = py - 16
+        lx = Math.max(16, Math.min(w - 120, lx))
+        ly = Math.max(16, Math.min(h - 30, ly))
+
+        if (fPrev[s].x === 0 && fPrev[s].y === 0) {
+          fPrev[s].x = lx; fPrev[s].y = ly
+        } else {
+          fPrev[s].x += (lx - fPrev[s].x) * LABEL_SMOOTH
+          fPrev[s].y += (ly - fPrev[s].y) * LABEL_SMOOTH
+        }
+        el.style.transform = `translate(${Math.round(fPrev[s].x)}px, ${Math.round(fPrev[s].y)}px)`
+      }
+
       rafRef.current = requestAnimationFrame(draw)
     }
     rafRef.current = requestAnimationFrame(draw)
@@ -467,6 +624,15 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts }: Pro
           <span className="whisper__name" />
           <span className="whisper__post" />
         </div>
+      ))}
+      {/* 3 fragment slots — anonymous text shards, home only */}
+      {[0, 1, 2].map(i => (
+        <div
+          key={`frag-${i}`}
+          ref={el => { fragRefs.current[i] = el }}
+          className="fragment"
+          style={{ transform: 'translate(0px, 0px)' }}
+        />
       ))}
     </>
   )
