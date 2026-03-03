@@ -92,6 +92,7 @@ interface Particle {
   dHue: number
   jitterX: number
   jitterY: number
+  cloudMul: number   // stable cloud radius multiplier (3–6)
 }
 
 /* ── Constants ── */
@@ -167,6 +168,7 @@ function createParticle(): Particle {
     dHue: (Math.random() - 0.5) * 0.1,
     jitterX: (Math.random() - 0.5) * 0.00015 * jitterScale,
     jitterY: (Math.random() - 0.5) * 0.00015 * jitterScale,
+    cloudMul: 3 + Math.random() * 3,   // stable 3–6x multiplier
   }
 }
 
@@ -474,32 +476,38 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts, isHom
         const py = p.y * h
         const isWhisper = whisperSet.has(i)
 
-        let r = p.r
-        // shadowBlur scales with particle size tier
-        let blur: number
-        if (p.r < 2.2) {
-          blur = p.r * 1.5          // micro: subtle
-        } else if (p.r < 4.5) {
-          blur = p.r * 2.5          // normal
-        } else {
-          blur = p.r * 3.5          // large accent: dramatic
-        }
+        let coreR = p.r
         let alpha = p.alpha
 
         if (isWhisper) {
-          r += 1.2
-          blur += 2
+          coreR += 1.2
           alpha = clamp(alpha + 0.08, 0, 1)
         }
 
-        const color = `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${alpha})`
+        // Layer 1: Probability cloud (large, dim, diffuse)
+        const cloudR = coreR * p.cloudMul
+        const cloudAlpha = 0.08 + (alpha - 0.15) * 0.06  // 0.08–0.14 range
+        const cloudColor = `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${cloudAlpha})`
         ctx.save()
         ctx.globalCompositeOperation = 'lighter'
-        ctx.shadowBlur = blur
-        ctx.shadowColor = color
-        ctx.fillStyle = color
+        ctx.shadowBlur = coreR * 6
+        ctx.shadowColor = cloudColor
+        ctx.fillStyle = cloudColor
         ctx.beginPath()
-        ctx.arc(px, py, r, 0, Math.PI * 2)
+        ctx.arc(px, py, cloudR, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+
+        // Layer 2: Core (small, bright, sharp)
+        const coreAlpha = clamp(alpha * 1.1, 0, 0.9)
+        const coreColor = `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${coreAlpha})`
+        ctx.save()
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.shadowBlur = coreR * 2
+        ctx.shadowColor = coreColor
+        ctx.fillStyle = coreColor
+        ctx.beginPath()
+        ctx.arc(px, py, coreR, 0, Math.PI * 2)
         ctx.fill()
         ctx.restore()
       }
