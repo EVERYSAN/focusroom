@@ -523,7 +523,7 @@ body {
 
 /* ── Floating Spotlight Labels (positioned by rAF, follow particles) ── */
 
-/* ── Whisper: halo of light + text (no card, no box) ── */
+/* ── Whisper: text only, no background ── */
 
 .whisper {
   position: fixed;
@@ -534,27 +534,10 @@ body {
   will-change: transform, opacity;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  white-space: nowrap;
   overflow: visible;
   opacity: 0;
-}
-
-/* Halo — radial glow behind text, no rectangular shape */
-.whisper::before {
-  content: "";
-  position: absolute;
-  inset: -40px -56px;
-  background: radial-gradient(
-    circle,
-    rgba(140, 160, 255, 0.14) 0%,
-    rgba(140, 160, 255, 0.06) 32%,
-    rgba(0, 0, 0, 0) 62%
-  );
-  filter: blur(2px);
-  border-radius: 999px;
-  pointer-events: none;
-  z-index: -1;
 }
 
 .whisper--in {
@@ -568,20 +551,20 @@ body {
 }
 
 .whisper__name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  color: #d6dbe6;
-  line-height: 1.2;
-  text-shadow: 0 0 10px rgba(140, 160, 255, 0.18);
+  color: #cfd3dc;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(140, 160, 255, 0.15);
 }
 
 .whisper__post {
   font-size: 11px;
-  color: #aab1bf;
-  line-height: 1.25;
+  color: #a0a7b4;
+  line-height: 1;
   margin-top: 2px;
-  opacity: 0.9;
-  text-shadow: 0 0 10px rgba(140, 160, 255, 0.18);
+  opacity: 0.85;
+  text-shadow: 0 0 8px rgba(140, 160, 255, 0.12);
 }
 
 /* ── Fragment: anonymous text shards (home only) ── */

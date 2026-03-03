@@ -476,38 +476,31 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts, isHom
         const py = p.y * h
         const isWhisper = whisperSet.has(i)
 
-        let coreR = p.r
+        let r = p.r
+        let blur: number
+        if (p.r < 2.2) {
+          blur = p.r * 1.5
+        } else if (p.r < 4.5) {
+          blur = p.r * 2.5
+        } else {
+          blur = p.r * 3.5
+        }
         let alpha = p.alpha
 
         if (isWhisper) {
-          coreR += 1.2
+          r += 1.2
+          blur += 2
           alpha = clamp(alpha + 0.08, 0, 1)
         }
 
-        // Layer 1: Probability cloud (large, dim, diffuse)
-        const cloudR = coreR * p.cloudMul
-        const cloudAlpha = 0.08 + (alpha - 0.15) * 0.06  // 0.08–0.14 range
-        const cloudColor = `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${cloudAlpha})`
+        const color = `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${alpha})`
         ctx.save()
         ctx.globalCompositeOperation = 'lighter'
-        ctx.shadowBlur = coreR * 6
-        ctx.shadowColor = cloudColor
-        ctx.fillStyle = cloudColor
+        ctx.shadowBlur = blur
+        ctx.shadowColor = color
+        ctx.fillStyle = color
         ctx.beginPath()
-        ctx.arc(px, py, cloudR, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
-
-        // Layer 2: Core (small, bright, sharp)
-        const coreAlpha = clamp(alpha * 1.1, 0, 0.9)
-        const coreColor = `hsla(${p.hue}, ${p.sat}%, ${p.lit}%, ${coreAlpha})`
-        ctx.save()
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.shadowBlur = coreR * 2
-        ctx.shadowColor = coreColor
-        ctx.fillStyle = coreColor
-        ctx.beginPath()
-        ctx.arc(px, py, coreR, 0, Math.PI * 2)
+        ctx.arc(px, py, r, 0, Math.PI * 2)
         ctx.fill()
         ctx.restore()
       }
@@ -524,13 +517,13 @@ export function QuantumCityCanvas({ memberCount, memberNames, recentPosts, isHom
         const px = p.x * w
         const py = p.y * h
 
-        // Position text near particle (offset up-left slightly)
-        let lx = px - 60
-        let ly = py - 36
+        // Position text to the right of particle
+        let lx = px + 10
+        let ly = py - 10
 
         // Edge clamping with 16px viewport padding
-        lx = Math.max(16, Math.min(w - 160, lx))
-        ly = Math.max(16, Math.min(h - 50, ly))
+        lx = Math.max(16, Math.min(w - 240, lx))
+        ly = Math.max(16, Math.min(h - 30, ly))
 
         labelTargets.push({ x: lx, y: ly })
       }
