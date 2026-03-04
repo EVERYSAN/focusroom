@@ -594,36 +594,9 @@ body {
   opacity: 0;
 }
 
-/* ── Desk Fragment: fixed-slot ambient text ── */
-
-.desk-fragment {
-  z-index: 2;
-  pointer-events: none;
-  font-size: 11px;
-  font-family: var(--font-serif);
-  color: #8b7355;
-  line-height: 1.2;
-  opacity: 0;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  animation: desk-fragment-breathe 8s ease-in-out infinite;
-}
-
-.desk-fragment--in {
-  transition: opacity 1.5s ease;
-  opacity: 0.45;
-}
-
-.desk-fragment--out {
-  transition: opacity 1.5s ease;
-  opacity: 0;
-}
-
-@keyframes desk-fragment-breathe {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(2px); }
-}
-
-/* ── Desk Background (photo-based, replaces Three.js) ── */
+/* ══════════════════════════════════════════════
+   Desk Background (photo-based cafe desk)
+   ══════════════════════════════════════════════ */
 
 .desk-bg {
   opacity: 0;
@@ -635,16 +608,17 @@ body {
   opacity: 1;
 }
 
+/* Warm vignette — darkens edges, keeps center clear for UI */
 .desk-bg__vignette {
   background: radial-gradient(
-    ellipse 80% 70% at 50% 50%,
-    transparent 30%,
-    rgba(18, 14, 10, 0.55) 80%,
-    rgba(18, 14, 10, 0.85) 100%
+    ellipse 75% 65% at 50% 45%,
+    transparent 25%,
+    rgba(15, 12, 8, 0.4) 70%,
+    rgba(15, 12, 8, 0.75) 100%
   );
 }
 
-/* Dust motes — pure CSS floating particles */
+/* Dust motes — very subtle floating particles */
 .desk-bg__dust {
   position: fixed;
   inset: 0;
@@ -655,10 +629,10 @@ body {
 
 .desk-dust-mote {
   position: absolute;
-  width: 3px;
-  height: 3px;
+  width: 2px;
+  height: 2px;
   border-radius: 50%;
-  background: rgba(210, 190, 160, 0.25);
+  background: rgba(220, 200, 170, 0.2);
   left: var(--x);
   top: var(--y);
   animation: dust-float var(--dur) ease-in-out infinite;
@@ -668,43 +642,97 @@ body {
 
 @keyframes dust-float {
   0%   { opacity: 0; transform: translate(0, 0); }
-  20%  { opacity: 0.35; }
-  50%  { opacity: 0.2; transform: translate(12px, -8px); }
-  80%  { opacity: 0.3; }
-  100% { opacity: 0; transform: translate(-6px, 6px); }
+  25%  { opacity: 0.3; }
+  50%  { opacity: 0.15; transform: translate(8px, -5px); }
+  75%  { opacity: 0.25; }
+  100% { opacity: 0; transform: translate(-4px, 4px); }
 }
 
-/* Coffee steam wisps — CSS only */
-.desk-bg__steam {
+/* ══════════════════════════════════════════════
+   Desk Overlay — container for sticky notes
+   ══════════════════════════════════════════════ */
+
+.desk-overlay {
   position: fixed;
-  right: 22%;
-  top: 18%;
-  z-index: 0;
+  inset: 0;
+  z-index: 1;
   pointer-events: none;
-  width: 40px;
-  height: 60px;
+  overflow: hidden;
 }
 
-.desk-steam-wisp {
+/* ══════════════════════════════════════════════
+   Sticky Note — yellow paper on the desk
+   ══════════════════════════════════════════════
+   Looks like a Post-it stuck to the desk surface.
+   Not a UI card — no border, no hover state.
+   Exists as ambient "noise", like NPC chatter.
+   ══════════════════════════════════════════════ */
+
+.sticky-note {
   position: absolute;
-  bottom: 0;
-  width: 8px;
-  height: 30px;
-  border-radius: 50%;
-  background: rgba(230, 220, 200, 0.06);
-  filter: blur(4px);
-  animation: steam-rise 4s ease-in-out infinite;
+  width: 100px;
+  min-height: 56px;
+  padding: 10px 10px 8px;
+  box-sizing: border-box;
+
+  /* Paper look */
+  background: linear-gradient(
+    168deg,
+    #f5e6a3 0%,
+    #f0dc8c 40%,
+    #ead578 100%
+  );
+  border-radius: 2px;
+  box-shadow:
+    1px 2px 6px rgba(40, 30, 10, 0.25),
+    0 1px 2px rgba(40, 30, 10, 0.15);
+
+  /* Base transform with slot-specific rotation */
+  transform: rotate(var(--rotate, 0deg));
+  transform-origin: center center;
+
+  /* Start hidden */
+  opacity: 0;
+
+  /* Subtle micro-breathing animation */
+  animation: sticky-breathe 16s ease-in-out infinite;
+  animation-delay: var(--breathe-phase, 0s);
 }
 
-.desk-steam-wisp--1 { left: 4px;  animation-delay: 0s; }
-.desk-steam-wisp--2 { left: 16px; animation-delay: 1.4s; }
-.desk-steam-wisp--3 { left: 28px; animation-delay: 2.8s; }
+.sticky-note__text {
+  display: block;
+  font-size: 11px;
+  font-family: var(--font-serif);
+  color: #3a3020;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
 
-@keyframes steam-rise {
-  0%   { opacity: 0; transform: translateY(0) scaleX(1); }
-  30%  { opacity: 0.08; }
-  60%  { opacity: 0.04; transform: translateY(-25px) scaleX(1.6); }
-  100% { opacity: 0; transform: translateY(-50px) scaleX(2); }
+/* ── Sticky note states ── */
+
+.sticky-note--in {
+  transition: opacity 0.6s ease;
+  opacity: 0.88;
+}
+
+.sticky-note--out {
+  transition: opacity 0.8s ease;
+  opacity: 0;
+}
+
+/* ── Micro-breathing — paper-on-desk subtle sway ── */
+
+@keyframes sticky-breathe {
+  0%, 100% {
+    transform: rotate(var(--rotate, 0deg)) translateY(0px);
+  }
+  33% {
+    transform: rotate(calc(var(--rotate, 0deg) + 0.4deg)) translateY(-1px);
+  }
+  66% {
+    transform: rotate(calc(var(--rotate, 0deg) - 0.3deg)) translateY(0.5px);
+  }
 }
 
 /* ── Status Badge ── */

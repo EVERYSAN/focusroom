@@ -1,3 +1,13 @@
+/**
+ * DeskOverlay — ambient sticky notes floating on the desk.
+ *
+ * Like NPC chatter in a game: not meant to be read carefully,
+ * but to give a sense of "others are working here too".
+ *
+ * Notes appear as yellow paper stuck to the desk surface,
+ * fade in softly, breathe gently, then fade out.
+ */
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { fragmentize, DEFAULT_HOME_FRAGMENTS } from '../lib/fragments'
 
@@ -16,34 +26,37 @@ interface DeskOverlayProps {
 
 /* ── Constants ── */
 
-const FRAG_SLOTS = 4
-const FRAG_FADE_MIN = 8_000
-const FRAG_FADE_MAX = 14_000
-const FRAG_SPAWN_MIN = 10_000
-const FRAG_SPAWN_MAX = 20_000
+const SLOT_COUNT = 4
+const FADE_MIN = 8_000
+const FADE_MAX = 14_000
+const SPAWN_MIN = 10_000
+const SPAWN_MAX = 20_000
 
-/** Fixed desk-slot positions (% of viewport) */
-const SLOT_POSITIONS = [
-  { left: '22%', top: '32%' },   // notebook top-right area
-  { left: '58%', top: '26%' },   // desk top-right
-  { left: '18%', top: '62%' },   // desk bottom-left
-  { left: '52%', top: '58%' },   // notebook bottom-right
+/**
+ * Slot positions — matching reference image desk layout:
+ * 1. Upper-left (near notebook edge)
+ * 2. Lower-left (below notebook)
+ * 3. Lower-right (beside pen)
+ * 4. Upper-right (near coffee cup)
+ */
+const SLOTS: { left: string; top: string; rotate: string }[] = [
+  { left: '12%',  top: '18%',  rotate: '-3deg' },
+  { left: '10%',  top: '64%',  rotate: '1.5deg' },
+  { left: '58%',  top: '68%',  rotate: '-1deg' },
+  { left: '56%',  top: '15%',  rotate: '2.5deg' },
 ]
-
-/** Slight random rotation for each fragment (paper-like) */
-const SLOT_ROTATIONS = ['-1.5deg', '2deg', '-0.8deg', '1.2deg']
 
 /* ── Component ── */
 
-interface FragSlot {
+interface StickySlot {
   text: string
   visible: boolean
   key: number
 }
 
 export function DeskOverlay({ isHome, recentPosts }: DeskOverlayProps) {
-  const [slots, setSlots] = useState<FragSlot[]>(
-    Array.from({ length: FRAG_SLOTS }, () => ({ text: '', visible: false, key: 0 })),
+  const [slots, setSlots] = useState<StickySlot[]>(
+    Array.from({ length: SLOT_COUNT }, () => ({ text: '', visible: false, key: 0 })),
   )
 
   const seqRef = useRef(0)
@@ -52,7 +65,7 @@ export function DeskOverlay({ isHome, recentPosts }: DeskOverlayProps) {
   const recentPostsRef = useRef(recentPosts)
   recentPostsRef.current = recentPosts
 
-  /** Pick next fragment text */
+  /** Pick next fragment text (max ~18 chars) */
   const pickText = useCallback((): string => {
     const posts = recentPostsRef.current ?? []
     const focus = posts.filter(p => p.type !== 'idea')
@@ -63,7 +76,7 @@ export function DeskOverlay({ isHome, recentPosts }: DeskOverlayProps) {
     return DEFAULT_HOME_FRAGMENTS[seq % DEFAULT_HOME_FRAGMENTS.length]
   }, [])
 
-  /** Show one fragment slot */
+  /** Show one sticky slot */
   const showSlot = useCallback((slotIdx: number) => {
     const text = pickText()
     setSlots(prev => {
@@ -73,7 +86,7 @@ export function DeskOverlay({ isHome, recentPosts }: DeskOverlayProps) {
     })
 
     // Schedule auto-fade
-    const fadeDelay = FRAG_FADE_MIN + Math.random() * (FRAG_FADE_MAX - FRAG_FADE_MIN)
+    const fadeDelay = FADE_MIN + Math.random() * (FADE_MAX - FADE_MIN)
     fadeTimersRef.current[slotIdx] = setTimeout(() => {
       setSlots(prev => {
         const next = [...prev]
@@ -85,9 +98,9 @@ export function DeskOverlay({ isHome, recentPosts }: DeskOverlayProps) {
 
   /** Schedule next spawn */
   const scheduleSpawn = useCallback(() => {
-    const delay = FRAG_SPAWN_MIN + Math.random() * (FRAG_SPAWN_MAX - FRAG_SPAWN_MIN)
+    const delay = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN)
     spawnTimerRef.current = setTimeout(() => {
-      const slot = Math.floor(Math.random() * FRAG_SLOTS)
+      const slot = Math.floor(Math.random() * SLOT_COUNT)
       showSlot(slot)
       scheduleSpawn()
     }, delay)
@@ -103,16 +116,14 @@ export function DeskOverlay({ isHome, recentPosts }: DeskOverlayProps) {
   // React to isHome
   useEffect(() => {
     if (isHome) {
-      // Stagger initial fragments
-      setTimeout(() => showSlot(0), 1_500)
-      setTimeout(() => showSlot(1), 5_000)
-      setTimeout(() => showSlot(2), 10_000)
-      setTimeout(() => showSlot(3), 16_000)
+      // Stagger initial fragments — feel alive from the start
+      setTimeout(() => showSlot(0), 1_200)
+      setTimeout(() => showSlot(2), 4_000)
+      setTimeout(() => showSlot(1), 8_000)
+      setTimeout(() => showSlot(3), 13_000)
       scheduleSpawn()
     } else {
-      // Stop spawning; existing fragments fade naturally
       clearAll()
-      // Let visible ones fade out gently (don't force-hide)
       setSlots(prev => prev.map(s => ({ ...s, visible: false })))
     }
 
@@ -121,27 +132,19 @@ export function DeskOverlay({ isHome, recentPosts }: DeskOverlayProps) {
   }, [isHome])
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 1,
-        pointerEvents: 'none',
-        overflow: 'visible',
-      }}
-    >
+    <div className="desk-overlay" aria-hidden="true">
       {slots.map((slot, i) => (
         <div
           key={`${i}-${slot.key}`}
-          className={`desk-fragment ${slot.visible ? 'desk-fragment--in' : 'desk-fragment--out'}`}
+          className={`sticky-note ${slot.visible ? 'sticky-note--in' : 'sticky-note--out'}`}
           style={{
-            position: 'absolute',
-            left: SLOT_POSITIONS[i].left,
-            top: SLOT_POSITIONS[i].top,
-            transform: `rotate(${SLOT_ROTATIONS[i]})`,
-          }}
+            left: SLOTS[i].left,
+            top: SLOTS[i].top,
+            '--rotate': SLOTS[i].rotate,
+            '--breathe-phase': `${i * 3.5}s`,
+          } as React.CSSProperties}
         >
-          {slot.text}
+          <span className="sticky-note__text">{slot.text}</span>
         </div>
       ))}
     </div>
