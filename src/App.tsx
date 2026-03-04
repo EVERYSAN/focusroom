@@ -3,7 +3,7 @@ import { AppHeader } from './components/AppHeader'
 import { PresencePanel } from './components/PresencePanel'
 import { FocusPanel, type Tab } from './components/FocusPanel'
 import { ActivityFeed } from './components/ActivityFeed'
-import { DeskScene } from './components/DeskScene'
+import { DeskBackground } from './components/DeskBackground'
 import { DeskOverlay } from './components/DeskOverlay'
 import { useNotes } from './hooks/useNotes'
 import { useRooms } from './hooks/useRooms'
@@ -34,8 +34,8 @@ function App() {
 
   return (
     <>
-      {/* Desk scene — full-screen 3D background */}
-      <DeskScene
+      {/* Desk photo background — replaces Three.js scene */}
+      <DeskBackground
         memberCount={members.length > 0 ? members.length : 10}
         isHome={isFocusMode}
       />

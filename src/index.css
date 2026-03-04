@@ -623,6 +623,90 @@ body {
   50% { transform: translateX(2px); }
 }
 
+/* ── Desk Background (photo-based, replaces Three.js) ── */
+
+.desk-bg {
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  background-color: #1a1510;
+}
+
+.desk-bg--loaded {
+  opacity: 1;
+}
+
+.desk-bg__vignette {
+  background: radial-gradient(
+    ellipse 80% 70% at 50% 50%,
+    transparent 30%,
+    rgba(18, 14, 10, 0.55) 80%,
+    rgba(18, 14, 10, 0.85) 100%
+  );
+}
+
+/* Dust motes — pure CSS floating particles */
+.desk-bg__dust {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.desk-dust-mote {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(210, 190, 160, 0.25);
+  left: var(--x);
+  top: var(--y);
+  animation: dust-float var(--dur) ease-in-out infinite;
+  animation-delay: var(--delay);
+  opacity: 0;
+}
+
+@keyframes dust-float {
+  0%   { opacity: 0; transform: translate(0, 0); }
+  20%  { opacity: 0.35; }
+  50%  { opacity: 0.2; transform: translate(12px, -8px); }
+  80%  { opacity: 0.3; }
+  100% { opacity: 0; transform: translate(-6px, 6px); }
+}
+
+/* Coffee steam wisps — CSS only */
+.desk-bg__steam {
+  position: fixed;
+  right: 22%;
+  top: 18%;
+  z-index: 0;
+  pointer-events: none;
+  width: 40px;
+  height: 60px;
+}
+
+.desk-steam-wisp {
+  position: absolute;
+  bottom: 0;
+  width: 8px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(230, 220, 200, 0.06);
+  filter: blur(4px);
+  animation: steam-rise 4s ease-in-out infinite;
+}
+
+.desk-steam-wisp--1 { left: 4px;  animation-delay: 0s; }
+.desk-steam-wisp--2 { left: 16px; animation-delay: 1.4s; }
+.desk-steam-wisp--3 { left: 28px; animation-delay: 2.8s; }
+
+@keyframes steam-rise {
+  0%   { opacity: 0; transform: translateY(0) scaleX(1); }
+  30%  { opacity: 0.08; }
+  60%  { opacity: 0.04; transform: translateY(-25px) scaleX(1.6); }
+  100% { opacity: 0; transform: translateY(-50px) scaleX(2); }
+}
+
 /* ── Status Badge ── */
 
 .status-dot {
