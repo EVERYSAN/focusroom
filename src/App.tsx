@@ -3,8 +3,7 @@ import { AppHeader } from './components/AppHeader'
 import { PresencePanel } from './components/PresencePanel'
 import { FocusPanel, type Tab } from './components/FocusPanel'
 import { ActivityFeed } from './components/ActivityFeed'
-import { DeskBackground } from './components/DeskBackground'
-import { DeskOverlay } from './components/DeskOverlay'
+import { CafeScene } from './components/CafeScene'
 import { useNotes } from './hooks/useNotes'
 import { useRooms } from './hooks/useRooms'
 import { usePresence } from './hooks/usePresence'
@@ -34,12 +33,8 @@ function App() {
 
   return (
     <>
-      {/* Desk photo background — replaces Three.js scene */}
-      <DeskBackground
-        memberCount={members.length > 0 ? members.length : 10}
-        isHome={isFocusMode}
-      />
-      <DeskOverlay
+      {/* Layered cafe desk scene */}
+      <CafeScene
         isHome={isFocusMode}
         recentPosts={visibleNotes}
       />
