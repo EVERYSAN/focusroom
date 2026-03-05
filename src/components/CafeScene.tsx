@@ -2,19 +2,11 @@
  * CafeScene — layered desk scene for the focus room.
  *
  * Architecture (bottom → top):
- *   1. Desk Layer      — AI-generated desk_texture.png (clean wood)
- *   2. Objects Layer    — reference image with objects (notebook, pen, coffee, plant)
- *                         composited via CSS blend; individual PNGs swap in when available
+ *   1. Desk Layer      — desk_texture.png (clean wood surface)
+ *   2. Objects Layer    — individual transparent PNGs (notebook, pen, coffee)
  *   3. Atmosphere Layer — CSS dust particles + steam wisps
- *   4. Sticky Layer     — ambient sticky notes (NPC chatter)
+ *   4. Sticky Layer     — sticky_base.png + text (NPC chatter)
  *   5. Vignette Layer   — CSS radial-gradient edge darkening
- *
- * Each layer is absolutely positioned inside a fixed container.
- * All layers are pointer-events: none (decoration only).
- *
- * Individual transparent PNGs (notebook.png, pen.png, etc.) can be swapped in
- * to the Objects Layer when generated. For now, the reference image provides
- * the complete object composition in the correct style.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -41,13 +33,9 @@ const FADE_MAX = 14_000
 const SPAWN_MIN = 10_000
 const SPAWN_MAX = 20_000
 
-/**
- * Slot positions on the desk surface.
- * Placed to avoid the central notebook and right-side coffee/pen.
- */
 const STICKY_SLOTS: { left: string; top: string; rotate: string }[] = [
-  { left: '8%',   top: '20%',  rotate: '-3deg' },
-  { left: '6%',   top: '62%',  rotate: '2deg' },
+  { left: '10%',  top: '20%',  rotate: '-3deg' },
+  { left: '8%',   top: '62%',  rotate: '2deg' },
   { left: '62%',  top: '68%',  rotate: '-1.5deg' },
   { left: '60%',  top: '16%',  rotate: '2.5deg' },
 ]
@@ -71,24 +59,24 @@ const dustMotes = Array.from({ length: DUST_COUNT }, (_, i) => ({
 
 /* ── Asset paths ── */
 
-const DESK_TEXTURE = '/assets/desk_texture.png'
-const OBJECTS_COMPOSITE = '/assets/desk_bg.webp'
+const ASSETS = {
+  desk: '/assets/desk_texture.png',
+  notebook: '/assets/notebook.png',
+  pen: '/assets/pen.png',
+  coffee: '/assets/coffee.png',
+  stickyBase: '/assets/sticky_base.png',
+} as const
 
 /* ── Component ── */
 
 export function CafeScene({ isHome, recentPosts }: CafeSceneProps) {
   const [deskLoaded, setDeskLoaded] = useState(false)
-  const [objLoaded, setObjLoaded] = useState(false)
 
-  /* Preload both layers */
+  /* Preload desk texture */
   useEffect(() => {
-    const deskImg = new Image()
-    deskImg.onload = () => setDeskLoaded(true)
-    deskImg.src = DESK_TEXTURE
-
-    const objImg = new Image()
-    objImg.onload = () => setObjLoaded(true)
-    objImg.src = OBJECTS_COMPOSITE
+    const img = new Image()
+    img.onload = () => setDeskLoaded(true)
+    img.src = ASSETS.desk
   }, [])
 
   /* ── Sticky note state ── */
@@ -162,31 +150,26 @@ export function CafeScene({ isHome, recentPosts }: CafeSceneProps) {
   return (
     <div className="scene" aria-hidden="true">
 
-      {/* ═══ Layer 1: Desk Surface ═══
-          AI-generated clean wood texture. Falls behind objects. */}
+      {/* ═══ Layer 1: Desk Surface ═══ */}
       <div
         className={`scene__desk ${deskLoaded ? 'scene__desk--loaded' : ''}`}
-        style={{ backgroundImage: `url(${DESK_TEXTURE})` }}
+        style={{ backgroundImage: `url(${ASSETS.desk})` }}
       />
 
-      {/* ═══ Layer 2: Objects Composite ═══
-          Reference image providing notebook, pen, coffee, plant.
-          When individual transparent PNGs are generated, this layer
-          gets replaced with positioned <img> elements. */}
-      <div
-        className={`scene__objects-composite ${objLoaded ? 'scene__objects-composite--loaded' : ''}`}
-        style={{ backgroundImage: `url(${OBJECTS_COMPOSITE})` }}
-      />
+      {/* ═══ Layer 2: Objects (individual PNGs) ═══ */}
+      <div className="scene__objects">
+        <img src={ASSETS.notebook} alt="" className="scene__obj scene__obj--notebook" draggable={false} />
+        <img src={ASSETS.pen}      alt="" className="scene__obj scene__obj--pen"      draggable={false} />
+        <img src={ASSETS.coffee}   alt="" className="scene__obj scene__obj--coffee"   draggable={false} />
+      </div>
 
       {/* ═══ Layer 3: Atmosphere ═══ */}
       <div className="scene__atmosphere">
-        {/* Steam from coffee — positioned above upper-right */}
         <div className="scene__steam">
           <span className="steam-wisp steam-wisp--1" />
           <span className="steam-wisp steam-wisp--2" />
           <span className="steam-wisp steam-wisp--3" />
         </div>
-        {/* Dust particles — subtle floating motes */}
         <div className="scene__dust">
           {dustMotes.map((m, i) => (
             <span
@@ -204,7 +187,7 @@ export function CafeScene({ isHome, recentPosts }: CafeSceneProps) {
         </div>
       </div>
 
-      {/* ═══ Layer 4: Sticky Notes ═══ */}
+      {/* ═══ Layer 4: Sticky Notes (PNG base + text) ═══ */}
       <div className="scene__stickies">
         {slots.map((slot, i) => (
           <div
@@ -217,6 +200,12 @@ export function CafeScene({ isHome, recentPosts }: CafeSceneProps) {
               '--breathe-phase': `${i * 3.5}s`,
             } as React.CSSProperties}
           >
+            <img
+              src={ASSETS.stickyBase}
+              alt=""
+              className="scene__sticky-bg"
+              draggable={false}
+            />
             <span className="scene__sticky-text">{slot.text}</span>
           </div>
         ))}
