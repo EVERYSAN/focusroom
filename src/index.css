@@ -746,21 +746,25 @@ body {
   100% { opacity: 0; transform: translate(-6px, 6px); }
 }
 
-/* ── Layer 5: Soft Light (cafe stand light, upper-left) ── */
+/* ── Layer 5: Desk Lamp Light (warm spot, upper-left) ── */
 
 .scene__light {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: none;
+  /* Warm stand-lamp glow from upper-left */
   background: radial-gradient(
-    ellipse 50% 45% at 22% 18%,
-    rgba(255, 240, 200, 0.08) 0%,
-    transparent 70%
+    circle at 18% 15%,
+    rgba(255, 210, 150, 0.30),
+    rgba(255, 210, 150, 0.10) 25%,
+    transparent 55%
   );
+  mix-blend-mode: screen;
 }
 
 /* ── Layer 6: Meeple Seats ── */
+/* Design goal: "wooden board-game meeple placed on desk" — NOT UI icons */
 
 .seats-layer {
   position: absolute;
@@ -786,30 +790,57 @@ body {
 }
 
 .seat__svg {
-  width: 32px;
-  height: 38px;
-  /* Stronger downward shadow — "placed on desk" */
-  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.28));
+  width: 40px;
+  height: 48px;
+  /* Contact shadow: "object sitting on desk" — downward only */
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+  /* Breathing: desync via CSS custom props */
   animation: meeple-breathe var(--breathe-dur, 7s) ease-in-out infinite;
   animation-delay: var(--breathe-phase, 0s);
-  transition: filter 0.3s ease, transform 0.3s ease;
+  transition: filter 0.4s ease;
 }
 
+/* ── State: Focusing (default) — warm micro-glow (気配) ── */
+.seat--focusing .seat__svg {
+  filter:
+    drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 6px rgba(255, 210, 150, 0.14));
+}
+
+/* ── Hover: slightly brighter glow ── */
 .seat:hover .seat__svg,
 .seat:active .seat__svg {
   filter:
-    drop-shadow(0 10px 14px rgba(0, 0, 0, 0.28))
-    drop-shadow(0 0 4px rgba(255, 255, 255, 0.12));
+    drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 8px rgba(255, 220, 170, 0.18));
 }
 
-/* "You" — subtle gold glow */
+/* ── State: "You" — subtle gold glow, slightly stronger ── */
 .seat--you .seat__svg {
   filter:
-    drop-shadow(0 10px 14px rgba(0, 0, 0, 0.28))
-    drop-shadow(0 0 6px rgba(201, 168, 76, 0.35));
+    drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 9px rgba(201, 168, 76, 0.28));
 }
 
-/* Entering bounce: scale 0 → 1.2 → 1.0 */
+.seat--you:hover .seat__svg {
+  filter:
+    drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 12px rgba(201, 168, 76, 0.35));
+}
+
+/* ── State: Ghost (placeholder) — very dim, no glow ── */
+.seat--ghost .seat__svg {
+  opacity: 0.35;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
+}
+
+/* ── State: Idle/Away — dim, no glow ── */
+.seat--idle .seat__svg {
+  opacity: 0.55;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
+}
+
+/* ── Entering bounce: scale 0 → 1.2 → 1.0 ── */
 .seat--entering .seat__svg {
   animation: meeple-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
              meeple-breathe var(--breathe-dur, 7s) ease-in-out 0.4s infinite;
@@ -821,18 +852,10 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Ghost — slightly more visible than before */
-.seat--ghost .seat__svg {
-  opacity: 0.5;
-}
-
-.seat--idle .seat__svg {
-  opacity: 0.6;
-}
-
+/* ── Breathing: subtle scale pulse, phase-desync per seat ── */
 @keyframes meeple-breathe {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.03); }
+  0%, 100% { transform: scale(1.0); }
+  50%      { transform: scale(1.04); }
 }
 
 /* ── Layer 7: Sticky Whispers (paper-like) ── */
@@ -1118,10 +1141,10 @@ body {
     flex-direction: column;
   }
 
-  /* Meeple seats — slightly smaller on mobile */
+  /* Meeple seats — slightly smaller on mobile, still "person-sized" */
   .seat__svg {
-    width: 28px;
-    height: 34px;
+    width: 34px;
+    height: 42px;
   }
 
   /* Whisper notes — compact for small screens */
