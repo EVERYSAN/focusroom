@@ -1,16 +1,17 @@
 /**
- * CafeScene — Illustration-style late-night cafe desk.
+ * CafeScene — Late-night cafe desk with physical objects.
  *
  * Architecture (bottom → top):
  *   1. Desk          — desk_texture.png zoomed 125%
  *   2. Stylize       — grain + desaturation (illustration feel)
- *   3. Props         — CSS desk clutter (clips, leaves, coffee ring, memo)
- *   4. Atmosphere    — fine dust particles
- *   5. Light         — warm spot from upper-left
- *   6. Seats         — Meeple figures at desk edge
- *   7. Sticky        — Paper whisper notes (#F6E7A7)
- *   8. Vignette      — edge darkening
- *   9. UI            — minimal text + sit-down button
+ *   3. Objects       — notebook.png + pen.png + coffee.png
+ *   4. Props         — CSS desk clutter (clips, leaves)
+ *   5. Atmosphere    — fine dust particles
+ *   6. Light         — warm spot from upper-left
+ *   7. Seats         — Meeple figures scattered on desk
+ *   8. Sticky        — Paper whisper notes (#F6E7A7)
+ *   9. Vignette      — edge darkening
+ *  10. UI            — text + sit-down button
  *   +  Mini Card     — popup on meeple tap
  */
 
@@ -42,31 +43,29 @@ interface CafeSceneProps {
 /* ── Asset paths ── */
 
 const DESK_TEXTURE = '/assets/desk_texture.png'
+const NOTEBOOK_IMG = '/assets/notebook.png'
+const PEN_IMG = '/assets/pen.png'
+const COFFEE_IMG = '/assets/coffee.png'
 
-/* ── Desk Props — scattered small items ── */
+/* ── Desk Props — small scattered items ── */
 
-/** Positions compensated for 125% zoom + 16% inset container */
 const DESK_PROPS: {
-  type: 'clip' | 'leaf' | 'ring' | 'memo'
+  type: 'clip' | 'leaf'
   x: number
   y: number
   rot: number
 }[] = [
-  { type: 'clip', x: 30, y: 36, rot: 18 },
-  { type: 'leaf', x: 65, y: 30, rot: -22 },
-  { type: 'ring', x: 68, y: 62, rot: 0 },
-  { type: 'memo', x: 33, y: 64, rot: -5 },
-  { type: 'clip', x: 62, y: 70, rot: -32 },
-  { type: 'leaf', x: 38, y: 30, rot: 38 },
-  { type: 'memo', x: 64, y: 40, rot: 3 },
-  { type: 'leaf', x: 55, y: 72, rot: -12 },
-  { type: 'ring', x: 36, y: 50, rot: 0 },
-  { type: 'clip', x: 48, y: 28, rot: -15 },
+  { type: 'clip', x: 26, y: 52, rot: 18 },
+  { type: 'leaf', x: 22, y: 78, rot: -22 },
+  { type: 'clip', x: 62, y: 74, rot: -32 },
+  { type: 'leaf', x: 24, y: 32, rot: 38 },
+  { type: 'clip', x: 72, y: 44, rot: -15 },
+  { type: 'leaf', x: 70, y: 72, rot: 12 },
 ]
 
 /* ── Dust — fine particles ── */
 
-const DUST_COUNT = 22
+const DUST_COUNT = 18
 const dustMotes = Array.from({ length: DUST_COUNT }, (_, i) => ({
   x: `${6 + ((i * 7.3) % 88)}%`,
   y: `${4 + ((i * 11.7) % 92)}%`,
@@ -162,7 +161,29 @@ export function CafeScene({
         <div className="scene__stylize" />
         <div className="scene__grain" />
 
-        {/* ═══ Layer 3: Desk Props (scattered small items) ═══ */}
+        {/* ═══ Layer 3: Desk Objects (notebook, pen, coffee) ═══ */}
+        <div className="scene__objects">
+          <img
+            src={NOTEBOOK_IMG}
+            alt=""
+            className="scene__obj scene__obj--notebook"
+            draggable={false}
+          />
+          <img
+            src={PEN_IMG}
+            alt=""
+            className="scene__obj scene__obj--pen"
+            draggable={false}
+          />
+          <img
+            src={COFFEE_IMG}
+            alt=""
+            className="scene__obj scene__obj--coffee"
+            draggable={false}
+          />
+        </div>
+
+        {/* ═══ Layer 4: Desk Props (small scattered items) ═══ */}
         <div className="scene__props">
           {DESK_PROPS.map((p, i) => (
             <span
@@ -177,7 +198,7 @@ export function CafeScene({
           ))}
         </div>
 
-        {/* ═══ Layer 4: Atmosphere (fine dust) ═══ */}
+        {/* ═══ Layer 5: Atmosphere (fine dust) ═══ */}
         <div className="scene__atmosphere">
           <div className="scene__dust">
             {dustMotes.map((m, i) => (
@@ -198,10 +219,10 @@ export function CafeScene({
           </div>
         </div>
 
-        {/* ═══ Layer 5: Warm Light (upper-left) ═══ */}
+        {/* ═══ Layer 6: Warm Light (upper-left) ═══ */}
         <div className="scene__light" />
 
-        {/* ═══ Layer 6: Meeple Seats ═══ */}
+        {/* ═══ Layer 7: Meeple Seats ═══ */}
         {isHome && (
           <SeatsLayer
             members={members}
@@ -211,7 +232,7 @@ export function CafeScene({
           />
         )}
 
-        {/* ═══ Layer 7: Sticky Whispers ═══ */}
+        {/* ═══ Layer 8: Sticky Whispers ═══ */}
         <StickyWhispers
           recentPosts={recentPosts}
           members={members}
@@ -219,10 +240,10 @@ export function CafeScene({
         />
       </div>
 
-      {/* ═══ Layer 8: Vignette (outside parallax) ═══ */}
+      {/* ═══ Layer 9: Vignette (outside parallax) ═══ */}
       <div className="scene__vignette" />
 
-      {/* ═══ Layer 9: UI Overlay ═══ */}
+      {/* ═══ Layer 10: UI Overlay ═══ */}
       {isHome && (
         <DeskUiLayer
           members={members}
