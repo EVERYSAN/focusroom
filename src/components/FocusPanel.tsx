@@ -51,7 +51,7 @@ interface Props {
 export function FocusPanel({
   room, members, ideas, stats, onPost,
   elapsed, isRunning, onStart, onPause, onReset,
-  selfUserId, activeTab, onTabChange,
+  selfUserId: _selfUserId, activeTab, onTabChange,
 }: Props) {
   const roomName = room?.name ?? 'Room'
 

@@ -59,9 +59,9 @@ export function StickyWhispers({ recentPosts, members, isActive }: Props) {
   const [whispers, setWhispers] = useState<Whisper[]>([])
 
   const seqRef = useRef(0)
-  const spawnTimerRef = useRef<ReturnType<typeof setTimeout>>()
-  const fadeTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(
-    new Map(),
+  const spawnTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const fadeTimersRef = useRef(
+    new Map<number, ReturnType<typeof setTimeout>>(),
   )
   const usedZonesRef = useRef<Set<number>>(new Set())
 
