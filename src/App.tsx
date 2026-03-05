@@ -31,12 +31,24 @@ function App() {
     updateStatus(isRunning ? 'focusing' : 'idle')
   }, [isRunning, updateStatus])
 
+  // "席につく" starts focus timer
+  const handleSitDown = () => {
+    start()
+  }
+
+  const isSeated = isRunning || elapsed > 0
+
   return (
     <>
       {/* Layered cafe desk scene */}
       <CafeScene
         isHome={isFocusMode}
         recentPosts={visibleNotes}
+        members={members}
+        selfUserId={userId.current}
+        isSeated={isSeated}
+        onSitDown={handleSitDown}
+        onOpenMenu={() => setActiveTab('people')}
       />
 
       {!isFocusMode && <AppHeader />}
@@ -49,21 +61,24 @@ function App() {
             members={members}
           />
         )}
-        <FocusPanel
-          room={currentRoom}
-          members={members}
-          ideas={recentIdeas}
-          stats={stats}
-          onPost={addNote}
-          elapsed={elapsed}
-          isRunning={isRunning}
-          onStart={start}
-          onPause={pause}
-          onReset={reset}
-          selfUserId={userId.current}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+        {/* In focus mode, FocusPanel is hidden — the desk scene handles everything */}
+        {!isFocusMode && (
+          <FocusPanel
+            room={currentRoom}
+            members={members}
+            ideas={recentIdeas}
+            stats={stats}
+            onPost={addNote}
+            elapsed={elapsed}
+            isRunning={isRunning}
+            onStart={start}
+            onPause={pause}
+            onReset={reset}
+            selfUserId={userId.current}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+        )}
         {!isFocusMode && (
           <ActivityFeed
             notes={visibleNotes}

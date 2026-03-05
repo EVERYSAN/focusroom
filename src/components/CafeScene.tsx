@@ -2,15 +2,22 @@
  * CafeScene — layered desk scene for the focus room.
  *
  * Architecture (bottom → top):
- *   1. Desk Layer      — desk_texture.png (clean wood surface)
- *   2. Objects Layer    — individual transparent PNGs (notebook, pen, coffee)
- *   3. Atmosphere Layer — CSS dust particles + steam wisps
- *   4. Sticky Layer     — sticky_base.png + text (NPC chatter)
- *   5. Vignette Layer   — CSS radial-gradient edge darkening
+ *   1. Desk Layer       — desk_texture.png (clean wood surface)
+ *   2. Objects Layer     — individual transparent PNGs (notebook, pen, coffee)
+ *   3. Atmosphere Layer  — CSS dust particles + steam wisps
+ *   4. Seats Layer       — Meeple figures around the desk edge
+ *   5. Sticky Layer      — Whisper notes that fade in/out on the desk
+ *   6. Vignette Layer    — CSS radial-gradient edge darkening
+ *   7. UI Layer          — Calm text + "席につく" button
+ *   +  Mini Card         — Popup on meeple tap
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { fragmentize, DEFAULT_HOME_FRAGMENTS } from '../lib/fragments'
+import { useState, useEffect } from 'react'
+import { SeatsLayer, SEAT_POSITIONS, type SeatMember } from './SeatsLayer'
+import { StickyWhispers } from './StickyWhispers'
+import { DeskUiLayer } from './DeskUiLayer'
+import { MiniCard } from './MiniCard'
+import type { PresenceMember } from '../types'
 
 /* ── Types ── */
 
@@ -23,35 +30,19 @@ interface RecentPost {
 interface CafeSceneProps {
   isHome: boolean
   recentPosts?: RecentPost[]
-}
-
-/* ── Sticky Note System ── */
-
-const SLOT_COUNT = 4
-const FADE_MIN = 8_000
-const FADE_MAX = 14_000
-const SPAWN_MIN = 10_000
-const SPAWN_MAX = 20_000
-
-const STICKY_SLOTS: { left: string; top: string; rotate: string }[] = [
-  { left: '10%',  top: '20%',  rotate: '-3deg' },
-  { left: '8%',   top: '62%',  rotate: '2deg' },
-  { left: '62%',  top: '68%',  rotate: '-1.5deg' },
-  { left: '60%',  top: '16%',  rotate: '2.5deg' },
-]
-
-interface StickySlot {
-  text: string
-  visible: boolean
-  key: number
+  members: PresenceMember[]
+  selfUserId: string
+  isSeated: boolean
+  onSitDown: () => void
+  onOpenMenu: () => void
 }
 
 /* ── Dust Mote Data ── */
 
 const DUST_COUNT = 12
 const dustMotes = Array.from({ length: DUST_COUNT }, (_, i) => ({
-  x: `${10 + (i * 7.3) % 80}%`,
-  y: `${8 + (i * 11.7) % 84}%`,
+  x: `${10 + ((i * 7.3) % 80)}%`,
+  y: `${8 + ((i * 11.7) % 84)}%`,
   delay: `${(i * 1.8) % 12}s`,
   dur: `${10 + (i % 5) * 3}s`,
   size: 1.5 + (i % 3) * 0.5,
@@ -64,12 +55,19 @@ const ASSETS = {
   notebook: '/assets/notebook.png',
   pen: '/assets/pen.png',
   coffee: '/assets/coffee.png',
-  stickyBase: '/assets/sticky_base.png',
 } as const
 
 /* ── Component ── */
 
-export function CafeScene({ isHome, recentPosts }: CafeSceneProps) {
+export function CafeScene({
+  isHome,
+  recentPosts,
+  members,
+  selfUserId,
+  isSeated,
+  onSitDown,
+  onOpenMenu,
+}: CafeSceneProps) {
   const [deskLoaded, setDeskLoaded] = useState(false)
 
   /* Preload desk texture */
@@ -79,77 +77,27 @@ export function CafeScene({ isHome, recentPosts }: CafeSceneProps) {
     img.src = ASSETS.desk
   }, [])
 
-  /* ── Sticky note state ── */
-  const [slots, setSlots] = useState<StickySlot[]>(
-    Array.from({ length: SLOT_COUNT }, () => ({ text: '', visible: false, key: 0 })),
-  )
+  /* ── Mini Card state ── */
+  const [selectedSeat, setSelectedSeat] = useState<{
+    member: SeatMember
+    index: number
+  } | null>(null)
 
-  const seqRef = useRef(0)
-  const spawnTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const fadeTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const recentPostsRef = useRef(recentPosts)
-  recentPostsRef.current = recentPosts
-
-  const pickText = useCallback((): string => {
-    const posts = recentPostsRef.current ?? []
-    const focus = posts.filter(p => p.type !== 'idea')
-    const seq = seqRef.current++
-    if (focus.length > 0) {
-      return fragmentize(focus[seq % focus.length].text)
-    }
-    return DEFAULT_HOME_FRAGMENTS[seq % DEFAULT_HOME_FRAGMENTS.length]
-  }, [])
-
-  const showSlot = useCallback((slotIdx: number) => {
-    const text = pickText()
-    setSlots(prev => {
-      const next = [...prev]
-      next[slotIdx] = { text, visible: true, key: prev[slotIdx].key + 1 }
-      return next
-    })
-    const fadeDelay = FADE_MIN + Math.random() * (FADE_MAX - FADE_MIN)
-    fadeTimersRef.current[slotIdx] = setTimeout(() => {
-      setSlots(prev => {
-        const next = [...prev]
-        next[slotIdx] = { ...next[slotIdx], visible: false }
-        return next
-      })
-    }, fadeDelay)
-  }, [pickText])
-
-  const scheduleSpawn = useCallback(() => {
-    const delay = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN)
-    spawnTimerRef.current = setTimeout(() => {
-      const slot = Math.floor(Math.random() * SLOT_COUNT)
-      showSlot(slot)
-      scheduleSpawn()
-    }, delay)
-  }, [showSlot])
-
-  const clearAll = useCallback(() => {
-    clearTimeout(spawnTimerRef.current)
-    fadeTimersRef.current.forEach(t => clearTimeout(t))
-    fadeTimersRef.current = []
-  }, [])
-
-  useEffect(() => {
-    if (isHome) {
-      setTimeout(() => showSlot(0), 1_200)
-      setTimeout(() => showSlot(2), 4_000)
-      setTimeout(() => showSlot(1), 8_000)
-      setTimeout(() => showSlot(3), 13_000)
-      scheduleSpawn()
+  const handleMeepleTap = (member: SeatMember, seatIndex: number) => {
+    if (selectedSeat?.index === seatIndex) {
+      setSelectedSeat(null)
     } else {
-      clearAll()
-      setSlots(prev => prev.map(s => ({ ...s, visible: false })))
+      setSelectedSeat({ member, index: seatIndex })
     }
-    return clearAll
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }
+
+  // Close mini card when leaving home
+  useEffect(() => {
+    if (!isHome) setSelectedSeat(null)
   }, [isHome])
 
   return (
-    <div className="scene" aria-hidden="true">
-
+    <div className="scene" aria-hidden={!isHome}>
       {/* ═══ Layer 1: Desk Surface ═══ */}
       <div
         className={`scene__desk ${deskLoaded ? 'scene__desk--loaded' : ''}`}
@@ -158,9 +106,24 @@ export function CafeScene({ isHome, recentPosts }: CafeSceneProps) {
 
       {/* ═══ Layer 2: Objects (individual PNGs) ═══ */}
       <div className="scene__objects">
-        <img src={ASSETS.notebook} alt="" className="scene__obj scene__obj--notebook" draggable={false} />
-        <img src={ASSETS.pen}      alt="" className="scene__obj scene__obj--pen"      draggable={false} />
-        <img src={ASSETS.coffee}   alt="" className="scene__obj scene__obj--coffee"   draggable={false} />
+        <img
+          src={ASSETS.notebook}
+          alt=""
+          className="scene__obj scene__obj--notebook"
+          draggable={false}
+        />
+        <img
+          src={ASSETS.pen}
+          alt=""
+          className="scene__obj scene__obj--pen"
+          draggable={false}
+        />
+        <img
+          src={ASSETS.coffee}
+          alt=""
+          className="scene__obj scene__obj--coffee"
+          draggable={false}
+        />
       </div>
 
       {/* ═══ Layer 3: Atmosphere ═══ */}
@@ -175,44 +138,64 @@ export function CafeScene({ isHome, recentPosts }: CafeSceneProps) {
             <span
               key={i}
               className="dust-mote"
-              style={{
-                '--x': m.x,
-                '--y': m.y,
-                '--delay': m.delay,
-                '--dur': m.dur,
-                '--size': `${m.size}px`,
-              } as React.CSSProperties}
+              style={
+                {
+                  '--x': m.x,
+                  '--y': m.y,
+                  '--delay': m.delay,
+                  '--dur': m.dur,
+                  '--size': `${m.size}px`,
+                } as React.CSSProperties
+              }
             />
           ))}
         </div>
       </div>
 
-      {/* ═══ Layer 4: Sticky Notes (PNG base + text) ═══ */}
-      <div className="scene__stickies">
-        {slots.map((slot, i) => (
-          <div
-            key={`${i}-${slot.key}`}
-            className={`scene__sticky ${slot.visible ? 'scene__sticky--in' : 'scene__sticky--out'}`}
-            style={{
-              left: STICKY_SLOTS[i].left,
-              top: STICKY_SLOTS[i].top,
-              '--rotate': STICKY_SLOTS[i].rotate,
-              '--breathe-phase': `${i * 3.5}s`,
-            } as React.CSSProperties}
-          >
-            <img
-              src={ASSETS.stickyBase}
-              alt=""
-              className="scene__sticky-bg"
-              draggable={false}
-            />
-            <span className="scene__sticky-text">{slot.text}</span>
-          </div>
-        ))}
-      </div>
+      {/* ═══ Layer 4: Meeple Seats ═══ */}
+      {isHome && (
+        <SeatsLayer
+          members={members}
+          selfUserId={selfUserId}
+          onMeepleTap={handleMeepleTap}
+        />
+      )}
 
-      {/* ═══ Layer 5: Vignette ═══ */}
+      {/* ═══ Layer 5: Sticky Whispers ═══ */}
+      <StickyWhispers
+        recentPosts={recentPosts}
+        members={members}
+        isActive={isHome}
+      />
+
+      {/* ═══ Layer 6: Vignette ═══ */}
       <div className="scene__vignette" />
+
+      {/* ═══ Layer 7: UI Overlay ═══ */}
+      {isHome && (
+        <DeskUiLayer
+          members={members}
+          isSeated={isSeated}
+          onSitDown={onSitDown}
+          onOpenMenu={onOpenMenu}
+        />
+      )}
+
+      {/* ═══ Mini Card (on meeple tap) ═══ */}
+      {selectedSeat && isHome && (
+        <div
+          className={`mini-card-anchor ${SEAT_POSITIONS[selectedSeat.index].y < 25 ? 'mini-card-anchor--below' : ''}`}
+          style={{
+            left: `${SEAT_POSITIONS[selectedSeat.index].x}%`,
+            top: `${SEAT_POSITIONS[selectedSeat.index].y}%`,
+          }}
+        >
+          <MiniCard
+            member={selectedSeat.member}
+            onClose={() => setSelectedSeat(null)}
+          />
+        </div>
+      )}
     </div>
   )
 }
