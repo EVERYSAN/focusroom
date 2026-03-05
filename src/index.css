@@ -595,15 +595,17 @@ body {
 }
 
 /* ══════════════════════════════════════════════
-   Scene — Layered cafe desk
+   Scene — Layered cafe desk (illustration B)
    ══════════════════════════════════════════════
    1. Desk         — wooden texture background
-   2. Objects      — notebook, pen, coffee
-   3. Atmosphere   — dust particles, steam
-   4. Seats        — Meeple figures around desk
-   5. Whispers     — Sticky note fragments
-   6. Vignette     — edge darkening
-   7. UI Layer     — calm text + "席につく" button
+   2. Stylize      — grain + desaturation (illustration feel)
+   3. Objects      — notebook, pen, coffee
+   4. Atmosphere   — subtle dust particles
+   5. Light        — soft upper-left spot
+   6. Seats        — Meeple figures close to desk
+   7. Whispers     — Paper sticky notes
+   8. Vignette     — edge darkening
+   9. UI Layer     — text "printed" on notebook + label button
    +  Mini Card    — popup on meeple tap
    ══════════════════════════════════════════════ */
 
@@ -615,6 +617,15 @@ body {
   overflow: hidden;
 }
 
+/* Parallax wrapper — shifts 4-10px with mouse/gyro */
+.scene__parallax {
+  position: absolute;
+  /* Slightly oversized to hide edges during shift */
+  inset: -12px;
+  will-change: transform;
+  transition: transform 0.15s ease-out;
+}
+
 /* ── Layer 1: Desk ── */
 
 .scene__desk {
@@ -624,6 +635,8 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  /* Illustration feel: slightly desaturated, contrast up, soften */
+  filter: saturate(0.82) contrast(1.08) brightness(0.95);
   opacity: 0;
   transition: opacity 1.2s ease;
 }
@@ -632,7 +645,32 @@ body {
   opacity: 1;
 }
 
-/* ── Layer 2: Objects (individual transparent PNGs) ── */
+/* ── Layer 2: Stylize Overlay (illustration feel) ── */
+
+.scene__stylize {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: rgba(30, 25, 18, 0.06);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* Paper grain — thin noise texture */
+.scene__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  /* CSS-generated noise via SVG filter */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
+/* ── Layer 3: Objects (individual transparent PNGs) ── */
 
 .scene__objects {
   position: absolute;
@@ -674,7 +712,7 @@ body {
   max-width: 220px;
 }
 
-/* ── Layer 3: Atmosphere ── */
+/* ── Layer 4: Atmosphere (dust only — no steam, abstract only) ── */
 
 .scene__atmosphere {
   position: absolute;
@@ -682,56 +720,6 @@ body {
   z-index: 4;
 }
 
-/* Steam wisps — positioned above coffee cup (right: 12%, top: 6%) */
-.scene__steam {
-  position: absolute;
-  top: 2%;
-  right: 16%;
-  width: 80px;
-  height: 100px;
-}
-
-.steam-wisp {
-  position: absolute;
-  width: 20px;
-  height: 40px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 255, 255, 0.12) 0%,
-    transparent 70%
-  );
-  border-radius: 50%;
-  opacity: 0;
-  filter: blur(4px);
-}
-
-.steam-wisp--1 {
-  left: 15%;
-  animation: steam-rise 6s ease-in-out infinite;
-  animation-delay: 0s;
-}
-
-.steam-wisp--2 {
-  left: 45%;
-  animation: steam-rise 7s ease-in-out infinite;
-  animation-delay: 2s;
-}
-
-.steam-wisp--3 {
-  left: 30%;
-  animation: steam-rise 5.5s ease-in-out infinite;
-  animation-delay: 3.5s;
-}
-
-@keyframes steam-rise {
-  0%   { opacity: 0; transform: translateY(0) scaleX(1); }
-  20%  { opacity: 0.1; }
-  50%  { opacity: 0.06; transform: translateY(-30px) scaleX(1.4); }
-  80%  { opacity: 0.03; }
-  100% { opacity: 0; transform: translateY(-60px) scaleX(1.8); }
-}
-
-/* Dust motes */
 .scene__dust {
   position: absolute;
   inset: 0;
@@ -739,10 +727,10 @@ body {
 
 .dust-mote {
   position: absolute;
-  width: var(--size, 2px);
-  height: var(--size, 2px);
+  width: var(--size, 1.5px);
+  height: var(--size, 1.5px);
   border-radius: 50%;
-  background: rgba(220, 200, 170, 0.25);
+  background: rgba(220, 200, 170, 0.18);
   left: var(--x);
   top: var(--y);
   animation: dust-float var(--dur) ease-in-out infinite;
@@ -752,13 +740,27 @@ body {
 
 @keyframes dust-float {
   0%   { opacity: 0; transform: translate(0, 0); }
-  20%  { opacity: 0.3; }
-  50%  { opacity: 0.12; transform: translate(10px, -6px); }
-  80%  { opacity: 0.2; }
-  100% { opacity: 0; transform: translate(-5px, 5px); }
+  25%  { opacity: 0.10; }
+  50%  { opacity: 0.06; transform: translate(12px, -8px); }
+  75%  { opacity: 0.08; }
+  100% { opacity: 0; transform: translate(-6px, 6px); }
 }
 
-/* ── Layer 4: Meeple Seats ── */
+/* ── Layer 5: Soft Light (cafe stand light, upper-left) ── */
+
+.scene__light {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 50% 45% at 22% 18%,
+    rgba(255, 240, 200, 0.08) 0%,
+    transparent 70%
+  );
+}
+
+/* ── Layer 6: Meeple Seats ── */
 
 .seats-layer {
   position: absolute;
@@ -778,42 +780,54 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Touch-friendly: ensure 44×44 minimum */
   min-width: 44px;
   min-height: 44px;
   -webkit-tap-highlight-color: transparent;
 }
 
 .seat__svg {
-  width: 30px;
-  height: 36px;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.28));
+  width: 32px;
+  height: 38px;
+  /* Stronger downward shadow — "placed on desk" */
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.28));
   animation: meeple-breathe var(--breathe-dur, 7s) ease-in-out infinite;
   animation-delay: var(--breathe-phase, 0s);
-  transition: filter 0.3s ease;
+  transition: filter 0.3s ease, transform 0.3s ease;
 }
 
 .seat:hover .seat__svg,
 .seat:active .seat__svg {
   filter:
-    drop-shadow(0 6px 10px rgba(0, 0, 0, 0.28))
-    drop-shadow(0 0 4px rgba(255, 255, 255, 0.15));
+    drop-shadow(0 10px 14px rgba(0, 0, 0, 0.28))
+    drop-shadow(0 0 4px rgba(255, 255, 255, 0.12));
 }
 
 /* "You" — subtle gold glow */
 .seat--you .seat__svg {
   filter:
-    drop-shadow(0 6px 10px rgba(0, 0, 0, 0.28))
+    drop-shadow(0 10px 14px rgba(0, 0, 0, 0.28))
     drop-shadow(0 0 6px rgba(201, 168, 76, 0.35));
 }
 
-/* Ghost / Idle — reduced opacity */
+/* Entering bounce: scale 0 → 1.2 → 1.0 */
+.seat--entering .seat__svg {
+  animation: meeple-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+             meeple-breathe var(--breathe-dur, 7s) ease-in-out 0.4s infinite;
+}
+
+@keyframes meeple-enter {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Ghost — slightly more visible than before */
 .seat--ghost .seat__svg {
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 .seat--idle .seat__svg {
-  opacity: 0.55;
+  opacity: 0.6;
 }
 
 @keyframes meeple-breathe {
@@ -821,7 +835,7 @@ body {
   50%      { transform: scale(1.03); }
 }
 
-/* ── Layer 5: Sticky Whispers ── */
+/* ── Layer 7: Sticky Whispers (paper-like) ── */
 
 .whispers-layer {
   position: absolute;
@@ -834,25 +848,30 @@ body {
   position: absolute;
   max-width: 150px;
   padding: 10px 14px 8px;
-  background: rgba(255, 248, 230, 0.88);
-  border-radius: 2px;
+  /* Cream paper — not pure white */
+  background:
+    linear-gradient(135deg, rgba(245, 238, 218, 0.92) 0%, rgba(240, 232, 208, 0.88) 100%);
+  border-radius: 1px 3px 2px 1px; /* slightly uneven corners */
+  /* Short downward shadow — "stuck on desk" */
   box-shadow:
-    1px 2px 6px rgba(40, 30, 10, 0.22),
-    0 0 0 0.5px rgba(180, 160, 120, 0.2);
+    0 3px 5px rgba(40, 30, 10, 0.18),
+    0 0 0 0.5px rgba(180, 160, 120, 0.15);
   transform: rotate(var(--rotate, 0deg));
   transform-origin: center center;
   opacity: 0;
   animation: whisper-sway 16s ease-in-out infinite;
   animation-delay: var(--sway-phase, 0s);
+  /* Subtle grain on paper */
+  background-blend-mode: overlay;
 }
 
 .whisper-note--in {
-  transition: opacity 0.5s ease;
-  opacity: 0.92;
+  transition: opacity 0.6s ease;
+  opacity: 0.90;
 }
 
 .whisper-note--out {
-  transition: opacity 0.7s ease;
+  transition: opacity 0.8s ease;
   opacity: 0;
 }
 
@@ -862,7 +881,7 @@ body {
   font-size: 13px;
   color: #3a3020;
   line-height: 1.5;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   word-break: break-all;
 }
 
@@ -870,35 +889,33 @@ body {
   display: block;
   margin-top: 4px;
   font-size: 10px;
-  color: #8a7a60;
+  color: #9a8a68;
   letter-spacing: 0.02em;
 }
 
-/* Paper-on-desk subtle sway */
 @keyframes whisper-sway {
   0%, 100% {
     transform: rotate(var(--rotate, 0deg)) translateY(0);
   }
   50% {
-    transform: rotate(calc(var(--rotate, 0deg) + 0.8deg)) translateY(2px);
+    transform: rotate(calc(var(--rotate, 0deg) + 0.6deg)) translateY(1.5px);
   }
 }
 
-/* ── Layer 6: Vignette ── */
+/* ── Layer 8: Vignette ── */
 
 .scene__vignette {
   position: absolute;
   inset: 0;
   z-index: 7;
   background: radial-gradient(
-    ellipse 75% 65% at 50% 45%,
-    transparent 25%,
-    rgba(15, 12, 8, 0.35) 70%,
-    rgba(15, 12, 8, 0.7) 100%
+    ellipse at center,
+    transparent 55%,
+    rgba(0, 0, 0, 0.45) 100%
   );
 }
 
-/* ── Layer 7: UI Overlay ── */
+/* ── Layer 9: UI Overlay — "printed on notebook" feel ── */
 
 .ui-layer {
   position: absolute;
@@ -909,7 +926,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 16px;
   padding: 16% 20px 10%;
 }
 
@@ -917,49 +934,53 @@ body {
   text-align: center;
 }
 
+/* Text "printed" on the notebook — no bg panel, low opacity, wide letter-spacing */
 .ui-layer__primary {
   font-family: var(--font-serif);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
-  color: rgba(230, 230, 230, 0.7);
-  letter-spacing: 0.06em;
-  line-height: 1.7;
-  margin: 0 0 8px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  color: rgba(220, 215, 200, 0.78);
+  letter-spacing: 0.08em;
+  line-height: 1.8;
+  margin: 0 0 6px;
+  /* Very subtle shadow — avoid Web feel */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .ui-layer__secondary {
-  font-size: 12px;
-  color: rgba(200, 200, 200, 0.55);
+  font-size: 11px;
+  color: rgba(200, 195, 180, 0.50);
+  letter-spacing: 0.06em;
   margin: 0;
   transition: opacity 600ms ease;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .ui-layer__secondary--fading {
   opacity: 0;
 }
 
+/* Button = "label stuck to notebook" — small, low-contrast, barely rounded */
 .ui-layer__btn {
   pointer-events: auto;
-  padding: 10px 28px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: rgba(230, 230, 230, 0.8);
-  font-size: 13px;
+  padding: 8px 22px;
+  border: 1px solid rgba(200, 190, 170, 0.18);
+  border-radius: 4px;
+  background: rgba(240, 232, 210, 0.08);
+  color: rgba(220, 215, 200, 0.72);
+  font-size: 12px;
   font-family: var(--font-sans);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   cursor: pointer;
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
+  /* Very thin "paper label" shadow */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .ui-layer__btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(240, 232, 210, 0.14);
+  border-color: rgba(200, 190, 170, 0.28);
 }
 
 .ui-layer__btn:active {
@@ -976,12 +997,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 50%;
-  background: rgba(20, 24, 32, 0.3);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: rgba(200, 200, 200, 0.5);
+  background: rgba(20, 18, 14, 0.25);
+  color: rgba(200, 195, 180, 0.40);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -989,8 +1008,8 @@ body {
 }
 
 .ui-layer__more:hover {
-  background: rgba(20, 24, 32, 0.5);
-  color: rgba(230, 230, 230, 0.7);
+  background: rgba(20, 18, 14, 0.45);
+  color: rgba(220, 215, 200, 0.6);
 }
 
 /* ── Mini Card (meeple tap popup) ── */
@@ -999,11 +1018,9 @@ body {
   position: absolute;
   z-index: 10;
   pointer-events: auto;
-  /* Default: card above the meeple */
   transform: translate(-50%, calc(-100% - 12px));
 }
 
-/* When seat is near top edge, show card below */
 .mini-card-anchor--below {
   transform: translate(-50%, 12px);
 }
@@ -1103,8 +1120,8 @@ body {
 
   /* Meeple seats — slightly smaller on mobile */
   .seat__svg {
-    width: 26px;
-    height: 32px;
+    width: 28px;
+    height: 34px;
   }
 
   /* Whisper notes — compact for small screens */
@@ -1123,7 +1140,12 @@ body {
   }
 
   .ui-layer__primary {
-    font-size: 13px;
+    font-size: 12px;
+  }
+
+  .ui-layer__btn {
+    padding: 7px 18px;
+    font-size: 11px;
   }
 
   .ui-layer__more {

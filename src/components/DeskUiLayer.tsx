@@ -1,9 +1,9 @@
 /**
- * DeskUiLayer — Minimal text + "席につく" button overlaid on the desk scene.
+ * DeskUiLayer — Minimal text "printed on the notebook" + label-style button.
  *
  * - Main:  「今も、静かに集中している人がいます」
  * - Sub:   「◯◯さんが集中しています」 (rotates every ~15 s)
- * - Button: 「席につく」 (hidden once seated)
+ * - Button: 「この席に座る」 — looks like a label stuck to the notebook
  * - Small "•••" menu to access other tabs
  */
 
@@ -61,7 +61,7 @@ export function DeskUiLayer({ members, isSeated, onSitDown, onOpenMenu }: Props)
 
   return (
     <div className="ui-layer">
-      {/* Calm text group — upper area */}
+      {/* Calm text group — positioned over the notebook */}
       <div className="ui-layer__text-group">
         <p className="ui-layer__primary">{ja.welcome.primary}</p>
         <p
@@ -71,10 +71,10 @@ export function DeskUiLayer({ members, isSeated, onSitDown, onOpenMenu }: Props)
         </p>
       </div>
 
-      {/* Seat button — center-bottom */}
+      {/* Label-style button — "stuck to the notebook" */}
       {!isSeated && (
         <button className="ui-layer__btn" onClick={onSitDown}>
-          席につく
+          この席に座る
         </button>
       )}
 

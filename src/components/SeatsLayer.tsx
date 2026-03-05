@@ -2,27 +2,29 @@
  * SeatsLayer — Meeple figures seated around the desk perimeter.
  *
  * - Max 8 seats, filled with real members + ghost dummies
- * - Preset % positions (no random)
- * - Breathing scale animation (1.0 ↔ 1.03) with staggered phase
+ * - Positions moved inward (closer to desk) for "gathering" feel
+ * - Breathing scale animation with staggered phase
+ * - "You" meeple bounces in with scale 0→1.2→1.0 on first seat
  * - Tap a meeple → bubble event to parent for MiniCard
  */
 
+import { useState, useEffect } from 'react'
 import type { PresenceMember, FocusStatus } from '../types'
 
 /* ── Constants ── */
 
 const MAX_SEATS = 8
 
-/** Fixed positions around the desk edge (% of scene) */
+/** Fixed positions — pulled inward so meeples "sit at the desk" */
 export const SEAT_POSITIONS = [
-  { x: 20, y: 12 },
-  { x: 50, y: 10 },
-  { x: 80, y: 12 },
-  { x: 90, y: 35 },
-  { x: 90, y: 65 },
-  { x: 80, y: 88 },
-  { x: 50, y: 90 },
-  { x: 20, y: 88 },
+  { x: 24, y: 18 },
+  { x: 50, y: 15 },
+  { x: 76, y: 18 },
+  { x: 82, y: 38 },
+  { x: 82, y: 62 },
+  { x: 76, y: 82 },
+  { x: 50, y: 85 },
+  { x: 24, y: 82 },
 ]
 
 /** Muted woody palette — looks like painted wooden meeples */
@@ -81,11 +83,20 @@ function MeepleSvg({ color }: { color: string }) {
 interface Props {
   members: PresenceMember[]
   selfUserId: string
+  isSeated: boolean
   onMeepleTap: (member: SeatMember, seatIndex: number) => void
 }
 
-export function SeatsLayer({ members, selfUserId, onMeepleTap }: Props) {
+export function SeatsLayer({ members, selfUserId, isSeated, onMeepleTap }: Props) {
   const seats = buildSeats(members)
+  const [hasAnimated, setHasAnimated] = useState(false)
+
+  // Track when user first sits down → trigger bounce animation
+  useEffect(() => {
+    if (isSeated && !hasAnimated) {
+      setHasAnimated(true)
+    }
+  }, [isSeated, hasAnimated])
 
   return (
     <div className="seats-layer">
@@ -95,12 +106,15 @@ export function SeatsLayer({ members, selfUserId, onMeepleTap }: Props) {
         const isGhost = !!seat.__ghost
         const isIdle =
           seat.focusStatus === 'idle' || seat.focusStatus === 'break'
+        // Show bounce for "you" meeple on first seat
+        const showBounce = isYou && isSeated && hasAnimated
 
         const cls = [
           'seat',
           isYou && 'seat--you',
           isGhost && 'seat--ghost',
           isIdle && !isGhost && 'seat--idle',
+          showBounce && 'seat--entering',
         ]
           .filter(Boolean)
           .join(' ')
