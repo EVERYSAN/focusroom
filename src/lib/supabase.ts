@@ -9,4 +9,9 @@ if (!url || !key) {
   )
 }
 
-export const supabase = createClient(url ?? '', key ?? '')
+// Use a placeholder URL when env vars are missing so the app renders without a backend.
+// All Supabase calls will fail silently — the UI still works with local/mock data.
+export const supabase = createClient(
+  url || 'https://placeholder.supabase.co',
+  key || 'placeholder-key',
+)

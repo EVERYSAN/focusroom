@@ -1,40 +1,10 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
 import { PostForm } from './PostForm'
 import { IdeaCard } from './IdeaCard'
 import { StatsPanel } from './StatsPanel'
-import { WelcomeSection } from './WelcomeSection'
-import { useFriendHeuristic } from '../hooks/useFriendHeuristic'
 import { ja } from '../lib/i18n'
 import type { Room, PresenceMember, Stats, NoteType, Note, FocusStatus } from '../types'
 
 export type Tab = 'focus' | 'people' | 'ideas' | 'today' | 'tools'
-
-/* ── Ghost (display-only pseudo users) ── */
-
-type DisplayMember = PresenceMember & { __ghost?: boolean }
-
-const MIN_DISPLAY = 10
-const MAX_DISPLAY = 12
-
-// Stable ghost pool — generated once, never changes between renders
-const GHOST_POOL: DisplayMember[] = Array.from({ length: MAX_DISPLAY }, (_, i) => {
-  const hex = (i + 10).toString(16).toUpperCase().padStart(2, '0')
-  return {
-    userId: `ghost-${hex}`,
-    displayName: `Guest #${hex}${String.fromCharCode(65 + (i % 26))}${i}`,
-    focusStatus: 'focusing' as FocusStatus,
-    joinedAt: new Date(Date.now() - (i + 1) * 3 * 60_000).toISOString(), // staggered
-    __ghost: true,
-  }
-})
-
-function buildDisplayMembers(members: PresenceMember[]): DisplayMember[] {
-  const real: DisplayMember[] = members.slice(0, MAX_DISPLAY)
-  const target = Math.min(MAX_DISPLAY, Math.max(MIN_DISPLAY, real.length))
-  const need = Math.max(0, target - real.length)
-  if (need === 0) return real
-  return [...real, ...GHOST_POOL.slice(0, need)]
-}
 
 /* ── Helpers ── */
 
@@ -58,26 +28,6 @@ const STATUS_LABEL: Record<FocusStatus, string> = {
   focusing: ja.memberStatus.focusing,
   break: ja.memberStatus.break,
   idle: ja.memberStatus.idle,
-}
-
-/* ── Headline rotation (12s cycle over displayMembers) ── */
-
-function useHeadlineRotation(displayMembers: DisplayMember[]) {
-  const [index, setIndex] = useState(0)
-  const membersRef = useRef(displayMembers)
-  membersRef.current = displayMembers
-
-  useEffect(() => {
-    if (membersRef.current.length === 0) return
-    setIndex(0)
-    const id = setInterval(() => {
-      setIndex(prev => (prev + 1) % (membersRef.current.length || 1))
-    }, 12_000)
-    return () => clearInterval(id)
-  }, [displayMembers.length])
-
-  if (displayMembers.length === 0) return null
-  return displayMembers[index % displayMembers.length]?.displayName ?? null
 }
 
 /* ── Component ── */
@@ -104,12 +54,9 @@ export function FocusPanel({
   selfUserId, activeTab, onTabChange,
 }: Props) {
   const roomName = room?.name ?? 'Room'
-  useFriendHeuristic(members, selfUserId)
 
-  const displayMembers = useMemo(() => buildDisplayMembers(members), [members])
-  const headlineName = useHeadlineRotation(displayMembers)
-
-  const pickWelcomeName = () => headlineName
+  // Focus tab is now handled by the desk scene — this panel only renders for other tabs.
+  // This component won't even mount when activeTab === 'focus' (see App.tsx).
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'focus', label: ja.tabs.focus },
@@ -120,62 +67,34 @@ export function FocusPanel({
   ]
 
   return (
-    <div className={`panel ${activeTab === 'focus' ? 'panel--transparent' : ''}`}>
-      {/* Header + Tabs — hidden in focus mode */}
-      {activeTab !== 'focus' && (
-        <>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-serif text-xl font-semibold text-[var(--text-primary)]">
-              {ja.focusPanel.inRoom(roomName)}
-            </h2>
-            <div className="flex items-center gap-2">
-              <button className="text-xs text-[var(--text-secondary)] border border-[var(--border-primary)] rounded-lg px-3 py-1.5 hover:bg-[var(--bg-surface)] transition-colors cursor-pointer">
-                {ja.focusPanel.filter}
-              </button>
-              <button className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer text-lg">
-                •••
-              </button>
-            </div>
-          </div>
+    <div className="panel">
+      {/* Header + Tabs */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-serif text-xl font-semibold text-[var(--text-primary)]">
+          {ja.focusPanel.inRoom(roomName)}
+        </h2>
+      </div>
 
-          <div className="filter-tabs mb-4">
-            {tabs.map(t => (
-              <button
-                key={t.key}
-                onClick={() => onTabChange(t.key)}
-                className={`filter-tab ${activeTab === t.key ? 'filter-tab--active' : ''}`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* ── 集中 Tab — 量子 + ウェルカム + 参加ボタンだけ ── */}
-      {activeTab === 'focus' && (
-        <div className="py-8 flex flex-col items-center gap-6 min-h-[360px]">
-          <WelcomeSection pickWelcomeName={pickWelcomeName} />
-
-          <div className="flex-1" />
-
+      <div className="filter-tabs mb-4">
+        {tabs.map(t => (
           <button
-            className="px-5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.07] transition-colors cursor-pointer backdrop-blur-sm"
-            onClick={() => { onStart(); onTabChange('people') }}
+            key={t.key}
+            onClick={() => onTabChange(t.key)}
+            className={`filter-tab ${activeTab === t.key ? 'filter-tab--active' : ''}`}
           >
-            {ja.actions.joinQuietly}
+            {t.label}
           </button>
-        </div>
-      )}
+        ))}
+      </div>
 
       {/* ── 人 Tab — member grid ── */}
       {activeTab === 'people' && (
         <div className="py-4">
           <div className="grid grid-cols-3 gap-4 justify-items-center max-h-[420px] overflow-y-auto">
-            {displayMembers.map((m, i) => (
+            {members.map((m, i) => (
               <div
                 key={m.userId}
-                className={`flex flex-col items-center gap-1.5 memberDot ${m.__ghost ? 'ghost' : ''}`}
+                className="flex flex-col items-center gap-1.5 memberDot"
                 style={{
                   '--breathe': `${5.5 + (i % 5) * 0.25}s`,
                   '--phase': `-${(i * 1.7) % 6}s`,
