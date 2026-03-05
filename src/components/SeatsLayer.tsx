@@ -1,22 +1,10 @@
 /**
- * SeatsLayer — Wooden meeple figures placed around the desk.
+ * SeatsLayer — Wooden meeple figures at the desk edge.
  *
- * Design: "Board-game wooden meeple on a late-night cafe desk"
- * NOT UI icons — physical objects with:
- *   1) Contact shadow (downward drop-shadow on desk)
- *   2) Gradient body (lighter top from lamp, darker bottom)
- *   3) Lamp highlight (radialGradient upper-left)
- *   4) Subtle edge darkening (thin stroke, not a drawn line)
- *   5) Micro-glow for focusing state (warm, faint)
- *
- * States:
- *   focusing — default, warm micro-glow
- *   idle     — opacity 0.55, no glow
- *   you      — slightly stronger gold glow
- *   ghost    — very dim (placeholder seats)
- *
- * Breathing: scale 1.0 ↔ 1.04, 6–9s, phase offset per seat.
- * Max 8 seats. Positions pulled inward to "sit at the desk edge."
+ * 36px wooden board-game meeples.
+ * 5-color palette: blue, green, orange, mustard, purple.
+ * Placed at desk edge (80% line).
+ * Scale-breathing with phase offset.
  */
 
 import { useState, useEffect } from 'react'
@@ -26,31 +14,25 @@ import type { PresenceMember, FocusStatus } from '../types'
 
 const MAX_SEATS = 8
 
-/** Fixed positions — pulled closer to desk center for "gathering" feel */
+/** Desk edge positions — compensated for 125% zoom + 16% inset */
 export const SEAT_POSITIONS = [
-  { x: 27, y: 22 },  // top-left
-  { x: 50, y: 19 },  // top-center
-  { x: 73, y: 22 },  // top-right
-  { x: 77, y: 40 },  // right-upper
-  { x: 77, y: 60 },  // right-lower
-  { x: 73, y: 78 },  // bottom-right
-  { x: 50, y: 81 },  // bottom-center
-  { x: 27, y: 78 },  // bottom-left
+  { x: 34, y: 32 },  // top-left
+  { x: 50, y: 28 },  // top-center
+  { x: 66, y: 32 },  // top-right
+  { x: 69, y: 44 },  // right-upper
+  { x: 69, y: 56 },  // right-lower
+  { x: 66, y: 68 },  // bottom-right
+  { x: 50, y: 72 },  // bottom-center
+  { x: 34, y: 68 },  // bottom-left
 ]
 
-/**
- * Muted "kusumi-iro" palette — looks like painted wooden meeples
- * under dim cafe lighting. NOT pastel, NOT saturated.
- */
+/** 5-color meeple palette */
 const MEEPLE_COLORS = [
-  '#8c7058', // warm walnut
-  '#6b7c5a', // moss green
-  '#7a6a8c', // dusty plum
-  '#8c6a58', // burnt sienna
-  '#5a748c', // slate blue
-  '#8c7a58', // raw umber
-  '#5a8c78', // dark teal
-  '#8c5a6a', // berry
+  '#5B7B9A', // blue
+  '#6B8C5A', // green
+  '#C4835A', // orange
+  '#B8973F', // mustard
+  '#8A6B94', // purple
 ]
 
 /* ── Types ── */
@@ -74,18 +56,7 @@ function buildSeats(members: PresenceMember[]): SeatMember[] {
   return [...real, ...ghosts]
 }
 
-/* ══════════════════════════════════════════════
-   Meeple SVG — "Wooden board-game piece"
-   ══════════════════════════════════════════════
-   viewBox 0 0 30 36
-   Head:  circle (15, 7) r=5.5
-   Body:  classic meeple silhouette (arms out, wide base)
-   Layers (bottom → top):
-     ① Base color fill
-     ② Linear gradient shade (light top → dark bottom)
-     ③ Radial highlight (lamp from upper-left)
-     ④ Edge shadow (thin dark stroke)
-   ══════════════════════════════════════════════ */
+/* ── Meeple SVG ── */
 
 const BODY_D =
   'M10 14 C10 12 12 10.5 15 10.5 C18 10.5 20 12 20 14' +
@@ -93,37 +64,31 @@ const BODY_D =
   ' L8 21 L3 23.5 L1 20 L7 17 Z'
 
 function MeepleSvg({ color, index }: { color: string; index: number }) {
-  const sId = `ms${index}` // shade gradient
-  const hId = `mh${index}` // highlight gradient
+  const sId = `ms${index}`
+  const hId = `mh${index}`
 
   return (
     <svg viewBox="0 0 30 36" className="seat__svg" aria-hidden="true">
       <defs>
-        {/* Shade: lighter top (lamp above) → darker bottom */}
         <linearGradient id={sId} x1="0.5" y1="0" x2="0.5" y2="1">
-          <stop offset="0%" stopColor="#fff" stopOpacity={0.20} />
-          <stop offset="100%" stopColor="#000" stopOpacity={0.12} />
+          <stop offset="0%" stopColor="#fff" stopOpacity={0.22} />
+          <stop offset="100%" stopColor="#000" stopOpacity={0.14} />
         </linearGradient>
-        {/* Highlight: warm spot from upper-left (desk lamp) */}
         <radialGradient id={hId} cx="0.30" cy="0.15" r="0.55" fx="0.30" fy="0.15">
-          <stop offset="0%" stopColor="#fff" stopOpacity={0.24} />
+          <stop offset="0%" stopColor="#fff" stopOpacity={0.26} />
           <stop offset="100%" stopColor="#fff" stopOpacity={0} />
         </radialGradient>
       </defs>
 
-      {/* ① Base color */}
       <circle cx="15" cy="7" r="5.5" fill={color} />
       <path d={BODY_D} fill={color} />
 
-      {/* ② Shade gradient (3D roundness) */}
       <circle cx="15" cy="7" r="5.5" fill={`url(#${sId})`} />
       <path d={BODY_D} fill={`url(#${sId})`} />
 
-      {/* ③ Lamp highlight (upper-left glow) */}
       <circle cx="15" cy="7" r="5.5" fill={`url(#${hId})`} />
       <path d={BODY_D} fill={`url(#${hId})`} />
 
-      {/* ④ Edge shadow (thin ambient outline — NOT a drawn border) */}
       <circle cx="15" cy="7" r="5.5" fill="none" stroke="rgba(0,0,0,0.15)" strokeWidth="0.6" />
       <path d={BODY_D} fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="0.6" />
     </svg>
@@ -143,7 +108,6 @@ export function SeatsLayer({ members, selfUserId, isSeated, onMeepleTap }: Props
   const seats = buildSeats(members)
   const [hasAnimated, setHasAnimated] = useState(false)
 
-  // Track when user first sits down → trigger bounce animation
   useEffect(() => {
     if (isSeated && !hasAnimated) {
       setHasAnimated(true)
@@ -158,7 +122,6 @@ export function SeatsLayer({ members, selfUserId, isSeated, onMeepleTap }: Props
         const isGhost = !!seat.__ghost
         const isIdle =
           seat.focusStatus === 'idle' || seat.focusStatus === 'break'
-        // Show bounce for "you" meeple on first seat
         const showBounce = isYou && isSeated && hasAnimated
 
         const cls = [
@@ -179,9 +142,7 @@ export function SeatsLayer({ members, selfUserId, isSeated, onMeepleTap }: Props
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
-              // Breathing duration: 6–9s, different per seat
               '--breathe-dur': `${6 + (i % 4) * 0.8}s`,
-              // Phase offset: stagger so no two breathe in sync
               '--breathe-phase': `${-(i * 1.1) % 9}s`,
             } as React.CSSProperties}
             onClick={e => {

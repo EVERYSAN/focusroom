@@ -35,12 +35,12 @@ const DISPLAY_MAX = 14_000
 const SPAWN_MIN = 12_000
 const SPAWN_MAX = 20_000
 
-/** Fixed zones on the desk where whispers may appear */
+/** Fixed zones — compensated for 125% zoom + 16% inset container */
 const WHISPER_ZONES = [
-  { left: '14%', top: '32%', rotate: '-1.5deg' },
-  { left: '54%', top: '24%', rotate: '1deg' },
-  { left: '16%', top: '64%', rotate: '2deg' },
-  { left: '50%', top: '70%', rotate: '-0.8deg' },
+  { left: '32%', top: '38%', rotate: '-2.5deg' },
+  { left: '55%', top: '34%', rotate: '1.8deg' },
+  { left: '34%', top: '58%', rotate: '3deg' },
+  { left: '52%', top: '62%', rotate: '-1.5deg' },
 ]
 
 /* ── Internal state ── */
