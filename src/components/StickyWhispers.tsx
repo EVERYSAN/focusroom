@@ -35,12 +35,13 @@ const DISPLAY_MAX = 14_000
 const SPAWN_MIN = 12_000
 const SPAWN_MAX = 20_000
 
-/** Fixed zones — compensated for 125% zoom + 16% inset container */
+/** Fixed zones — well-separated, around notebook edges
+ *  Positions compensated for 125% zoom + 16% inset parallax */
 const WHISPER_ZONES = [
-  { left: '32%', top: '38%', rotate: '-2.5deg' },
-  { left: '55%', top: '34%', rotate: '1.8deg' },
-  { left: '34%', top: '58%', rotate: '3deg' },
-  { left: '52%', top: '62%', rotate: '-1.5deg' },
+  { left: '22%', top: '34%', rotate: '-2.5deg' },   // left of notebook
+  { left: '72%', top: '38%', rotate: '1.8deg' },    // right of notebook
+  { left: '24%', top: '66%', rotate: '3deg' },      // bottom-left
+  { left: '70%', top: '64%', rotate: '-1.5deg' },   // bottom-right
 ]
 
 /* ── Internal state ── */
@@ -168,14 +169,25 @@ export function StickyWhispers({ recentPosts, members, isActive }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive])
 
+  /* Identify older whisper when 2 visible — it gets faded "secondary" style */
+  const visibleIds = whispers.filter(w => w.visible).map(w => w.id)
+
   return (
     <div className="whispers-layer">
       {whispers.map(w => {
         const zone = WHISPER_ZONES[w.zoneIndex]
+        const isSecondary =
+          w.visible && visibleIds.length > 1 && visibleIds[0] === w.id
+        const cls = [
+          'whisper-note',
+          w.visible ? 'whisper-note--in' : 'whisper-note--out',
+          isSecondary && 'whisper-note--secondary',
+        ].filter(Boolean).join(' ')
+
         return (
           <div
             key={w.id}
-            className={`whisper-note ${w.visible ? 'whisper-note--in' : 'whisper-note--out'}`}
+            className={cls}
             style={{
               left: zone.left,
               top: zone.top,

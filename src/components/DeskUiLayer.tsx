@@ -1,10 +1,14 @@
 /**
- * DeskUiLayer — UI overlay matching reference image layout.
+ * DeskUiLayer — UI overlay centered above the notebook.
  *
- * - Top area:    「今、静かに集中している人がいます」
- * - Member list: 「🔒 ◯◯が集中しています」 (up to 3 visible)
- * - Button:      「席につく」— wooden embossed style (bottom-right)
- * - Menu:        「•••」 bottom-right dot button
+ * All text + button form one centered group above the desk notebook,
+ * making them feel part of the same physical space.
+ *
+ * - Primary:   「今、静かに集中している人がいます」
+ * - Members:   「🔒 ◯◯が集中しています」 (up to 3)
+ * - Status:    「いま：作業中」 (when no focused members)
+ * - Button:    「席につく」— wooden embossed
+ * - Menu:      「•••」 bottom-right
  */
 
 import type { PresenceMember } from '../types'
@@ -26,32 +30,35 @@ export function DeskUiLayer({ members, isSeated, onSitDown, onOpenMenu }: Props)
 
   return (
     <div className="ui-layer">
-      {/* ── Top area: calm text + member list ── */}
-      <div className="ui-layer__top">
+      {/* ── Centered group above notebook ── */}
+      <div className="ui-layer__center">
         <p className="ui-layer__primary">{ja.welcome.primary}</p>
-        <div className="ui-layer__member-list">
-          {focusingMembers.map(m => (
-            <p key={m.userId} className="ui-layer__member-row">
-              <span className="ui-layer__lock">🔒</span>
-              {' '}
-              {ja.spotlight.focusing(m.displayName)}
-            </p>
-          ))}
-          {focusingMembers.length === 0 && (
-            <p className="ui-layer__member-row">
-              {ja.spotlight.nowDefault}
-            </p>
-          )}
-        </div>
-      </div>
 
-      {/* ── Bottom-right: sit button + menu ── */}
-      <div className="ui-layer__bottom">
+        {focusingMembers.length > 0 ? (
+          <div className="ui-layer__member-list">
+            {focusingMembers.map(m => (
+              <p key={m.userId} className="ui-layer__member-row">
+                <span className="ui-layer__lock">🔒</span>
+                {' '}
+                {ja.spotlight.focusing(m.displayName)}
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="ui-layer__member-row">
+            {ja.spotlight.nowDefault}
+          </p>
+        )}
+
         {!isSeated && (
           <button className="ui-layer__btn" onClick={onSitDown}>
             席につく
           </button>
         )}
+      </div>
+
+      {/* ── Bottom-right: menu only ── */}
+      <div className="ui-layer__bottom">
         <button
           className="ui-layer__more"
           onClick={onOpenMenu}

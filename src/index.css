@@ -684,23 +684,23 @@ body {
   user-select: none;
 }
 
-/* Notebook — center of desk */
+/* Notebook — center hero of desk (1.25× scale, slightly lowered) */
 .scene__obj--notebook {
-  width: 28%;
-  max-width: 320px;
+  width: 35%;
+  max-width: 400px;
   left: 50%;
-  top: 50%;
+  top: 53%;
   transform: translate(-50%, -50%);
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.40))
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.45))
           drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
 }
 
-/* Pen — right of notebook */
+/* Pen — snug against notebook right edge */
 .scene__obj--pen {
   width: 12%;
   max-width: 140px;
-  left: 66%;
-  top: 52%;
+  left: 62%;
+  top: 56%;
   transform: translate(-50%, -50%) rotate(-15deg);
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
 }
@@ -827,10 +827,10 @@ body {
 }
 
 .seat__svg {
-  width: 56px;
-  height: 67px;
+  width: 62px;
+  height: 74px;
   /* Strong desk shadow for physical presence */
-  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.40));
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.38));
   /* Breathing: desync via CSS custom props */
   animation: meeple-breathe var(--breathe-dur, 7s) ease-in-out infinite;
   animation-delay: var(--breathe-phase, 0s);
@@ -881,13 +881,13 @@ body {
 }
 
 .seat--ghost .seat__svg {
-  opacity: 0.30;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
+  opacity: 0.45;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.28));
 }
 
 .seat--idle .seat__svg {
-  opacity: 0.50;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
+  opacity: 0.62;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.26));
 }
 
 .seat--entering .seat__svg {
@@ -945,6 +945,11 @@ body {
   opacity: 0;
 }
 
+/* Second (older) whisper — slightly faded for "ambient noise" feel */
+.whisper-note--secondary.whisper-note--in {
+  opacity: 0.78;
+}
+
 .whisper-note__text {
   display: block;
   font-family: var(--font-serif);
@@ -994,15 +999,19 @@ body {
   inset: 0;
   z-index: 8;
   pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 0;
 }
 
-/* ── Top area: text + member list ── */
-.ui-layer__top {
-  padding: 28px 32px;
+/* ── Centered group — sits above notebook ── */
+.ui-layer__center {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  transform: translateX(-50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
 .ui-layer__primary {
@@ -1019,6 +1028,7 @@ body {
 .ui-layer__member-list {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
 }
 
@@ -1035,18 +1045,17 @@ body {
   font-size: 11px;
 }
 
-/* ── Bottom area: sit button + menu ── */
+/* ── Bottom-right: menu dot only ── */
 .ui-layer__bottom {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 0 28px 24px;
+  position: absolute;
+  bottom: 24px;
+  right: 28px;
 }
 
-/* Button = wooden embossed label */
+/* Button = wooden embossed label (inside center group) */
 .ui-layer__btn {
   pointer-events: auto;
+  margin-top: 6px;
   padding: 10px 28px;
   border: 1px solid rgba(160, 130, 80, 0.35);
   border-radius: 4px;
@@ -1220,8 +1229,8 @@ body {
 
   /* Meeple seats — smaller on mobile */
   .seat__svg {
-    width: 40px;
-    height: 48px;
+    width: 46px;
+    height: 55px;
   }
 
   .seat__status-icon {
@@ -1230,8 +1239,8 @@ body {
     right: -4px;
   }
 
-  /* Desk objects — smaller on mobile */
-  .scene__obj--notebook { width: 34%; }
+  /* Desk objects — still hero on mobile */
+  .scene__obj--notebook { width: 42%; }
   .scene__obj--pen { width: 14%; }
   .scene__obj--coffee { width: 16%; }
 
@@ -1245,9 +1254,9 @@ body {
     font-size: 12px;
   }
 
-  /* UI layer — tighter padding */
-  .ui-layer__top {
-    padding: 20px 20px;
+  /* UI layer — tighter on mobile */
+  .ui-layer__center {
+    top: 16%;
   }
 
   .ui-layer__primary {
@@ -1259,7 +1268,8 @@ body {
   }
 
   .ui-layer__bottom {
-    padding: 0 20px 18px;
+    bottom: 18px;
+    right: 20px;
   }
 
   .ui-layer__btn {
