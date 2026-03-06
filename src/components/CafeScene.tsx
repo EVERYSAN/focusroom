@@ -1,18 +1,21 @@
 /**
- * CafeScene — layered desk scene for the focus room.
+ * CafeScene — Late-night cafe desk with physical objects.
  *
  * Architecture (bottom → top):
- *   1. Desk Layer       — desk_texture.png (clean wood surface)
- *   2. Objects Layer     — individual transparent PNGs (notebook, pen, coffee)
- *   3. Atmosphere Layer  — CSS dust particles + steam wisps
- *   4. Seats Layer       — Meeple figures around the desk edge
- *   5. Sticky Layer      — Whisper notes that fade in/out on the desk
- *   6. Vignette Layer    — CSS radial-gradient edge darkening
- *   7. UI Layer          — Calm text + "席につく" button
- *   +  Mini Card         — Popup on meeple tap
+ *   1. Desk          — desk_texture.png zoomed 125%
+ *   2. Stylize       — grain + desaturation (illustration feel)
+ *   3. Objects       — notebook.png + pen.png + coffee.png
+ *   4. Props         — CSS desk clutter (clips, leaves)
+ *   5. Atmosphere    — fine dust particles
+ *   6. Light         — warm spot from upper-left
+ *   7. Seats         — Meeple figures scattered on desk
+ *   8. Sticky        — Paper whisper notes (#F6E7A7)
+ *   9. Vignette      — edge darkening
+ *  10. UI            — text + sit-down button
+ *   +  Mini Card     — popup on meeple tap
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { SeatsLayer, SEAT_POSITIONS, type SeatMember } from './SeatsLayer'
 import { StickyWhispers } from './StickyWhispers'
 import { DeskUiLayer } from './DeskUiLayer'
@@ -37,25 +40,39 @@ interface CafeSceneProps {
   onOpenMenu: () => void
 }
 
-/* ── Dust Mote Data ── */
-
-const DUST_COUNT = 12
-const dustMotes = Array.from({ length: DUST_COUNT }, (_, i) => ({
-  x: `${10 + ((i * 7.3) % 80)}%`,
-  y: `${8 + ((i * 11.7) % 84)}%`,
-  delay: `${(i * 1.8) % 12}s`,
-  dur: `${10 + (i % 5) * 3}s`,
-  size: 1.5 + (i % 3) * 0.5,
-}))
-
 /* ── Asset paths ── */
 
-const ASSETS = {
-  desk: '/assets/desk_texture.png',
-  notebook: '/assets/notebook.png',
-  pen: '/assets/pen.png',
-  coffee: '/assets/coffee.png',
-} as const
+const DESK_TEXTURE = '/assets/desk_texture.png'
+const NOTEBOOK_IMG = '/assets/notebook.png'
+const PEN_IMG = '/assets/pen.png'
+const COFFEE_IMG = '/assets/coffee.png'
+
+/* ── Desk Props — small scattered items ── */
+
+const DESK_PROPS: {
+  type: 'clip' | 'leaf'
+  x: number
+  y: number
+  rot: number
+}[] = [
+  { type: 'clip', x: 26, y: 52, rot: 18 },
+  { type: 'leaf', x: 22, y: 78, rot: -22 },
+  { type: 'clip', x: 62, y: 74, rot: -32 },
+  { type: 'leaf', x: 24, y: 32, rot: 38 },
+  { type: 'clip', x: 72, y: 44, rot: -15 },
+  { type: 'leaf', x: 70, y: 72, rot: 12 },
+]
+
+/* ── Dust — fine particles ── */
+
+const DUST_COUNT = 18
+const dustMotes = Array.from({ length: DUST_COUNT }, (_, i) => ({
+  x: `${6 + ((i * 7.3) % 88)}%`,
+  y: `${4 + ((i * 11.7) % 92)}%`,
+  delay: `${(i * 2.1) % 20}s`,
+  dur: `${16 + (i % 6) * 3}s`,
+  size: 0.8 + (i % 3) * 0.4,
+}))
 
 /* ── Component ── */
 
@@ -69,13 +86,42 @@ export function CafeScene({
   onOpenMenu,
 }: CafeSceneProps) {
   const [deskLoaded, setDeskLoaded] = useState(false)
+  const sceneRef = useRef<HTMLDivElement>(null)
 
   /* Preload desk texture */
   useEffect(() => {
     const img = new Image()
     img.onload = () => setDeskLoaded(true)
-    img.src = ASSETS.desk
+    img.src = DESK_TEXTURE
   }, [])
+
+  /* ── Micro-parallax (mouse/gyro → subtle shift) ── */
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+
+  const handlePointerMove = useCallback((e: MouseEvent) => {
+    const cx = window.innerWidth / 2
+    const cy = window.innerHeight / 2
+    const dx = ((e.clientX - cx) / cx) * 5
+    const dy = ((e.clientY - cy) / cy) * 3
+    setOffset({ x: dx, y: dy })
+  }, [])
+
+  const handleDeviceOrientation = useCallback((e: DeviceOrientationEvent) => {
+    const gamma = e.gamma ?? 0
+    const beta = e.beta ?? 0
+    const dx = (gamma / 45) * 6
+    const dy = ((beta - 45) / 45) * 4
+    setOffset({ x: Math.max(-6, Math.min(6, dx)), y: Math.max(-4, Math.min(4, dy)) })
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener('mousemove', handlePointerMove, { passive: true })
+    window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', handlePointerMove)
+      window.removeEventListener('deviceorientation', handleDeviceOrientation)
+    }
+  }, [handlePointerMove, handleDeviceOrientation])
 
   /* ── Mini Card state ── */
   const [selectedSeat, setSelectedSeat] = useState<{
@@ -91,87 +137,113 @@ export function CafeScene({
     }
   }
 
-  // Close mini card when leaving home
   useEffect(() => {
     if (!isHome) setSelectedSeat(null)
   }, [isHome])
 
+  /* Camera zoom 125% + parallax offset */
+  const parallaxStyle = {
+    transform: `translate(${offset.x}px, ${offset.y}px) scale(1.25)`,
+  }
+
   return (
-    <div className="scene" aria-hidden={!isHome}>
-      {/* ═══ Layer 1: Desk Surface ═══ */}
-      <div
-        className={`scene__desk ${deskLoaded ? 'scene__desk--loaded' : ''}`}
-        style={{ backgroundImage: `url(${ASSETS.desk})` }}
-      />
+    <div className="scene" ref={sceneRef} aria-hidden={!isHome}>
+      {/* Parallax + zoom wrapper */}
+      <div className="scene__parallax" style={parallaxStyle}>
 
-      {/* ═══ Layer 2: Objects (individual PNGs) ═══ */}
-      <div className="scene__objects">
-        <img
-          src={ASSETS.notebook}
-          alt=""
-          className="scene__obj scene__obj--notebook"
-          draggable={false}
+        {/* ═══ Layer 1: Desk Surface ═══ */}
+        <div
+          className={`scene__desk ${deskLoaded ? 'scene__desk--loaded' : ''}`}
+          style={{ backgroundImage: `url(${DESK_TEXTURE})` }}
         />
-        <img
-          src={ASSETS.pen}
-          alt=""
-          className="scene__obj scene__obj--pen"
-          draggable={false}
-        />
-        <img
-          src={ASSETS.coffee}
-          alt=""
-          className="scene__obj scene__obj--coffee"
-          draggable={false}
-        />
-      </div>
 
-      {/* ═══ Layer 3: Atmosphere ═══ */}
-      <div className="scene__atmosphere">
-        <div className="scene__steam">
-          <span className="steam-wisp steam-wisp--1" />
-          <span className="steam-wisp steam-wisp--2" />
-          <span className="steam-wisp steam-wisp--3" />
+        {/* ═══ Layer 2: Stylize (illustration feel) ═══ */}
+        <div className="scene__stylize" />
+        <div className="scene__grain" />
+
+        {/* ═══ Layer 3: Desk Objects (notebook, pen, coffee) ═══ */}
+        <div className="scene__objects">
+          <img
+            src={NOTEBOOK_IMG}
+            alt=""
+            className="scene__obj scene__obj--notebook"
+            draggable={false}
+          />
+          <img
+            src={PEN_IMG}
+            alt=""
+            className="scene__obj scene__obj--pen"
+            draggable={false}
+          />
+          <img
+            src={COFFEE_IMG}
+            alt=""
+            className="scene__obj scene__obj--coffee"
+            draggable={false}
+          />
         </div>
-        <div className="scene__dust">
-          {dustMotes.map((m, i) => (
+
+        {/* ═══ Layer 4: Desk Props (small scattered items) ═══ */}
+        <div className="scene__props">
+          {DESK_PROPS.map((p, i) => (
             <span
               key={i}
-              className="dust-mote"
-              style={
-                {
-                  '--x': m.x,
-                  '--y': m.y,
-                  '--delay': m.delay,
-                  '--dur': m.dur,
-                  '--size': `${m.size}px`,
-                } as React.CSSProperties
-              }
+              className={`desk-prop desk-prop--${p.type}`}
+              style={{
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                '--prop-rot': `${p.rot}deg`,
+              } as React.CSSProperties}
             />
           ))}
         </div>
+
+        {/* ═══ Layer 5: Atmosphere (fine dust) ═══ */}
+        <div className="scene__atmosphere">
+          <div className="scene__dust">
+            {dustMotes.map((m, i) => (
+              <span
+                key={i}
+                className="dust-mote"
+                style={
+                  {
+                    '--x': m.x,
+                    '--y': m.y,
+                    '--delay': m.delay,
+                    '--dur': m.dur,
+                    '--size': `${m.size}px`,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ═══ Layer 6: Warm Light (upper-left) ═══ */}
+        <div className="scene__light" />
+
+        {/* ═══ Layer 7: Meeple Seats ═══ */}
+        {isHome && (
+          <SeatsLayer
+            members={members}
+            selfUserId={selfUserId}
+            isSeated={isSeated}
+            onMeepleTap={handleMeepleTap}
+          />
+        )}
+
+        {/* ═══ Layer 8: Sticky Whispers ═══ */}
+        <StickyWhispers
+          recentPosts={recentPosts}
+          members={members}
+          isActive={isHome}
+        />
       </div>
 
-      {/* ═══ Layer 4: Meeple Seats ═══ */}
-      {isHome && (
-        <SeatsLayer
-          members={members}
-          selfUserId={selfUserId}
-          onMeepleTap={handleMeepleTap}
-        />
-      )}
-
-      {/* ═══ Layer 5: Sticky Whispers ═══ */}
-      <StickyWhispers
-        recentPosts={recentPosts}
-        members={members}
-        isActive={isHome}
-      />
-
-      {/* ═══ Layer 6: Vignette ═══ */}
+      {/* ═══ Layer 9: Vignette (outside parallax) ═══ */}
       <div className="scene__vignette" />
 
-      {/* ═══ Layer 7: UI Overlay ═══ */}
+      {/* ═══ Layer 10: UI Overlay ═══ */}
       {isHome && (
         <DeskUiLayer
           members={members}
@@ -181,7 +253,7 @@ export function CafeScene({
         />
       )}
 
-      {/* ═══ Mini Card (on meeple tap) ═══ */}
+      {/* ═══ Mini Card ═══ */}
       {selectedSeat && isHome && (
         <div
           className={`mini-card-anchor ${SEAT_POSITIONS[selectedSeat.index].y < 25 ? 'mini-card-anchor--below' : ''}`}

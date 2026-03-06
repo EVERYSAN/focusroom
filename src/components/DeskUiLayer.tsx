@@ -1,20 +1,18 @@
 /**
- * DeskUiLayer — Minimal text + "席につく" button overlaid on the desk scene.
+ * DeskUiLayer — UI overlay centered above the notebook.
  *
- * - Main:  「今も、静かに集中している人がいます」
- * - Sub:   「◯◯さんが集中しています」 (rotates every ~15 s)
- * - Button: 「席につく」 (hidden once seated)
- * - Small "•••" menu to access other tabs
+ * All text + button form one centered group above the desk notebook,
+ * making them feel part of the same physical space.
+ *
+ * - Primary:   「今、静かに集中している人がいます」
+ * - Members:   「🔒 ◯◯が集中しています」 (up to 3)
+ * - Status:    「いま：作業中」 (when no focused members)
+ * - Button:    「席につく」— wooden embossed
+ * - Menu:      「•••」 bottom-right
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react'
 import type { PresenceMember } from '../types'
 import { ja } from '../lib/i18n'
-
-/* ── Constants ── */
-
-const ROTATE_INTERVAL = 15_000
-const FADE_DURATION = 600
 
 /* ── Component ── */
 
@@ -26,66 +24,49 @@ interface Props {
 }
 
 export function DeskUiLayer({ members, isSeated, onSitDown, onOpenMenu }: Props) {
-  const [currentName, setCurrentName] = useState<string | null>(null)
-  const [fading, setFading] = useState(false)
-
-  const membersRef = useRef(members)
-  membersRef.current = members
-  const indexRef = useRef(0)
-
-  const pickName = useCallback(() => {
-    const ms = membersRef.current
-    if (ms.length === 0) return null
-    const idx = indexRef.current % ms.length
-    indexRef.current++
-    return ms[idx].displayName
-  }, [])
-
-  useEffect(() => {
-    setCurrentName(pickName())
-
-    const interval = setInterval(() => {
-      setFading(true)
-      setTimeout(() => {
-        setCurrentName(pickName())
-        setFading(false)
-      }, FADE_DURATION)
-    }, ROTATE_INTERVAL)
-
-    return () => clearInterval(interval)
-  }, [pickName, members.length])
-
-  const subText = currentName
-    ? ja.spotlight.focusing(currentName)
-    : ja.spotlight.nowDefault
+  const focusingMembers = members.filter(
+    m => m.focusStatus === 'focusing',
+  ).slice(0, 3)
 
   return (
     <div className="ui-layer">
-      {/* Calm text group — upper area */}
-      <div className="ui-layer__text-group">
+      {/* ── Centered group above notebook ── */}
+      <div className="ui-layer__center">
         <p className="ui-layer__primary">{ja.welcome.primary}</p>
-        <p
-          className={`ui-layer__secondary ${fading ? 'ui-layer__secondary--fading' : ''}`}
-        >
-          {subText}
-        </p>
+
+        {focusingMembers.length > 0 ? (
+          <div className="ui-layer__member-list">
+            {focusingMembers.map(m => (
+              <p key={m.userId} className="ui-layer__member-row">
+                <span className="ui-layer__lock">🔒</span>
+                {' '}
+                {ja.spotlight.focusing(m.displayName)}
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="ui-layer__member-row">
+            {ja.spotlight.nowDefault}
+          </p>
+        )}
+
+        {!isSeated && (
+          <button className="ui-layer__btn" onClick={onSitDown}>
+            席につく
+          </button>
+        )}
       </div>
 
-      {/* Seat button — center-bottom */}
-      {!isSeated && (
-        <button className="ui-layer__btn" onClick={onSitDown}>
-          席につく
+      {/* ── Bottom-right: menu only ── */}
+      <div className="ui-layer__bottom">
+        <button
+          className="ui-layer__more"
+          onClick={onOpenMenu}
+          aria-label="メニュー"
+        >
+          •••
         </button>
-      )}
-
-      {/* Minimal nav — bottom corner */}
-      <button
-        className="ui-layer__more"
-        onClick={onOpenMenu}
-        aria-label="メニュー"
-      >
-        •••
-      </button>
+      </div>
     </div>
   )
 }

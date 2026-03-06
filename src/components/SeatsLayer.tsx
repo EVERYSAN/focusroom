@@ -1,41 +1,46 @@
 /**
- * SeatsLayer — Meeple figures seated around the desk perimeter.
+ * SeatsLayer — Wooden meeple figures scattered on the desk.
  *
- * - Max 8 seats, filled with real members + ghost dummies
- * - Preset % positions (no random)
- * - Breathing scale animation (1.0 ↔ 1.03) with staggered phase
- * - Tap a meeple → bubble event to parent for MiniCard
+ * - 60px wooden board-game meeples (3D SVG with filters)
+ * - 5-color palette: blue, green, orange, brown, purple
+ * - Scattered around notebook (matching reference image)
+ * - Status indicator icons (💡 idea, ☕ break)
+ * - Scale-breathing with phase offset
  */
 
+import { useState, useEffect } from 'react'
 import type { PresenceMember, FocusStatus } from '../types'
 
 /* ── Constants ── */
 
 const MAX_SEATS = 8
 
-/** Fixed positions around the desk edge (% of scene) */
+/** Meeple positions — scattered around notebook, compensated for 125% zoom + 16% inset */
 export const SEAT_POSITIONS = [
-  { x: 20, y: 12 },
-  { x: 50, y: 10 },
-  { x: 80, y: 12 },
-  { x: 90, y: 35 },
-  { x: 90, y: 65 },
-  { x: 80, y: 88 },
-  { x: 50, y: 90 },
-  { x: 20, y: 88 },
+  { x: 28, y: 26, rot: -12 },   // top-left
+  { x: 48, y: 20, rot: 5 },     // top-center
+  { x: 64, y: 24, rot: -8 },    // top-right
+  { x: 72, y: 42, rot: 15 },    // right-upper
+  { x: 72, y: 58, rot: -5 },    // right-lower
+  { x: 62, y: 72, rot: 10 },    // bottom-right
+  { x: 42, y: 74, rot: -6 },    // bottom-center
+  { x: 26, y: 62, rot: 8 },     // left-lower
 ]
 
-/** Muted woody palette — looks like painted wooden meeples */
+/** 5-color meeple palette (matching reference) */
 const MEEPLE_COLORS = [
-  '#a08460', // warm brown
-  '#7a8c6a', // sage green
-  '#8a7a9c', // dusty purple
-  '#9c7a6a', // terracotta
-  '#6a849c', // steel blue
-  '#9c8a6a', // ochre
-  '#7a9c8c', // teal
-  '#9c6a7a', // mauve
+  '#4A7FBA', // blue
+  '#5D9E4B', // green
+  '#D4853A', // orange
+  '#A67735', // brown/mustard
+  '#8A5BA0', // purple
 ]
+
+/** Status icons mapped to focus status */
+const STATUS_ICONS: Record<string, string> = {
+  idea: '💡',
+  break: '☕',
+}
 
 /* ── Types ── */
 
@@ -58,20 +63,61 @@ function buildSeats(members: PresenceMember[]): SeatMember[] {
   return [...real, ...ghosts]
 }
 
-/* ── Meeple SVG ── */
+/* ── 3D Meeple SVG ── */
 
-function MeepleSvg({ color }: { color: string }) {
+const BODY_D =
+  'M10 14 C10 12 12 10.5 15 10.5 C18 10.5 20 12 20 14' +
+  ' L23 17 L29 20 L27 23.5 L22 21 L23.5 35 L6.5 35' +
+  ' L8 21 L3 23.5 L1 20 L7 17 Z'
+
+function MeepleSvg({ color, index }: { color: string; index: number }) {
+  const sId = `ms${index}`
+  const hId = `mh${index}`
+  const fId = `mf${index}`
+
   return (
-    <svg
-      viewBox="0 0 24 28"
-      fill={color}
-      className="seat__svg"
-      aria-hidden="true"
-    >
-      {/* Head */}
-      <circle cx="12" cy="5" r="4.5" />
-      {/* Body + arms + legs */}
-      <path d="M2.5 27 V20.5 L0 17 H8 V13.5 C8 11.5 9.8 10 12 10 C14.2 10 16 11.5 16 13.5 V17 H24 L21.5 20.5 V27 Z" />
+    <svg viewBox="0 0 30 36" className="seat__svg" aria-hidden="true">
+      <defs>
+        {/* Shading gradient (top-bright → bottom-dark) */}
+        <linearGradient id={sId} x1="0.5" y1="0" x2="0.5" y2="1">
+          <stop offset="0%" stopColor="#fff" stopOpacity={0.30} />
+          <stop offset="100%" stopColor="#000" stopOpacity={0.25} />
+        </linearGradient>
+        {/* Highlight from upper-left (lamp) */}
+        <radialGradient id={hId} cx="0.28" cy="0.12" r="0.55" fx="0.28" fy="0.12">
+          <stop offset="0%" stopColor="#fff" stopOpacity={0.40} />
+          <stop offset="100%" stopColor="#fff" stopOpacity={0} />
+        </radialGradient>
+        {/* Drop shadow filter for 3D feel */}
+        <filter id={fId} x="-20%" y="-10%" width="140%" height="140%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="blur" />
+          <feOffset dx="0" dy="2" result="offsetBlur" />
+          <feFlood floodColor="#000" floodOpacity="0.3" />
+          <feComposite in2="offsetBlur" operator="in" />
+          <feMerge>
+            <feMergeNode />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g filter={`url(#${fId})`}>
+        {/* Base color */}
+        <circle cx="15" cy="7" r="5.5" fill={color} />
+        <path d={BODY_D} fill={color} />
+
+        {/* Shading overlay */}
+        <circle cx="15" cy="7" r="5.5" fill={`url(#${sId})`} />
+        <path d={BODY_D} fill={`url(#${sId})`} />
+
+        {/* Highlight overlay */}
+        <circle cx="15" cy="7" r="5.5" fill={`url(#${hId})`} />
+        <path d={BODY_D} fill={`url(#${hId})`} />
+
+        {/* Edge stroke for definition */}
+        <circle cx="15" cy="7" r="5.5" fill="none" stroke="rgba(0,0,0,0.20)" strokeWidth="0.5" />
+        <path d={BODY_D} fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="0.5" />
+      </g>
     </svg>
   )
 }
@@ -81,11 +127,19 @@ function MeepleSvg({ color }: { color: string }) {
 interface Props {
   members: PresenceMember[]
   selfUserId: string
+  isSeated: boolean
   onMeepleTap: (member: SeatMember, seatIndex: number) => void
 }
 
-export function SeatsLayer({ members, selfUserId, onMeepleTap }: Props) {
+export function SeatsLayer({ members, selfUserId, isSeated, onMeepleTap }: Props) {
   const seats = buildSeats(members)
+  const [hasAnimated, setHasAnimated] = useState(false)
+
+  useEffect(() => {
+    if (isSeated && !hasAnimated) {
+      setHasAnimated(true)
+    }
+  }, [isSeated, hasAnimated])
 
   return (
     <div className="seats-layer">
@@ -95,12 +149,18 @@ export function SeatsLayer({ members, selfUserId, onMeepleTap }: Props) {
         const isGhost = !!seat.__ghost
         const isIdle =
           seat.focusStatus === 'idle' || seat.focusStatus === 'break'
+        const showBounce = isYou && isSeated && hasAnimated
+
+        // Determine status icon
+        const statusIcon = !isGhost ? STATUS_ICONS[seat.focusStatus ?? ''] : undefined
 
         const cls = [
           'seat',
           isYou && 'seat--you',
           isGhost && 'seat--ghost',
           isIdle && !isGhost && 'seat--idle',
+          !isIdle && !isGhost && 'seat--focusing',
+          showBounce && 'seat--entering',
         ]
           .filter(Boolean)
           .join(' ')
@@ -112,8 +172,9 @@ export function SeatsLayer({ members, selfUserId, onMeepleTap }: Props) {
             style={{
               left: `${pos.x}%`,
               top: `${pos.y}%`,
-              '--breathe-dur': `${6 + (i % 3)}s`,
-              '--breathe-phase': `${-(i * 1.3) % 8}s`,
+              '--breathe-dur': `${6 + (i % 4) * 0.8}s`,
+              '--breathe-phase': `${-(i * 1.1) % 9}s`,
+              '--seat-rot': `${pos.rot}deg`,
             } as React.CSSProperties}
             onClick={e => {
               e.stopPropagation()
@@ -121,7 +182,13 @@ export function SeatsLayer({ members, selfUserId, onMeepleTap }: Props) {
             }}
             aria-label={seat.displayName}
           >
-            <MeepleSvg color={MEEPLE_COLORS[i % MEEPLE_COLORS.length]} />
+            <MeepleSvg
+              color={MEEPLE_COLORS[i % MEEPLE_COLORS.length]}
+              index={i}
+            />
+            {statusIcon && (
+              <span className="seat__status-icon">{statusIcon}</span>
+            )}
           </button>
         )
       })}
