@@ -1,4 +1,4 @@
-# Focus Room
+# Workwiz
 
 A calm co-working web app where users feel others' presence through quiet sticky-note updates.
 

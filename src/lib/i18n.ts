@@ -5,6 +5,24 @@ export const ja = {
     someoneFocusing: '誰かが集中しています',
   },
 
+  /** 上部バナー — オンライン人数 */
+  roomBanner: {
+    focusing: (n: number) => `今この部屋で ${n}人 が集中しています`,
+    empty: '静かな部屋があなたを待っています',
+    onlyYou: 'あなただけの静かな空間です',
+  },
+
+  /** 入室ログ */
+  entryLog: {
+    joined: (name: string) => `${name} が入室しました`,
+    left: (name: string) => `${name} が退室しました`,
+  },
+
+  /** 作業時間ラベル */
+  workTime: {
+    minutes: (m: number) => `${m}分`,
+  },
+
   tabs: {
     focus: '集中',
     people: '人',
@@ -36,6 +54,7 @@ export const ja = {
     pauseFocus: '一時停止',
     shareInsight: '💡 ひらめきを共有',
     joinQuietly: 'そっと参加する',
+    sitDown: '席につく',
   },
 
   postForm: {
@@ -82,6 +101,7 @@ export const ja = {
     onlineInRoom: 'ルーム内のメンバー',
     noOneHere: 'まだ誰もいません',
     searchRooms: 'ルームを検索...',
+    online: (n: number) => `${n}人オンライン`,
   },
 
   memberStatus: {

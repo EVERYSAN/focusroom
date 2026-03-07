@@ -5,6 +5,7 @@
  * - 5-color palette: blue, green, orange, brown, purple
  * - Scattered around notebook (matching reference image)
  * - Status indicator icons (💡 idea, ☕ break)
+ * - 🔥 work time label next to each meeple
  * - Scale-breathing with phase offset
  */
 
@@ -61,6 +62,12 @@ function buildSeats(members: PresenceMember[]): SeatMember[] {
     __ghost: true,
   }))
   return [...real, ...ghosts]
+}
+
+/** Calculate elapsed minutes from joinedAt to now */
+function getElapsedMinutes(joinedAt: string): number {
+  const diff = Date.now() - new Date(joinedAt).getTime()
+  return Math.max(0, Math.floor(diff / 60_000))
 }
 
 /* ── 3D Meeple SVG ── */
@@ -135,6 +142,13 @@ export function SeatsLayer({ members, selfUserId, isSeated, onMeepleTap }: Props
   const seats = buildSeats(members)
   const [hasAnimated, setHasAnimated] = useState(false)
 
+  // Tick every 60s to update work-time labels
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 60_000)
+    return () => clearInterval(id)
+  }, [])
+
   useEffect(() => {
     if (isSeated && !hasAnimated) {
       setHasAnimated(true)
@@ -153,6 +167,9 @@ export function SeatsLayer({ members, selfUserId, isSeated, onMeepleTap }: Props
 
         // Determine status icon
         const statusIcon = !isGhost ? STATUS_ICONS[seat.focusStatus ?? ''] : undefined
+
+        // Work time
+        const elapsedMin = getElapsedMinutes(seat.joinedAt)
 
         const cls = [
           'seat',
@@ -188,6 +205,12 @@ export function SeatsLayer({ members, selfUserId, isSeated, onMeepleTap }: Props
             />
             {statusIcon && (
               <span className="seat__status-icon">{statusIcon}</span>
+            )}
+            {/* 🔥 Work time label */}
+            {elapsedMin > 0 && (
+              <span className="seat__timer">
+                🔥 {elapsedMin}分
+              </span>
             )}
           </button>
         )

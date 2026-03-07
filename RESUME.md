@@ -1,4 +1,4 @@
-# RESUME - Focus Room
+# RESUME - Workwiz
 
 ## Current branch / commit
 - branch: main

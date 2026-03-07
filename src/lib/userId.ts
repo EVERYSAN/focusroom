@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'focus-room-user-id'
+const STORAGE_KEY = 'workwiz-user-id'
 
 let cached: string | null = null
 
