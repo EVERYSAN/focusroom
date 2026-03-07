@@ -1278,6 +1278,215 @@ body {
 
 /* ── Responsive ── */
 
+/* ══════════════════════════════════════════════
+   Note Card UI — Paper-style card in desk center
+   ══════════════════════════════════════════════ */
+
+.note-card-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.note-card {
+  position: relative;
+  width: 300px;
+  max-height: 70%;
+  border-radius: 6px;
+  overflow: hidden;
+  pointer-events: auto;
+
+  /* Paper-like beige background */
+  background: #F5EDD6;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.3) 0%,
+      rgba(245,237,214,0) 30%
+    );
+
+  /* Subtle shadow like a notebook on a desk */
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255,255,255, 0.4);
+
+  /* Slight tilt like a real notebook */
+  transform: rotate(-1.5deg);
+}
+
+/* Faint ruled lines */
+.note-card__lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent,
+    transparent 27px,
+    rgba(180, 160, 130, 0.18) 27px,
+    rgba(180, 160, 130, 0.18) 28px
+  );
+  /* Offset lines to start below the header area */
+  background-position-y: 12px;
+}
+
+/* Red margin line (like a real notebook) */
+.note-card__lines::before {
+  content: '';
+  position: absolute;
+  left: 36px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(200, 120, 120, 0.15);
+}
+
+.note-card__content {
+  position: relative;
+  z-index: 1;
+  padding: 18px 20px 16px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Banner — online count */
+.note-card__banner {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(100, 85, 60, 0.55);
+  letter-spacing: 0.04em;
+  margin: 0 0 4px 0;
+}
+
+/* Brand title */
+.note-card__brand {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: #4A3F2F;
+  letter-spacing: 0.08em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Subtitle */
+.note-card__subtitle {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(100, 85, 60, 0.5);
+  margin: 2px 0 0 0;
+  letter-spacing: 0.03em;
+}
+
+/* Divider — hand-drawn line feel */
+.note-card__divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(140, 120, 90, 0.22);
+  margin: 10px 0 8px 0;
+}
+
+/* User list */
+.note-card__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* User row */
+.note-card__row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(180, 160, 130, 0.08);
+  transition: opacity 0.3s ease;
+}
+
+.note-card__row:last-child {
+  border-bottom: none;
+}
+
+.note-card__row--ghost {
+  opacity: 0.35;
+}
+
+.note-card__row--self {
+  opacity: 1;
+}
+
+.note-card__row--self .note-card__name {
+  font-weight: 600;
+  color: #3D6B4F;
+}
+
+/* Name */
+.note-card__name {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: #4A3F2F;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Activity — handwritten feel */
+.note-card__activity {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: rgba(100, 85, 60, 0.55);
+  white-space: nowrap;
+}
+
+/* Elapsed time */
+.note-card__elapsed {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: rgba(160, 100, 40, 0.7);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Sit-down button — ink-on-paper style */
+.note-card__btn {
+  margin-top: 12px;
+  padding: 8px 24px;
+  border: 1.5px solid rgba(100, 85, 60, 0.3);
+  border-radius: 4px;
+  background: rgba(100, 85, 60, 0.06);
+  color: #4A3F2F;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  align-self: center;
+}
+
+.note-card__btn:hover {
+  background: rgba(100, 85, 60, 0.12);
+  border-color: rgba(100, 85, 60, 0.45);
+}
+
+.note-card__btn:active {
+  transform: scale(0.97);
+}
+
 @media (max-width: 768px) {
   .layout-grid {
     grid-template-columns: 1fr;
@@ -1309,10 +1518,19 @@ body {
     right: -4px;
   }
 
-  /* Desk objects — still hero on mobile */
-  .scene__obj--notebook { width: 42%; }
-  .scene__obj--pen { width: 14%; }
-  .scene__obj--coffee { width: 16%; }
+  /* Note card — smaller on mobile */
+  .note-card {
+    width: 260px;
+    transform: rotate(-1deg);
+  }
+
+  .note-card__content {
+    padding: 14px 16px 12px 38px;
+  }
+
+  .note-card__brand {
+    font-size: 18px;
+  }
 
   /* Whisper notes — compact for small screens */
   .whisper-note {
@@ -1324,23 +1542,7 @@ body {
     font-size: 12px;
   }
 
-  /* UI layer — tighter on mobile */
-  .ui-layer__center {
-    top: 16%;
-  }
-
-  .ui-layer__banner-text {
-    font-size: 11px;
-  }
-
-  .ui-layer__brand {
-    font-size: 16px;
-  }
-
-  .ui-layer__btn {
-    padding: 8px 20px;
-    font-size: 12px;
-  }
+  /* (old ui-layer styles removed — now using note-card) */
 
   .seat__timer {
     font-size: 8px;

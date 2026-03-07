@@ -31,6 +31,12 @@ export const ja = {
     tools: 'ツール',
   },
 
+  noteCard: {
+    subtitle: 'この部屋で集中している人',
+    defaultActivity: '集中中',
+    you: 'あなた',
+  },
+
   focusPanel: {
     inRoom: (name: string) => `${name}にて`,
     filter: 'フィルター ◇',

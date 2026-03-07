@@ -29,6 +29,7 @@ export interface PresenceMember {
   displayName: string
   focusStatus: FocusStatus
   joinedAt: string
+  activity?: string
 }
 
 export interface ActivityEntry {

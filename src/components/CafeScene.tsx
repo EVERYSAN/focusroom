@@ -4,21 +4,21 @@
  * Architecture (bottom → top):
  *   1. Desk          — desk_texture.png zoomed 125%
  *   2. Stylize       — grain + desaturation (illustration feel)
- *   3. Objects       — notebook.png + pen.png + coffee.png
+ *   3. NoteCard      — Paper-style UI card (user list + banner)
  *   4. Props         — CSS desk clutter (clips, leaves)
  *   5. Atmosphere    — fine dust particles
  *   6. Light         — warm spot from upper-left
  *   7. Seats         — Meeple figures scattered on desk
  *   8. Sticky        — Paper whisper notes (#F6E7A7)
  *   9. Vignette      — edge darkening
- *  10. UI            — text + sit-down button
+ *  10. (reserved)
  *   +  Mini Card     — popup on meeple tap
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { SeatsLayer, SEAT_POSITIONS, type SeatMember } from './SeatsLayer'
 import { StickyWhispers } from './StickyWhispers'
-import { DeskUiLayer } from './DeskUiLayer'
+import { NoteCardUI } from './NoteCardUI'
 import { MiniCard } from './MiniCard'
 import type { PresenceMember } from '../types'
 
@@ -43,9 +43,6 @@ interface CafeSceneProps {
 /* ── Asset paths ── */
 
 const DESK_TEXTURE = '/assets/desk_texture.png'
-const NOTEBOOK_IMG = '/assets/notebook.png'
-const PEN_IMG = '/assets/pen.png'
-const COFFEE_IMG = '/assets/coffee.png'
 
 /* ── Desk Props — small scattered items ── */
 
@@ -160,27 +157,15 @@ export function CafeScene({
         <div className="scene__stylize" />
         <div className="scene__grain" />
 
-        {/* ═══ Layer 3: Desk Objects (notebook, pen, coffee) ═══ */}
-        <div className="scene__objects">
-          <img
-            src={NOTEBOOK_IMG}
-            alt=""
-            className="scene__obj scene__obj--notebook"
-            draggable={false}
+        {/* ═══ Layer 3: Note Card UI (replaces notebook/pen/coffee) ═══ */}
+        {isHome && (
+          <NoteCardUI
+            members={members}
+            selfUserId={selfUserId}
+            isSeated={isSeated}
+            onSitDown={onSitDown}
           />
-          <img
-            src={PEN_IMG}
-            alt=""
-            className="scene__obj scene__obj--pen"
-            draggable={false}
-          />
-          <img
-            src={COFFEE_IMG}
-            alt=""
-            className="scene__obj scene__obj--coffee"
-            draggable={false}
-          />
-        </div>
+        )}
 
         {/* ═══ Layer 4: Desk Props (small scattered items) ═══ */}
         <div className="scene__props">
@@ -242,15 +227,7 @@ export function CafeScene({
       {/* ═══ Layer 9: Vignette (outside parallax) ═══ */}
       <div className="scene__vignette" />
 
-      {/* ═══ Layer 10: UI Overlay ═══ */}
-      {isHome && (
-        <DeskUiLayer
-          members={members}
-          selfUserId={selfUserId}
-          isSeated={isSeated}
-          onSitDown={onSitDown}
-        />
-      )}
+      {/* ═══ Layer 10: (reserved — UI now in Layer 3 NoteCardUI) ═══ */}
 
       {/* ═══ Mini Card ═══ */}
       {selectedSeat && isHome && (

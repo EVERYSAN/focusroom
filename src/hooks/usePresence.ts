@@ -22,6 +22,7 @@ export function usePresence(roomId: string, userId: string) {
       displayName,
       focusStatus: 'idle',
       joinedAt: new Date().toISOString(),
+      activity: '',
     }
 
     channel
@@ -43,8 +44,8 @@ export function usePresence(roomId: string, userId: string) {
     }
   }, [roomId, userId])
 
-  /** Update own focus status (e.g., when starting/stopping timer) */
-  const updateStatus = useCallback(async (focusStatus: FocusStatus) => {
+  /** Update own focus status and optional activity label */
+  const updateStatus = useCallback(async (focusStatus: FocusStatus, activity?: string) => {
     const channel = channelRef.current
     if (!channel) return
 
@@ -53,6 +54,7 @@ export function usePresence(roomId: string, userId: string) {
       displayName: getDisplayName(userId),
       focusStatus,
       joinedAt: new Date().toISOString(),
+      activity: activity ?? '',
     })
   }, [userId])
 
