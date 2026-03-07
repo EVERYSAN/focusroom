@@ -853,6 +853,21 @@ body {
   50%      { transform: translateY(-3px); }
 }
 
+/* Work time label (🔥 42分) below meeple */
+.seat__timer {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255, 200, 120, 0.82);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.50);
+  letter-spacing: 0.02em;
+}
+
 /* ── Meeple States ── */
 
 .seat--focusing .seat__svg {
@@ -1001,7 +1016,29 @@ body {
   pointer-events: none;
 }
 
-/* ── Centered group — sits above notebook ── */
+/* ── Top banner — online count ── */
+.ui-layer__top-banner {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.ui-layer__banner-text {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(230, 225, 210, 0.72);
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  margin: 0;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.40);
+  white-space: nowrap;
+}
+
+/* ── Centered group — brand + sit-down ── */
 .ui-layer__center {
   position: absolute;
   left: 50%;
@@ -1011,45 +1048,18 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
-.ui-layer__primary {
+.ui-layer__brand {
   font-family: var(--font-serif);
-  font-size: 14px;
-  font-weight: 400;
-  color: rgba(230, 225, 210, 0.82);
-  letter-spacing: 0.08em;
-  line-height: 1.8;
-  margin: 0 0 10px;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-}
-
-.ui-layer__member-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.ui-layer__member-row {
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(220, 215, 200, 0.65);
-  letter-spacing: 0.04em;
+  font-size: 20px;
+  font-weight: 300;
+  color: rgba(230, 225, 210, 0.50);
+  letter-spacing: 0.18em;
   margin: 0;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.ui-layer__lock {
-  font-size: 11px;
-}
-
-/* ── Bottom-right: menu dot only ── */
-.ui-layer__bottom {
-  position: absolute;
-  bottom: 24px;
-  right: 28px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.30);
+  user-select: none;
 }
 
 /* Button = wooden embossed label (inside center group) */
@@ -1197,6 +1207,66 @@ body {
 .status-dot--break    { background: var(--dot-break); }
 .status-dot--idle     { background: var(--dot-idle); }
 
+/* ── Entry Log (join/leave notifications) ── */
+
+.entry-log {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.entry-log__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(20, 24, 32, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  animation: entry-log-in 0.35s ease;
+}
+
+.entry-log__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.entry-log__dot--join {
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.40);
+}
+
+.entry-log__dot--leave {
+  background: #6b7280;
+}
+
+.entry-log__text {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(220, 215, 200, 0.75);
+  letter-spacing: 0.02em;
+}
+
+@keyframes entry-log-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── Reduced Motion ── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1259,21 +1329,34 @@ body {
     top: 16%;
   }
 
-  .ui-layer__primary {
-    font-size: 12px;
-  }
-
-  .ui-layer__member-row {
+  .ui-layer__banner-text {
     font-size: 11px;
   }
 
-  .ui-layer__bottom {
-    bottom: 18px;
-    right: 20px;
+  .ui-layer__brand {
+    font-size: 16px;
   }
 
   .ui-layer__btn {
     padding: 8px 20px;
     font-size: 12px;
+  }
+
+  .seat__timer {
+    font-size: 8px;
+    bottom: -12px;
+  }
+
+  .entry-log {
+    bottom: 16px;
+    left: 12px;
+  }
+
+  .entry-log__item {
+    padding: 6px 10px;
+  }
+
+  .entry-log__text {
+    font-size: 11px;
   }
 }

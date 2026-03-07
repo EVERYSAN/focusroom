@@ -1,94 +1,43 @@
-import { useState, useRef, useEffect } from 'react'
-import { AppHeader } from './components/AppHeader'
-import { PresencePanel } from './components/PresencePanel'
-import { FocusPanel, type Tab } from './components/FocusPanel'
-import { ActivityFeed } from './components/ActivityFeed'
+import { useRef } from 'react'
 import { CafeScene } from './components/CafeScene'
+import { EntryLog } from './components/EntryLog'
 import { useNotes } from './hooks/useNotes'
-import { useRooms } from './hooks/useRooms'
 import { usePresence } from './hooks/usePresence'
-import { useFocusTimer } from './hooks/useFocusTimer'
+import { useEntryLog } from './hooks/useEntryLog'
 import { getUserId } from './lib/userId'
 
 function App() {
-  const [currentRoomId, setCurrentRoomId] = useState('cafe')
-  const [activeTab, setActiveTab] = useState<Tab>('focus')
+  const currentRoomId = 'cafe'
   const userId = useRef(getUserId())
-  const isFocusMode = activeTab === 'focus'
 
-  const { rooms } = useRooms()
   const { members, updateStatus } = usePresence(currentRoomId, userId.current)
   const {
-    visibleNotes, hiddenCount, recentIdeas,
-    addNote, stats, pauseFade, resumeFade,
+    visibleNotes, recentIdeas: _recentIdeas,
+    addNote: _addNote, pauseFade: _pauseFade, resumeFade: _resumeFade,
   } = useNotes(currentRoomId)
-  const { elapsed, isRunning, start, pause, reset } = useFocusTimer(userId.current)
 
-  const currentRoom = rooms.find(r => r.id === currentRoomId)
+  const { entries } = useEntryLog(members, userId.current)
 
-  // Sync focus status with Presence when timer starts/stops
-  useEffect(() => {
-    updateStatus(isRunning ? 'focusing' : 'idle')
-  }, [isRunning, updateStatus])
-
-  // "席につく" starts focus timer
+  // Auto-set status to focusing when seated
   const handleSitDown = () => {
-    start()
+    updateStatus('focusing')
   }
-
-  const isSeated = isRunning || elapsed > 0
 
   return (
     <>
-      {/* Layered cafe desk scene */}
+      {/* Full-screen desk scene — always visible */}
       <CafeScene
-        isHome={isFocusMode}
+        isHome={true}
         recentPosts={visibleNotes}
         members={members}
         selfUserId={userId.current}
-        isSeated={isSeated}
+        isSeated={true}
         onSitDown={handleSitDown}
-        onOpenMenu={() => setActiveTab('people')}
+        onOpenMenu={() => {}}
       />
 
-      {!isFocusMode && <AppHeader />}
-      <div className={`layout-grid ${isFocusMode ? 'layout-grid--focus' : ''}`}>
-        {!isFocusMode && (
-          <PresencePanel
-            rooms={rooms}
-            currentRoomId={currentRoomId}
-            onRoomSelect={setCurrentRoomId}
-            members={members}
-          />
-        )}
-        {/* In focus mode, FocusPanel is hidden — the desk scene handles everything */}
-        {!isFocusMode && (
-          <FocusPanel
-            room={currentRoom}
-            members={members}
-            ideas={recentIdeas}
-            stats={stats}
-            onPost={addNote}
-            elapsed={elapsed}
-            isRunning={isRunning}
-            onStart={start}
-            onPause={pause}
-            onReset={reset}
-            selfUserId={userId.current}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        )}
-        {!isFocusMode && (
-          <ActivityFeed
-            notes={visibleNotes}
-            hiddenCount={hiddenCount}
-            ideas={recentIdeas}
-            onPauseFade={pauseFade}
-            onResumeFade={resumeFade}
-          />
-        )}
-      </div>
+      {/* Entry log — bottom-left overlay */}
+      <EntryLog entries={entries} />
     </>
   )
 }

@@ -37,7 +37,7 @@ interface CafeSceneProps {
   selfUserId: string
   isSeated: boolean
   onSitDown: () => void
-  onOpenMenu: () => void
+  onOpenMenu?: () => void
 }
 
 /* ── Asset paths ── */
@@ -83,7 +83,6 @@ export function CafeScene({
   selfUserId,
   isSeated,
   onSitDown,
-  onOpenMenu,
 }: CafeSceneProps) {
   const [deskLoaded, setDeskLoaded] = useState(false)
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -247,9 +246,9 @@ export function CafeScene({
       {isHome && (
         <DeskUiLayer
           members={members}
+          selfUserId={selfUserId}
           isSeated={isSeated}
           onSitDown={onSitDown}
-          onOpenMenu={onOpenMenu}
         />
       )}
 

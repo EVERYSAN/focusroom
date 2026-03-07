@@ -1,4 +1,4 @@
-# Project: Focus Room (Sticky Wall MVP)
+# Project: Workwiz
 
 ## Goal
 Build a calm co-working web app where users feel others' presence without noisy chat.

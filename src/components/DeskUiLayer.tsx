@@ -1,14 +1,9 @@
 /**
- * DeskUiLayer — UI overlay centered above the notebook.
+ * DeskUiLayer — Minimal UI overlay for Workwiz.
  *
- * All text + button form one centered group above the desk notebook,
- * making them feel part of the same physical space.
- *
- * - Primary:   「今、静かに集中している人がいます」
- * - Members:   「🔒 ◯◯が集中しています」 (up to 3)
- * - Status:    「いま：作業中」 (when no focused members)
- * - Button:    「席につく」— wooden embossed
- * - Menu:      「•••」 bottom-right
+ * Top:    「今この部屋で◯人が集中しています」
+ * Center: App brand "Workwiz" (small, subtle)
+ * Bottom: 「席につく」 button (when not seated)
  */
 
 import type { PresenceMember } from '../types'
@@ -18,54 +13,38 @@ import { ja } from '../lib/i18n'
 
 interface Props {
   members: PresenceMember[]
+  selfUserId: string
   isSeated: boolean
   onSitDown: () => void
-  onOpenMenu: () => void
 }
 
-export function DeskUiLayer({ members, isSeated, onSitDown, onOpenMenu }: Props) {
-  const focusingMembers = members.filter(
-    m => m.focusStatus === 'focusing',
-  ).slice(0, 3)
+export function DeskUiLayer({ members, selfUserId, isSeated, onSitDown }: Props) {
+  // Count others (exclude self)
+  const othersCount = members.filter(m => m.userId !== selfUserId).length
+  const totalCount = members.length
+
+  // Banner message
+  const bannerText =
+    othersCount === 0
+      ? ja.roomBanner.onlyYou
+      : ja.roomBanner.focusing(totalCount)
 
   return (
     <div className="ui-layer">
-      {/* ── Centered group above notebook ── */}
-      <div className="ui-layer__center">
-        <p className="ui-layer__primary">{ja.welcome.primary}</p>
+      {/* ── Top banner: online count ── */}
+      <div className="ui-layer__top-banner">
+        <p className="ui-layer__banner-text">{bannerText}</p>
+      </div>
 
-        {focusingMembers.length > 0 ? (
-          <div className="ui-layer__member-list">
-            {focusingMembers.map(m => (
-              <p key={m.userId} className="ui-layer__member-row">
-                <span className="ui-layer__lock">🔒</span>
-                {' '}
-                {ja.spotlight.focusing(m.displayName)}
-              </p>
-            ))}
-          </div>
-        ) : (
-          <p className="ui-layer__member-row">
-            {ja.spotlight.nowDefault}
-          </p>
-        )}
+      {/* ── Center: brand + sit-down ── */}
+      <div className="ui-layer__center">
+        <h1 className="ui-layer__brand">Workwiz</h1>
 
         {!isSeated && (
           <button className="ui-layer__btn" onClick={onSitDown}>
-            席につく
+            {ja.actions.sitDown}
           </button>
         )}
-      </div>
-
-      {/* ── Bottom-right: menu only ── */}
-      <div className="ui-layer__bottom">
-        <button
-          className="ui-layer__more"
-          onClick={onOpenMenu}
-          aria-label="メニュー"
-        >
-          •••
-        </button>
       </div>
     </div>
   )

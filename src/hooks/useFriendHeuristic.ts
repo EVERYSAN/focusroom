@@ -5,8 +5,8 @@ import type { PresenceMember } from '../types'
 // when user accounts are implemented. The current approach treats
 // "recently seen users" as pseudo-friends.
 
-const STORAGE_KEY = 'focus-room-seen-users'
-const SESSION_KEY = 'focus-room-session-seen'
+const STORAGE_KEY = 'workwiz-seen-users'
+const SESSION_KEY = 'workwiz-session-seen'
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 interface SeenUser {
