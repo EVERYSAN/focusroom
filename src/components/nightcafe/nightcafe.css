@@ -1,0 +1,682 @@
+/* ============================================
+   Night Cafe UI — 夜カフェ × 斜め視点
+   ============================================ */
+
+/* ── Reset & Base ── */
+.nightcafe {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: 'Helvetica Neue', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  color: #e8dcc4;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Background ── */
+.nc-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    /* warm radial from center-bottom — the counter area glow */
+    radial-gradient(ellipse 140% 50% at 50% 75%, rgba(120, 80, 30, 0.25) 0%, transparent 60%),
+    /* ceiling darkness */
+    linear-gradient(to bottom, rgba(8, 6, 3, 0.95) 0%, rgba(18, 13, 8, 0.85) 40%, rgba(30, 22, 12, 0.7) 100%);
+  background-color: #0d0a06;
+}
+
+/* vignette */
+.nc-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: inset 0 0 150px 60px rgba(0, 0, 0, 0.65);
+}
+
+/* ── Header ── */
+.nc-header {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 40px 16px 4px;
+}
+
+.nc-title {
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: 4px;
+  color: rgba(240, 230, 210, 0.85);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.nc-subtitle {
+  font-size: 10px;
+  color: rgba(200, 180, 150, 0.35);
+  margin: 8px 0 0;
+  letter-spacing: 0.5px;
+  font-weight: 300;
+}
+
+/* ── Counter area ── */
+.nc-counter-area {
+  position: relative;
+  z-index: 5;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 56px;
+  perspective: 600px;
+}
+
+/* The wooden counter surface */
+.nc-counter-bar {
+  position: absolute;
+  bottom: 56px;
+  left: -20px;
+  right: -20px;
+  height: 100px;
+  background: linear-gradient(
+    to bottom,
+    #5a4530 0%,
+    #4d3a28 20%,
+    #3d2e1f 60%,
+    #2a1f14 100%
+  );
+  border-top: 1.5px solid rgba(180, 145, 90, 0.25);
+  box-shadow:
+    0 -4px 30px rgba(180, 140, 80, 0.06),
+    0 -1px 8px rgba(200, 160, 90, 0.05),
+    inset 0 3px 10px rgba(0, 0, 0, 0.4);
+  /* angled surface */
+  transform: rotateX(20deg);
+  transform-origin: bottom center;
+  z-index: 2;
+}
+
+/* wood grain */
+.nc-counter-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 40px,
+      rgba(0, 0, 0, 0.03) 40px,
+      rgba(0, 0, 0, 0.03) 41px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 120px,
+      rgba(100, 70, 30, 0.06) 120px,
+      rgba(100, 70, 30, 0.06) 122px
+    );
+}
+
+/* Warm light reflection on counter */
+.nc-counter-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 5%,
+    rgba(255, 220, 150, 0.06) 20%,
+    rgba(255, 220, 150, 0.1) 50%,
+    rgba(255, 220, 150, 0.06) 80%,
+    transparent 95%
+  );
+}
+
+/* ── Back wall with shelves ── */
+.nc-back-wall {
+  position: absolute;
+  bottom: 56px;
+  left: 0;
+  right: 0;
+  height: 180px;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 12, 8, 0.95) 0%,
+    rgba(30, 22, 14, 0.8) 40%,
+    rgba(45, 33, 20, 0.5) 100%
+  );
+  /* brick texture hint */
+  background-image:
+    linear-gradient(to bottom,
+      rgba(15, 12, 8, 0.95) 0%,
+      rgba(30, 22, 14, 0.8) 40%,
+      rgba(45, 33, 20, 0.5) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 18px,
+      rgba(80, 60, 35, 0.04) 18px,
+      rgba(80, 60, 35, 0.04) 19px
+    );
+  pointer-events: none;
+}
+
+.nc-shelf {
+  position: absolute;
+  bottom: 110px;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(90, 70, 45, 0.3) 15%,
+    rgba(90, 70, 45, 0.4) 50%,
+    rgba(90, 70, 45, 0.3) 85%,
+    transparent
+  );
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* bottle silhouettes on shelf */
+.nc-shelf::before {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 20%;
+  width: 12px;
+  height: 28px;
+  background: rgba(40, 30, 20, 0.4);
+  border-radius: 2px 2px 1px 1px;
+  box-shadow:
+    18px 4px 0 rgba(40, 30, 20, 0.35),
+    40px -2px 0 rgba(40, 30, 20, 0.3),
+    62px 2px 0 rgba(40, 30, 20, 0.25),
+    88px -3px 0 rgba(40, 30, 20, 0.35),
+    110px 1px 0 rgba(40, 30, 20, 0.3);
+}
+
+.nc-shelf-2 {
+  bottom: 145px;
+  left: 18%;
+  right: 18%;
+  opacity: 0.6;
+}
+
+.nc-shelf-2::before {
+  left: 15%;
+  height: 22px;
+  box-shadow:
+    22px 2px 0 rgba(40, 30, 20, 0.3),
+    48px -1px 0 rgba(40, 30, 20, 0.25),
+    72px 3px 0 rgba(40, 30, 20, 0.28);
+}
+
+.nc-seats-scroll {
+  position: relative;
+  z-index: 5;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0 12px;
+}
+
+.nc-seats-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.nc-seats {
+  display: flex;
+  gap: 2px;
+  padding: 0 4px;
+  min-width: min-content;
+}
+
+/* ── Individual Seat ── */
+.cafe-seat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 88px;
+  min-width: 88px;
+  padding-top: 16px;
+  transition: opacity 0.8s ease;
+}
+
+.cafe-seat.vacant {
+  opacity: 0.28;
+}
+
+.cafe-seat.occupied {
+  opacity: 1;
+}
+
+/* Warm pool of light under occupied seat */
+.cafe-seat.occupied::before {
+  content: '';
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    rgba(255, 200, 100, 0.06) 0%,
+    rgba(255, 180, 80, 0.03) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Pendant Light ── */
+.seat-light {
+  position: relative;
+  width: 36px;
+  height: 46px;
+  margin-bottom: -2px;
+  z-index: 3;
+}
+
+.pendant-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
+  transition: filter 0.6s ease;
+}
+
+.light-on .pendant-svg {
+  filter: drop-shadow(0 6px 12px rgba(255, 210, 120, 0.35));
+}
+
+.light-glow {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 220, 130, 0.2) 0%,
+    rgba(255, 200, 100, 0.08) 35%,
+    rgba(255, 180, 80, 0.02) 60%,
+    transparent 75%
+  );
+  pointer-events: none;
+  animation: glow-pulse 5s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+}
+
+.light-off .pendant-svg {
+  opacity: 0.3;
+}
+
+/* ── Counter surface (tool + mug area) ── */
+.seat-counter-surface {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  height: 38px;
+  width: 78px;
+  z-index: 4;
+}
+
+/* ── Tool icons ── */
+.seat-tool {
+  width: 30px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.seat-tool-icon {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+}
+
+/* ── Coffee mug ── */
+.seat-mug-wrap {
+  position: relative;
+  width: 22px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.seat-mug {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+}
+
+/* ── Steam ── */
+.steam-container {
+  position: absolute;
+  top: -14px;
+  left: 3px;
+  width: 16px;
+  height: 22px;
+  pointer-events: none;
+}
+
+.steam {
+  position: absolute;
+  bottom: 0;
+  width: 2px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  animation: steam-rise 3.5s ease-in-out infinite;
+}
+
+.steam-1 { left: 3px; animation-delay: 0s; }
+.steam-2 { left: 7px; animation-delay: 1.2s; }
+.steam-3 { left: 11px; animation-delay: 2.4s; }
+
+@keyframes steam-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scaleX(1);
+    height: 5px;
+  }
+  20% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.08;
+    transform: translateY(-10px) scaleX(1.8);
+    height: 10px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-22px) scaleX(2.5);
+    height: 14px;
+  }
+}
+
+/* ── Chair ── */
+.seat-chair {
+  width: 30px;
+  height: 34px;
+  margin-top: -2px;
+  z-index: 3;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+/* ── Seat info ── */
+.seat-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 6px;
+  z-index: 6;
+}
+
+.seat-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(240, 230, 210, 0.9);
+  letter-spacing: 0.5px;
+}
+
+.seat-activity {
+  font-size: 9px;
+  color: rgba(210, 190, 160, 0.5);
+  white-space: nowrap;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seat-time {
+  font-size: 9px;
+  color: rgba(245, 180, 100, 0.6);
+  white-space: nowrap;
+}
+
+.vacant-info {
+  margin-top: 8px;
+}
+
+.seat-vacant-label {
+  font-size: 9px;
+  color: rgba(200, 180, 150, 0.15);
+  letter-spacing: 2px;
+}
+
+/* ── Floor area ── */
+.nc-floor {
+  position: fixed;
+  bottom: 48px;
+  left: 0;
+  right: 0;
+  height: 80px;
+  z-index: 3;
+  background: linear-gradient(
+    to bottom,
+    rgba(35, 26, 16, 0.9) 0%,
+    rgba(20, 15, 8, 0.95) 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Bottom nav bar ── */
+.nc-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 52px;
+  background: rgba(12, 10, 7, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(100, 80, 50, 0.12);
+}
+
+.nc-nav-btn {
+  background: none;
+  border: none;
+  color: rgba(200, 180, 150, 0.35);
+  cursor: pointer;
+  padding: 8px 20px;
+  transition: color 0.3s;
+}
+
+.nc-nav-btn:hover {
+  color: rgba(240, 220, 180, 0.7);
+}
+
+.nc-nav-main {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(180, 140, 80, 0.1);
+  border: 1px solid rgba(180, 140, 80, 0.2) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: rgba(230, 200, 140, 0.6);
+  transition: all 0.3s;
+}
+
+.nc-nav-main:hover {
+  background: rgba(180, 140, 80, 0.2);
+  color: rgba(245, 220, 160, 0.85);
+  border-color: rgba(200, 160, 100, 0.35) !important;
+}
+
+/* ── Ambient dust particles ── */
+.nightcafe::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 12% 25%, rgba(255, 220, 150, 0.06) 50%, transparent 50%),
+    radial-gradient(1px 1px at 28% 55%, rgba(255, 220, 150, 0.04) 50%, transparent 50%),
+    radial-gradient(1px 1px at 65% 35%, rgba(255, 220, 150, 0.05) 50%, transparent 50%),
+    radial-gradient(1px 1px at 82% 62%, rgba(255, 220, 150, 0.04) 50%, transparent 50%),
+    radial-gradient(1px 1px at 45% 78%, rgba(255, 220, 150, 0.03) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 55% 15%, rgba(255, 200, 120, 0.05) 50%, transparent 50%),
+    radial-gradient(1px 1px at 90% 80%, rgba(255, 220, 150, 0.03) 50%, transparent 50%);
+  animation: dust-drift 25s linear infinite;
+}
+
+@keyframes dust-drift {
+  0%   { transform: translateY(0) translateX(0); }
+  50%  { transform: translateY(-10px) translateX(5px); }
+  100% { transform: translateY(-20px) translateX(0); }
+}
+
+/* ── Ambient ceiling lights (decorative) ── */
+.nc-ambient-lights {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.nc-ambient-light {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 200, 100, 0.04) 0%, transparent 70%);
+}
+
+.nc-ambient-light:nth-child(1) {
+  width: 200px;
+  height: 200px;
+  top: 5%;
+  left: 15%;
+}
+
+.nc-ambient-light:nth-child(2) {
+  width: 160px;
+  height: 160px;
+  top: 8%;
+  right: 20%;
+}
+
+.nc-ambient-light:nth-child(3) {
+  width: 240px;
+  height: 240px;
+  top: 2%;
+  left: 45%;
+}
+
+/* ── Mobile-first responsive ── */
+@media (min-width: 480px) {
+  .cafe-seat {
+    width: 105px;
+    min-width: 105px;
+  }
+
+  .nc-seats {
+    gap: 6px;
+  }
+
+  .seat-counter-surface {
+    width: 90px;
+    height: 42px;
+  }
+
+  .seat-tool {
+    width: 36px;
+    height: 26px;
+  }
+
+  .seat-mug-wrap {
+    width: 26px;
+    height: 30px;
+  }
+
+  .seat-name {
+    font-size: 12px;
+  }
+
+  .seat-activity {
+    font-size: 10px;
+  }
+
+  .seat-time {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 768px) {
+  .cafe-seat {
+    width: 130px;
+    min-width: 130px;
+  }
+
+  .nc-header {
+    padding-top: 64px;
+  }
+
+  .nc-title {
+    font-size: 26px;
+    letter-spacing: 6px;
+  }
+
+  .nc-subtitle {
+    font-size: 12px;
+  }
+
+  .seat-light {
+    width: 44px;
+    height: 56px;
+  }
+
+  .light-glow {
+    width: 100px;
+    height: 100px;
+  }
+
+  .seat-counter-surface {
+    width: 110px;
+    height: 48px;
+  }
+
+  .seat-tool {
+    width: 42px;
+    height: 30px;
+  }
+
+  .seat-name {
+    font-size: 13px;
+  }
+
+  .seat-activity, .seat-time {
+    font-size: 11px;
+  }
+
+  .nc-counter-bar {
+    height: 110px;
+  }
+}
