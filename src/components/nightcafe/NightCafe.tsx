@@ -1,20 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useElapsedTick } from './useElapsed'
 import { useCafePresence } from './useCafePresence'
-import { CafeSeat } from './CafeSeat'
+import {
+  PendantLight, ToolIcon, CoffeeMug, Stool, EditPencil,
+  getWarmthLevel, formatElapsed,
+} from './CafeSeat'
 import './nightcafe.css'
 
-/* Per-seat layout config for gentle curve effect.
-   Edge seats sit slightly higher (further away in perspective)
-   and are scaled down; chairs angle inward. */
-const seatLayout = [
-  { offsetY: -12, chairRotate:  8, scale: 0.89 },
-  { offsetY:  -5, chairRotate:  4, scale: 0.95 },
-  { offsetY:   0, chairRotate:  1, scale: 1    },
-  { offsetY:   0, chairRotate: -1, scale: 1    },
-  { offsetY:  -5, chairRotate: -4, scale: 0.95 },
-  { offsetY: -12, chairRotate: -8, scale: 0.89 },
-]
+/* ── Layout: 6 seats ── */
+const SEAT_COUNT = 6
 
 export function NightCafe() {
   useElapsedTick()
@@ -52,8 +46,6 @@ export function NightCafe() {
   const [editOpen, setEditOpen] = useState(false)
   const [editValue, setEditValue] = useState('')
 
-  // When café becomes full while the overlay is still showing,
-  // dismiss the overlay and show the toast instead so the user can watch.
   useEffect(() => {
     if (isFull && entryVisible && !isSeated) {
       setEntryFading(true)
@@ -62,8 +54,6 @@ export function NightCafe() {
         setShowFullToast(true)
       }, 400)
     }
-    // When a seat opens up while the toast is showing, hide the toast
-    // and re-show the entry overlay.
     if (!isFull && showFullToast && !isSeated) {
       setShowFullToast(false)
       setEntryFading(false)
@@ -87,94 +77,160 @@ export function NightCafe() {
     setEditValue('')
   }, [editValue, updateActivity])
 
+  /* ── Occupied seats for status overlay ── */
+  const occupiedSeats = seats.filter(s => s.occupied)
+
   return (
     <div className="nightcafe">
-      {/* ambient overlay layers */}
+      {/* ══ Background layers ══ */}
       <div className="nc-bg" />
       <div className="nc-vignette" />
 
-      {/* café window — rainy night scene */}
-      <div className="nc-window" aria-hidden="true">
+      {/* ══════════════════════════════════
+          ZONE 1 — Window (hero, top ~50%)
+          ══════════════════════════════════ */}
+      <div className="nc-window-zone" aria-hidden="true">
+        {/* Night sky + city bokeh */}
         <div className="nc-window-scene">
           <div className="nc-city-glow" />
         </div>
+
+        {/* Rain layers */}
         <div className="nc-rain-layer nc-rain-1" />
         <div className="nc-rain-layer nc-rain-2" />
+
+        {/* Glass water drops */}
         <div className="nc-glass-drop" style={{ left: '11%', animationDelay: '0s', animationDuration: '5.2s' }} />
         <div className="nc-glass-drop" style={{ left: '27%', animationDelay: '2.1s', animationDuration: '6.8s' }} />
         <div className="nc-glass-drop" style={{ left: '44%', animationDelay: '4.5s', animationDuration: '5.6s' }} />
         <div className="nc-glass-drop" style={{ left: '62%', animationDelay: '1.4s', animationDuration: '7.2s' }} />
         <div className="nc-glass-drop" style={{ left: '80%', animationDelay: '3.8s', animationDuration: '6.0s' }} />
-        <div className="nc-window-mullion" />
+
+        {/* Glass condensation haze */}
+        <div className="nc-condensation" />
+
+        {/* Wooden window frame */}
+        <div className="nc-window-frame">
+          <div className="nc-window-mullion" />
+        </div>
+
+        {/* Pendant lights (one per seat, hanging from top) */}
+        <div className="nc-pendant-row">
+          {seats.map((seat, i) => {
+            const warmth = seat.occupied ? getWarmthLevel(seat.joinedAt) : 0
+            return (
+              <div key={seat.id} className="nc-pendant-slot">
+                <PendantLight on={seat.occupied} warmth={warmth} />
+              </div>
+            )
+          })}
+        </div>
       </div>
 
-      {/* distant ambient ceiling lights */}
-      <div className="nc-ambient-lights">
-        <div className="nc-ambient-light" />
-        <div className="nc-ambient-light" />
-        <div className="nc-ambient-light" />
-      </div>
-
-      {/* header */}
-      <header className="nc-header">
-        <h1 className="nc-title">FocusRoom</h1>
-        {isSeated || showFullToast ? (
-          <p className="nc-people-count">
-            今夜のカフェ <span className="nc-count-num">{occupiedCount}人</span>が集中しています
+      {/* ══ Status overlay ON the window ══ */}
+      {(isSeated || showFullToast) && (
+        <div className="nc-status-overlay">
+          <p className="nc-status-title">
+            いま <span className="nc-status-count">{occupiedCount}人</span>が集中しています
           </p>
-        ) : (
-          <p className="nc-subtitle">静かな夜カフェで、誰かと一緒に集中する</p>
-        )}
-      </header>
-
-      {/* quiet event log — ephemeral toasts for join/leave */}
-      {events.length > 0 && (
-        <div className="nc-event-strip">
-          {events.map((ev) => (
-            <div key={ev.id} className="nc-event-item">
-              {ev.type === 'join'
-                ? `${ev.displayName} が入室しました`
-                : `${ev.displayName} が退出しました`}
+          <div className="nc-status-members">
+            {occupiedSeats.map(s => (
+              <span className={`nc-status-card ${mySeatIndex !== null && seats[mySeatIndex]?.id === s.id ? 'is-me' : ''}`} key={s.id}>
+                <span className="nc-status-dot" />
+                <span className="nc-status-name">{mySeatIndex !== null && seats[mySeatIndex]?.id === s.id ? 'あなた' : s.name}</span>
+                {s.joinedAt && (
+                  <span className="nc-status-fire">🔥 {formatElapsed(s.joinedAt)}</span>
+                )}
+                {s.activity && <span className="nc-status-activity">{s.activity}</span>}
+              </span>
+            ))}
+          </div>
+          {/* Event toasts */}
+          {events.length > 0 && (
+            <div className="nc-status-events">
+              {events.map(ev => (
+                <div key={ev.id} className="nc-status-event">
+                  • {ev.type === 'join'
+                    ? `${ev.displayName} が入室しました`
+                    : `${ev.displayName} が退出しました`}
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
 
-      {/* counter area */}
-      <div className="nc-counter-area">
-        {/* back wall with shelf silhouettes */}
-        <div className="nc-back-wall">
-          <div className="nc-shelf" />
-          <div className="nc-shelf nc-shelf-2" />
+      {/* Subtitle when not seated */}
+      {!isSeated && !showFullToast && (
+        <div className="nc-window-subtitle">
+          <p>静かな夜カフェで、誰かと一緒に集中する</p>
         </div>
-        <div className="nc-counter-bar" />
+      )}
+
+      {/* ══════════════════════════════════
+          ZONE 2 — Counter (wood surface + items)
+          ══════════════════════════════════ */}
+      <div className="nc-counter-zone">
+        <div className="nc-counter-surface" />
+
+        {/* Items on counter (tool + mug per seat) */}
+        <div className="nc-counter-items">
+          {seats.map((seat, i) => (
+            <div
+              key={seat.id}
+              className={`nc-counter-item ${seat.occupied ? 'occupied' : 'vacant'}`}
+            >
+              {seat.occupied && seat.tool && seat.tool !== 'none' && (
+                <div className="nc-item-tool">
+                  <ToolIcon tool={seat.tool} />
+                </div>
+              )}
+              {seat.occupied && <CoffeeMug />}
+            </div>
+          ))}
+        </div>
+
         <div className="nc-counter-edge" />
-        <div className="nc-seats-wrap">
-          <div className="nc-seats">
-            {seats.map((seat, i) => {
-              const layout = seatLayout[i]
-              return (
-                <CafeSeat
-                  key={seat.id}
-                  seat={seat}
-                  chairRotate={layout.chairRotate}
-                  joining={joiningIndices.has(i)}
-                  isMine={mySeatIndex === i}
-                  onEditActivity={() => setEditOpen(true)}
-                  style={{
-                    transform: `translateY(${layout.offsetY}px) scale(${layout.scale})`,
-                  }}
-                />
-              )
-            })}
-          </div>
-        </div>
       </div>
 
-      {/* floor area below counter */}
-      <div className="nc-floor" />
+      {/* ══════════════════════════════════
+          ZONE 3 — Stools + labels
+          ══════════════════════════════════ */}
+      <div className="nc-stool-zone">
+        <div className="nc-stools">
+          {seats.map((seat, i) => (
+            <div
+              key={seat.id}
+              className={`nc-stool-seat ${seat.occupied ? 'occupied' : 'vacant'} ${mySeatIndex === i ? 'my-seat' : ''}`}
+            >
+              <Stool occupied={seat.occupied} />
+              {seat.occupied && seat.name ? (
+                <div className="nc-stool-label">
+                  <span className="nc-stool-name">{mySeatIndex === i ? 'あなた' : seat.name}</span>
+                  {seat.joinedAt && (
+                    <span className="nc-stool-time">🔥 {formatElapsed(seat.joinedAt)}</span>
+                  )}
+                  {seat.activity && (
+                    <span className="nc-stool-activity">
+                      {seat.activity}
+                      {mySeatIndex === i && (
+                        <button className="nc-stool-edit" onClick={() => setEditOpen(true)} aria-label="活動を変更">
+                          <EditPencil />
+                        </button>
+                      )}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="nc-stool-label vacant-label" />
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="nc-floor-gradient" />
+      </div>
 
-      {/* bottom bar (placeholder) */}
+      {/* ══ Bottom nav bar ══ */}
       <nav className="nc-bottom-bar">
         <button className="nc-nav-btn" aria-label="スケジュール">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -190,12 +246,10 @@ export function NightCafe() {
           onClick={isSeated ? () => setEditOpen(true) : undefined}
         >
           {isSeated ? (
-            /* pencil icon */
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 1 1 3.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
           ) : (
-            /* plus icon */
             <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
@@ -209,14 +263,14 @@ export function NightCafe() {
         </button>
       </nav>
 
-      {/* Full-café toast — floats above bottom bar so user can still see the café */}
+      {/* ══ Full-café toast ══ */}
       {showFullToast && (
         <div className="nc-full-toast">
           満席です — 席が空いたら入室できます
         </div>
       )}
 
-      {/* Activity edit overlay */}
+      {/* ══ Activity edit overlay ══ */}
       {editOpen && (
         <div className="nc-edit-overlay" onClick={() => setEditOpen(false)}>
           <div className="nc-edit-card" onClick={(e) => e.stopPropagation()}>
@@ -238,7 +292,7 @@ export function NightCafe() {
         </div>
       )}
 
-      {/* Entry overlay — shown on first visit */}
+      {/* ══ Entry overlay — shown on first visit ══ */}
       {entryVisible && (
         <div className={`nc-entry-overlay ${entryFading ? 'fading' : ''}`}>
           <div className="nc-entry-card">
