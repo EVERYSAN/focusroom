@@ -156,6 +156,7 @@ const _statusListeners = new Set<(status: string) => void>()
 function getOrCreateChannel(roomId: string, userId: string): RealtimeChannel {
   const topic = `cafe:${roomId}`
   if (_channel && _channelRoom === roomId) {
+    console.log('[presence] reusing channel', topic)
     return _channel
   }
 
@@ -168,15 +169,19 @@ function getOrCreateChannel(roomId: string, userId: string): RealtimeChannel {
   _subscribed = false
   _channelRoom = roomId
 
+  console.log('[presence] creating channel', topic, 'userId:', userId)
+
   const channel = supabase.channel(topic, {
     config: { presence: { key: userId } },
   })
 
   channel
     .on('presence', { event: 'sync' }, () => {
+      console.log('[presence] sync fired, listeners:', _syncListeners.size)
       _syncListeners.forEach((fn) => fn())
     })
     .subscribe((status) => {
+      console.log('[presence] subscribe status:', status)
       if (status === 'SUBSCRIBED') {
         _subscribed = true
       }
@@ -366,10 +371,18 @@ export function useCafePresence(roomId = 'default') {
         tool: tool ?? pickToolFromActivity(activity),
       }
 
+      console.log('[presence] sitDown called, _subscribed:', _subscribed, '_channel:', !!_channel)
       if (_subscribed && _channel) {
-        await _channel.track(payload)
+        console.log('[presence] tracking payload now')
+        try {
+          await _channel.track(payload)
+          console.log('[presence] track succeeded')
+        } catch (err) {
+          console.error('[presence] track failed:', err)
+        }
       } else {
         // channel not ready yet — queue for when SUBSCRIBED fires
+        console.log('[presence] channel not ready, queuing payload')
         pendingTrackRef.current = payload
       }
     },
