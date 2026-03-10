@@ -5,6 +5,7 @@ import {
   PendantLight, ToolIcon, CoffeeMug, Stool, EditPencil,
   getWarmthLevel, formatElapsed,
 } from './CafeSeat'
+import { WindowScene } from './three/WindowScene'
 import './nightcafe.css'
 
 /* ── Layout: 6 seats ── */
@@ -99,50 +100,18 @@ export function NightCafe() {
 
       {/* ══════════════════════════════════
           ZONE 1 — Window (hero, top ~50%)
+          Three.js Canvas + CSS overlays
           ══════════════════════════════════ */}
-      <div className="nc-window-zone" aria-hidden="true">
-        {/* Night sky + city bokeh */}
-        <div className="nc-window-scene">
-          <div className="nc-city-glow" />
-          <div className="nc-bokeh-orbs" />
-        </div>
+      <div className="nc-window-zone">
+        {/* 3D scene: bokeh, rain, glass, pendant lights */}
+        <WindowScene seats={seats} />
 
-        {/* Rain layers */}
-        <div className="nc-rain-layer nc-rain-1" />
-        <div className="nc-rain-layer nc-rain-2" />
-
-        {/* Glass water drops */}
-        <div className="nc-glass-drop" style={{ left: '11%', animationDelay: '0s', animationDuration: '5.2s' }} />
-        <div className="nc-glass-drop" style={{ left: '27%', animationDelay: '2.1s', animationDuration: '6.8s' }} />
-        <div className="nc-glass-drop" style={{ left: '44%', animationDelay: '4.5s', animationDuration: '5.6s' }} />
-        <div className="nc-glass-drop" style={{ left: '62%', animationDelay: '1.4s', animationDuration: '7.2s' }} />
-        <div className="nc-glass-drop" style={{ left: '80%', animationDelay: '3.8s', animationDuration: '6.0s' }} />
-
-        {/* Static water droplets on glass */}
-        <div className="nc-droplet" style={{ left: '7%', top: '25%', width: '5px', height: '5px' }} />
-        <div className="nc-droplet" style={{ left: '14%', top: '62%', width: '3px', height: '4px' }} />
-        <div className="nc-droplet" style={{ left: '19%', top: '38%', width: '6px', height: '7px' }} />
-        <div className="nc-droplet" style={{ left: '24%', top: '72%', width: '4px', height: '4px' }} />
-        <div className="nc-droplet" style={{ left: '31%', top: '18%', width: '3px', height: '3px' }} />
-        <div className="nc-droplet" style={{ left: '38%', top: '55%', width: '7px', height: '8px' }} />
-        <div className="nc-droplet" style={{ left: '46%', top: '42%', width: '4px', height: '5px' }} />
-        <div className="nc-droplet" style={{ left: '53%', top: '68%', width: '5px', height: '6px' }} />
-        <div className="nc-droplet" style={{ left: '59%', top: '22%', width: '3px', height: '3px' }} />
-        <div className="nc-droplet" style={{ left: '67%', top: '48%', width: '6px', height: '6px' }} />
-        <div className="nc-droplet" style={{ left: '73%', top: '75%', width: '4px', height: '5px' }} />
-        <div className="nc-droplet" style={{ left: '80%', top: '33%', width: '5px', height: '5px' }} />
-        <div className="nc-droplet" style={{ left: '86%', top: '58%', width: '3px', height: '4px' }} />
-        <div className="nc-droplet" style={{ left: '93%', top: '20%', width: '4px', height: '4px' }} />
-
-        {/* Glass condensation haze */}
-        <div className="nc-condensation" />
-
-        {/* Wooden window frame */}
+        {/* Wooden window frame (CSS overlay on top of Canvas) */}
         <div className="nc-window-frame">
           <div className="nc-window-mullion" />
         </div>
 
-        {/* Pendant lights (one per seat, hanging from top) */}
+        {/* Pendant light SVGs (CSS overlay, z-index above Canvas) */}
         <div className="nc-pendant-row">
           {seats.map((seat, i) => {
             const warmth = seat.occupied ? getWarmthLevel(seat.joinedAt) : 0

@@ -76,250 +76,11 @@
   z-index: 2;
 }
 
-/* Night sky base */
-.nc-window-scene {
-  position: absolute;
+/* ── Three.js Canvas inside window zone ── */
+.nc-window-zone canvas {
+  position: absolute !important;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    #070a10 0%,
-    #0c1018 40%,
-    #141a24 100%
-  );
-}
-
-/* ── Bokeh city lights — ambient background haze ── */
-.nc-city-glow {
-  position: absolute;
-  inset: 0;
-  background:
-    /* Large ambient warm glow patches */
-    radial-gradient(ellipse 40% 35% at 25% 45%, rgba(255, 180, 80, 0.08) 0%, transparent 100%),
-    radial-gradient(ellipse 35% 30% at 60% 50%, rgba(255, 200, 100, 0.06) 0%, transparent 100%),
-    radial-gradient(ellipse 30% 25% at 80% 40%, rgba(255, 170, 60, 0.05) 0%, transparent 100%),
-    /* Cool ambient patches */
-    radial-gradient(ellipse 25% 20% at 50% 55%, rgba(150, 180, 255, 0.04) 0%, transparent 100%),
-    /* Horizon glow */
-    linear-gradient(to top, rgba(255, 180, 80, 0.06) 0%, transparent 40%);
-  filter: blur(20px);
-  opacity: 0.9;
-  animation: bokeh-drift 40s ease-in-out infinite alternate;
-}
-
-/* ── Bokeh orbs — distinct circular lens bokeh ── */
-.nc-bokeh-orbs {
-  position: absolute;
-  inset: 0;
-  animation: bokeh-drift-2 45s ease-in-out infinite alternate;
-  background:
-    /* === Large warm orbs (hero bokeh) — bigger & brighter === */
-    radial-gradient(circle 50px at 10% 42%, rgba(255, 185, 60, 0.55) 0%, rgba(255, 185, 60, 0.18) 50%, transparent 100%),
-    radial-gradient(circle 70px at 26% 52%, rgba(255, 200, 80, 0.48) 0%, rgba(255, 200, 80, 0.14) 55%, transparent 100%),
-    radial-gradient(circle 45px at 40% 35%, rgba(255, 170, 50, 0.40) 0%, rgba(255, 170, 50, 0.10) 55%, transparent 100%),
-    radial-gradient(circle 80px at 62% 48%, rgba(255, 210, 100, 0.52) 0%, rgba(255, 210, 100, 0.15) 50%, transparent 100%),
-    radial-gradient(circle 38px at 78% 55%, rgba(255, 180, 60, 0.42) 0%, rgba(255, 180, 60, 0.10) 55%, transparent 100%),
-    radial-gradient(circle 60px at 92% 40%, rgba(255, 195, 75, 0.38) 0%, rgba(255, 195, 75, 0.10) 55%, transparent 100%),
-    /* === Medium warm orbs === */
-    radial-gradient(circle 28px at 6% 65%, rgba(255, 210, 100, 0.38) 0%, rgba(255, 210, 100, 0.08) 60%, transparent 100%),
-    radial-gradient(circle 35px at 35% 68%, rgba(255, 160, 60, 0.34) 0%, rgba(255, 160, 60, 0.08) 55%, transparent 100%),
-    radial-gradient(circle 22px at 50% 28%, rgba(255, 200, 120, 0.30) 0%, rgba(255, 200, 120, 0.07) 60%, transparent 100%),
-    radial-gradient(circle 32px at 85% 30%, rgba(255, 180, 70, 0.35) 0%, rgba(255, 180, 70, 0.08) 55%, transparent 100%),
-    /* === Cool blue-white orbs (streetlights) === */
-    radial-gradient(circle 40px at 48% 46%, rgba(170, 200, 255, 0.40) 0%, rgba(170, 200, 255, 0.10) 55%, transparent 100%),
-    radial-gradient(circle 25px at 72% 62%, rgba(190, 215, 255, 0.30) 0%, rgba(190, 215, 255, 0.06) 60%, transparent 100%),
-    radial-gradient(circle 20px at 18% 30%, rgba(200, 220, 255, 0.25) 0%, rgba(200, 220, 255, 0.05) 60%, transparent 100%),
-    /* === Accent orbs (signs, signals) === */
-    radial-gradient(circle 18px at 68% 38%, rgba(255, 100, 110, 0.28) 0%, rgba(255, 100, 110, 0.05) 60%, transparent 100%),
-    radial-gradient(circle 12px at 55% 70%, rgba(100, 255, 150, 0.20) 0%, transparent 100%),
-    radial-gradient(circle 20px at 88% 65%, rgba(255, 140, 80, 0.28) 0%, rgba(255, 140, 80, 0.06) 60%, transparent 100%),
-    /* === Small scattered twinkles === */
-    radial-gradient(circle 10px at 4% 50%, rgba(255, 220, 140, 0.28) 0%, transparent 100%),
-    radial-gradient(circle 8px at 15% 75%, rgba(255, 200, 100, 0.24) 0%, transparent 100%),
-    radial-gradient(circle 9px at 30% 25%, rgba(200, 190, 255, 0.20) 0%, transparent 100%),
-    radial-gradient(circle 11px at 44% 60%, rgba(255, 190, 80, 0.24) 0%, transparent 100%),
-    radial-gradient(circle 7px at 58% 35%, rgba(255, 220, 160, 0.22) 0%, transparent 100%),
-    radial-gradient(circle 10px at 75% 72%, rgba(255, 170, 60, 0.26) 0%, transparent 100%),
-    radial-gradient(circle 8px at 95% 52%, rgba(200, 210, 255, 0.18) 0%, transparent 100%);
-}
-
-@keyframes bokeh-drift {
-  0%   { transform: translate(0, 0) scale(1); }
-  50%  { transform: translate(-4px, 3px) scale(1.02); }
-  100% { transform: translate(3px, -2px) scale(0.98); }
-}
-
-@keyframes bokeh-drift-2 {
-  0%   { transform: translate(0, 0) scale(1); }
-  33%  { transform: translate(3px, -2px) scale(1.01); }
-  66%  { transform: translate(-2px, 3px) scale(0.99); }
-  100% { transform: translate(1px, -1px) scale(1.005); }
-}
-
-/* ── Rain streaks ── */
-.nc-rain-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.nc-rain-1 {
-  background: repeating-linear-gradient(
-    178deg,
-    transparent 0px,
-    transparent 30px,
-    rgba(190, 210, 230, 0.09) 30px,
-    rgba(190, 210, 230, 0.04) 32px
-  ),
-  repeating-linear-gradient(
-    176deg,
-    transparent 0px,
-    transparent 48px,
-    rgba(190, 210, 230, 0.07) 48px,
-    rgba(190, 210, 230, 0.03) 49px
-  );
-  background-size: 100% 200%;
-  animation: rain-fall-1 1.1s linear infinite;
-  opacity: 0.85;
-}
-
-.nc-rain-2 {
-  background: repeating-linear-gradient(
-    177deg,
-    transparent 0px,
-    transparent 42px,
-    rgba(190, 210, 230, 0.06) 42px,
-    rgba(190, 210, 230, 0.025) 44px
-  ),
-  repeating-linear-gradient(
-    179deg,
-    transparent 0px,
-    transparent 62px,
-    rgba(190, 210, 230, 0.05) 62px,
-    rgba(190, 210, 230, 0.015) 63px
-  );
-  background-size: 100% 300%;
-  animation: rain-fall-2 1.6s linear infinite;
-  opacity: 0.55;
-}
-
-@keyframes rain-fall-1 {
-  from { background-position: 0 -100%; }
-  to   { background-position: 0 100%; }
-}
-
-@keyframes rain-fall-2 {
-  from { background-position: 0 -100%; }
-  to   { background-position: 0 100%; }
-}
-
-/* ── Glass water drops (sliding down glass) ── */
-.nc-glass-drop {
-  position: absolute;
-  top: -15%;
-  width: 2.5px;
-  height: 22px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgba(200, 215, 230, 0.5) 25%,
-    rgba(200, 215, 230, 0.8) 55%,
-    rgba(200, 215, 230, 0.4) 80%,
-    rgba(200, 215, 230, 0.15)
-  );
-  border-radius: 1px 1px 2px 2px;
-  animation: glass-drip 6s ease-in infinite;
-  opacity: 0;
-  z-index: 3;
-  /* Slight refraction glow */
-  box-shadow: 0 0 3px rgba(200, 215, 230, 0.15);
-}
-
-/* Small trail left behind by the drop */
-.nc-glass-drop::after {
-  content: '';
-  position: absolute;
-  top: -100%;
-  left: 0;
-  width: 1px;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(200, 215, 230, 0.06) 50%,
-    rgba(200, 215, 230, 0.12) 100%
-  );
-}
-
-@keyframes glass-drip {
-  0%   { top: -15%; height: 14px; opacity: 0; }
-  6%   { opacity: 0.95; }
-  30%  { height: 35px; opacity: 0.7; }
-  65%  { height: 20px; opacity: 0.35; }
-  100% { top: 110%; height: 8px; opacity: 0; }
-}
-
-/* ── Static water droplets on glass ── */
-.nc-droplet {
-  position: absolute;
-  border-radius: 50%;
-  z-index: 4;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      circle at 35% 30%,
-      rgba(255, 255, 255, 0.25) 0%,
-      rgba(200, 210, 220, 0.12) 30%,
-      rgba(150, 170, 190, 0.06) 60%,
-      transparent 100%
-    );
-  box-shadow:
-    inset 0 -1px 2px rgba(0, 0, 0, 0.15),
-    inset 0 1px 1px rgba(255, 255, 255, 0.12),
-    0 1px 3px rgba(0, 0, 0, 0.2);
-  animation: droplet-shimmer 8s ease-in-out infinite;
-}
-
-.nc-droplet::after {
-  content: '';
-  position: absolute;
-  top: 15%;
-  left: 20%;
-  width: 35%;
-  height: 25%;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.20);
-  filter: blur(0.5px);
-}
-
-@keyframes droplet-shimmer {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 0.85; }
-}
-
-/* ── Glass condensation haze — enhanced ── */
-.nc-condensation {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background:
-    /* Visible haze band */
-    linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(180, 200, 220, 0.015) 20%,
-      rgba(180, 200, 220, 0.04) 50%,
-      rgba(180, 200, 220, 0.08) 80%,
-      rgba(180, 200, 220, 0.10) 100%
-    ),
-    /* Patchy condensation spots */
-    radial-gradient(ellipse 15% 20% at 20% 80%, rgba(180, 200, 220, 0.06) 0%, transparent 100%),
-    radial-gradient(ellipse 12% 18% at 45% 90%, rgba(180, 200, 220, 0.05) 0%, transparent 100%),
-    radial-gradient(ellipse 18% 15% at 70% 85%, rgba(180, 200, 220, 0.07) 0%, transparent 100%),
-    radial-gradient(ellipse 10% 12% at 90% 75%, rgba(180, 200, 220, 0.04) 0%, transparent 100%);
-  pointer-events: none;
-  z-index: 2;
+  z-index: 1;
 }
 
 /* ── Window frame (thick wooden border, richer) ── */
@@ -1295,11 +1056,6 @@
     height: 100px;
   }
 
-  /* Larger bokeh circles for tablet */
-  .nc-bokeh-orbs {
-    background-size: 100%;
-  }
-
   .nc-light-cones {
     background:
       radial-gradient(ellipse 65px 80% at calc(50% - 172px) 0%, rgba(255, 210, 120, 0.14) 0%, transparent 100%),
@@ -1310,9 +1066,6 @@
       radial-gradient(ellipse 65px 80% at calc(50% + 258px) 0%, rgba(255, 210, 120, 0.14) 0%, transparent 100%);
   }
 
-  .nc-droplet {
-    animation-duration: 10s;
-  }
 }
 
 /* ═══════════════════════════════════
@@ -1431,11 +1184,6 @@
 
   .nc-counter-edge {
     height: 14px;
-  }
-
-  /* Desktop: larger droplets */
-  .nc-droplet {
-    transform: scale(1.3);
   }
 
   /* Desktop: richer counter grain */
