@@ -180,10 +180,20 @@ function getOrCreateChannel(roomId: string, userId: string): RealtimeChannel {
       console.log('[presence] sync fired, listeners:', _syncListeners.size)
       _syncListeners.forEach((fn) => fn())
     })
-    .subscribe((status) => {
-      console.log('[presence] subscribe status:', status)
+    .subscribe((status, err) => {
+      console.log('[presence] subscribe status:', status, err ? `error: ${err.message}` : '')
       if (status === 'SUBSCRIBED') {
         _subscribed = true
+      }
+      if (status === 'CHANNEL_ERROR') {
+        console.error('[presence] CHANNEL_ERROR detail:', err)
+        // Auto-retry after a short delay
+        setTimeout(() => {
+          if (_channel === channel && !_subscribed) {
+            console.log('[presence] retrying subscription...')
+            channel.subscribe()
+          }
+        }, 3000)
       }
       _statusListeners.forEach((fn) => fn(status))
     })
