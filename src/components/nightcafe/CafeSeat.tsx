@@ -1,6 +1,16 @@
 import type { Seat } from './types'
 import { formatElapsed } from './useElapsed'
 
+/* Warmth level based on session duration (quiet, stepped) */
+function getWarmthLevel(joinedAt?: Date): number {
+  if (!joinedAt) return 0
+  const minutes = Math.floor((Date.now() - joinedAt.getTime()) / 60_000)
+  if (minutes >= 60) return 3
+  if (minutes >= 30) return 2
+  if (minutes >= 10) return 1
+  return 0
+}
+
 /* ── SVG icons for tools ── */
 const LaptopIcon = () => (
   <svg viewBox="0 0 40 28" className="seat-tool-icon">
@@ -64,8 +74,8 @@ const CoffeeMug = () => (
 )
 
 /* ── Pendant light SVG ── */
-const PendantLight = ({ on }: { on: boolean }) => (
-  <div className={`seat-light ${on ? 'light-on' : 'light-off'}`}>
+const PendantLight = ({ on, warmth = 0 }: { on: boolean; warmth?: number }) => (
+  <div className={`seat-light ${on ? `light-on warmth-${warmth}` : 'light-off'}`}>
     <svg viewBox="0 0 40 50" className="pendant-svg">
       <line x1="20" y1="0" x2="20" y2="15" stroke="#555" strokeWidth="1.5" />
       <path d="M10 15 Q10 12 20 12 Q30 12 30 15 L28 30 Q28 32 20 32 Q12 32 12 30 Z"
@@ -77,8 +87,12 @@ const PendantLight = ({ on }: { on: boolean }) => (
 )
 
 /* ── Chair SVG ── */
-const Chair = () => (
-  <svg viewBox="0 0 36 40" className="seat-chair">
+const Chair = ({ rotate = 0 }: { rotate?: number }) => (
+  <svg
+    viewBox="0 0 36 40"
+    className="seat-chair"
+    style={rotate ? { transform: `rotate(${rotate}deg)` } : undefined}
+  >
     <rect x="4" y="0" width="28" height="16" rx="3" fill="#5a4a38" />
     <rect x="6" y="16" width="24" height="6" rx="2" fill="#6b5b48" />
     <rect x="6" y="22" width="4" height="16" rx="1" fill="#4a3c2c" />
@@ -87,13 +101,37 @@ const Chair = () => (
   </svg>
 )
 
+/* ── Small pencil icon for activity edit ── */
+const EditPencil = () => (
+  <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M11 1.5l3.5 3.5M2 11l7-7 3.5 3.5-7 7H2v-3.5z" />
+  </svg>
+)
+
 /* ── Main seat component ── */
-export function CafeSeat({ seat }: { seat: Seat }) {
+interface CafeSeatProps {
+  seat: Seat
+  chairRotate?: number
+  style?: React.CSSProperties
+  joining?: boolean
+  isMine?: boolean
+  onEditActivity?: () => void
+}
+
+export function CafeSeat({ seat, chairRotate = 0, style, joining = false, isMine = false, onEditActivity }: CafeSeatProps) {
   const { occupied, name, activity, joinedAt, tool } = seat
+  const warmth = occupied ? getWarmthLevel(joinedAt) : 0
+
+  const cls = [
+    'cafe-seat',
+    occupied ? `occupied warmth-${warmth}` : 'vacant',
+    joining ? 'joining' : '',
+    isMine ? 'my-seat' : '',
+  ].filter(Boolean).join(' ')
 
   return (
-    <div className={`cafe-seat ${occupied ? 'occupied' : 'vacant'}`}>
-      <PendantLight on={occupied} />
+    <div className={cls} style={style}>
+      <PendantLight on={occupied} warmth={warmth} />
 
       <div className="seat-counter-surface">
         {occupied && tool && tool !== 'none' && (
@@ -104,12 +142,21 @@ export function CafeSeat({ seat }: { seat: Seat }) {
         {occupied && <CoffeeMug />}
       </div>
 
-      <Chair />
+      <Chair rotate={chairRotate} />
 
       {occupied && name && (
         <div className="seat-info">
           <span className="seat-name">{name}</span>
-          {activity && <span className="seat-activity">{activity}</span>}
+          {activity && (
+            <span className="seat-activity">
+              {activity}
+              {isMine && onEditActivity && (
+                <button className="seat-edit-btn" onClick={onEditActivity} aria-label="活動を変更">
+                  <EditPencil />
+                </button>
+              )}
+            </span>
+          )}
           {joinedAt && (
             <span className="seat-time">🔥 {formatElapsed(joinedAt)}</span>
           )}

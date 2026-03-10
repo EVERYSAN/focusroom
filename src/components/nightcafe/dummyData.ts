@@ -41,22 +41,10 @@ export const dummySeats: Seat[] = [
   },
   {
     id: 6,
-    occupied: false,
-  },
-  {
-    id: 7,
     occupied: true,
     name: 'Sora',
     activity: 'レポート作成',
     joinedAt: minutesAgo(55),
     tool: 'notebook',
-  },
-  {
-    id: 8,
-    occupied: true,
-    name: 'Hina',
-    activity: '作業中',
-    joinedAt: minutesAgo(10),
-    tool: 'laptop',
   },
 ]
