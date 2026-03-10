@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+// .trim() guards against trailing whitespace / newlines in env vars
+// (Vercel can silently append \n when pasting multi-line values).
+const url = (import.meta.env.VITE_SUPABASE_URL as string)?.trim()
+const key = (import.meta.env.VITE_SUPABASE_ANON_KEY as string)?.trim()
 
 if (!url || !key) {
   console.warn(
@@ -15,6 +17,3 @@ export const supabase = createClient(
   url || 'https://placeholder.supabase.co',
   key || 'placeholder-key',
 )
-
-// Expose for production diagnostics (temporary)
-;(window as unknown as Record<string, unknown>).__supabase = supabase
