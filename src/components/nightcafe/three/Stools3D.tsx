@@ -21,14 +21,16 @@ function BarStool({ position, occupied }: { position: [number, number, number]; 
 
   const metalMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#1a1815',
-    roughness: 0.5,
-    metalness: 0.6,
+    roughness: 0.35,
+    metalness: 0.85,
+    envMapIntensity: 1.2,
   }), [])
 
   const seatMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: occupied ? '#3a2a1a' : '#2a2018',
-    roughness: 0.8,
-    metalness: 0.05,
+    roughness: 0.75,
+    metalness: 0.08,
+    envMapIntensity: 0.4,
   }), [occupied])
 
   const legPositions: [number, number, number][] = [

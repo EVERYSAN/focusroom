@@ -77,8 +77,9 @@ export function Counter3D() {
   const topMat = useMemo(() => new THREE.MeshStandardMaterial({
     map: woodTex,
     color: '#8a6040',
-    roughness: 0.65,
-    metalness: 0.05,
+    roughness: 0.55,
+    metalness: 0.08,
+    envMapIntensity: 0.6,
   }), [woodTex])
 
   const frontMat = useMemo(() => new THREE.MeshStandardMaterial({
@@ -90,8 +91,9 @@ export function Counter3D() {
 
   const edgeMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#3e2210',
-    roughness: 0.6,
-    metalness: 0.1,
+    roughness: 0.4,
+    metalness: 0.3,
+    envMapIntensity: 0.8,
   }), [])
 
   return (

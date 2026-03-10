@@ -116,8 +116,9 @@ export function PendantLamp({ index, seat, total }: PendantLampProps) {
       <mesh geometry={shadeGeo} castShadow>
         <meshStandardMaterial
           color="#2a2018"
-          roughness={0.8}
-          metalness={0.15}
+          roughness={0.7}
+          metalness={0.25}
+          envMapIntensity={0.5}
           side={THREE.DoubleSide}
         />
       </mesh>

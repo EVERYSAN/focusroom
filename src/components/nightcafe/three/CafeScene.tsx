@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { Environment } from '@react-three/drei'
 import * as THREE from 'three'
 import { BokehLights } from './BokehLights'
 import { RainGlass } from './RainGlass'
@@ -46,6 +47,13 @@ export function CafeScene({ seats }: CafeSceneProps) {
       <fog attach="fog" args={['#080604', 22, 50]} />
 
       <Suspense fallback={null}>
+        {/* HDRI environment map — subtle reflections on all PBR surfaces */}
+        <Environment
+          preset="night"
+          background={false}
+          environmentIntensity={0.3}
+        />
+
         {/* Background city bokeh */}
         <BokehLights />
 

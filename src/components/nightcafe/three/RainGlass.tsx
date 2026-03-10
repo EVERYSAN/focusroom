@@ -199,7 +199,7 @@ export function RainGlass() {
           thickness={0.5}
           normalMap={normalTexture}
           normalScale={new THREE.Vector2(0.15, 0.15)}
-          envMapIntensity={0.2}
+          envMapIntensity={0.5}
           side={THREE.DoubleSide}
         />
       </mesh>

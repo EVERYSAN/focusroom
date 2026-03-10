@@ -61,13 +61,14 @@ function CoffeeMug3D({ position }: { position: [number, number, number] }) {
         />
       </mesh>
 
-      {/* Coffee liquid surface */}
+      {/* Coffee liquid surface — reflective like real liquid */}
       <mesh position={[0, 0.26, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.115, 16]} />
         <meshStandardMaterial
           color="#2a1508"
-          roughness={0.3}
-          metalness={0.0}
+          roughness={0.15}
+          metalness={0.1}
+          envMapIntensity={1.5}
         />
       </mesh>
     </group>
@@ -78,13 +79,14 @@ function CoffeeMug3D({ position }: { position: [number, number, number] }) {
 function Laptop3D({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      {/* Base / keyboard */}
+      {/* Base / keyboard — aluminium finish */}
       <mesh position={[0, 0.015, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.45, 0.02, 0.30]} />
         <meshStandardMaterial
           color="#2a2a2e"
-          roughness={0.6}
-          metalness={0.3}
+          roughness={0.4}
+          metalness={0.6}
+          envMapIntensity={1.0}
         />
       </mesh>
 
@@ -94,8 +96,9 @@ function Laptop3D({ position }: { position: [number, number, number] }) {
           <boxGeometry args={[0.44, 0.30, 0.008]} />
           <meshStandardMaterial
             color="#1a1a1e"
-            roughness={0.5}
-            metalness={0.3}
+            roughness={0.35}
+            metalness={0.5}
+            envMapIntensity={0.8}
           />
         </mesh>
 
@@ -172,8 +175,9 @@ function Notebook3D({ position }: { position: [number, number, number] }) {
         <cylinderGeometry args={[0.008, 0.008, 0.22, 8]} />
         <meshStandardMaterial
           color="#1a1a1e"
-          roughness={0.4}
-          metalness={0.5}
+          roughness={0.25}
+          metalness={0.8}
+          envMapIntensity={1.2}
         />
       </mesh>
     </group>
