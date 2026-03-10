@@ -8,12 +8,12 @@ import './nightcafe.css'
    Edge seats sit slightly higher (further away in perspective)
    and are scaled down; chairs angle inward. */
 const seatLayout = [
-  { offsetY: -8, chairRotate:  8, scale: 0.92 },
-  { offsetY: -3, chairRotate:  4, scale: 0.96 },
-  { offsetY:  0, chairRotate:  1, scale: 1    },
-  { offsetY:  0, chairRotate: -1, scale: 1    },
-  { offsetY: -3, chairRotate: -4, scale: 0.96 },
-  { offsetY: -8, chairRotate: -8, scale: 0.92 },
+  { offsetY: -12, chairRotate:  8, scale: 0.89 },
+  { offsetY:  -5, chairRotate:  4, scale: 0.95 },
+  { offsetY:   0, chairRotate:  1, scale: 1    },
+  { offsetY:   0, chairRotate: -1, scale: 1    },
+  { offsetY:  -5, chairRotate: -4, scale: 0.95 },
+  { offsetY: -12, chairRotate: -8, scale: 0.89 },
 ]
 
 export function NightCafe() {

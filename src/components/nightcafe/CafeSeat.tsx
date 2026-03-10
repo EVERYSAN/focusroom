@@ -147,6 +147,9 @@ export function CafeSeat({ seat, chairRotate = 0, style, joining = false, isMine
       {occupied && name && (
         <div className="seat-info">
           <span className="seat-name">{name}</span>
+          {joinedAt && (
+            <span className="seat-time">🔥 {formatElapsed(joinedAt)}</span>
+          )}
           {activity && (
             <span className="seat-activity">
               {activity}
@@ -156,9 +159,6 @@ export function CafeSeat({ seat, chairRotate = 0, style, joining = false, isMine
                 </button>
               )}
             </span>
-          )}
-          {joinedAt && (
-            <span className="seat-time">🔥 {formatElapsed(joinedAt)}</span>
           )}
         </div>
       )}

@@ -35,22 +35,23 @@
   box-shadow: inset 0 0 150px 60px rgba(0, 0, 0, 0.65);
 }
 
-/* ── Café Window — rainy night ── */
+/* ── Café Window — rainy night (background element) ── */
 .nc-window {
   position: absolute;
-  top: 20%;
-  left: 8%;
-  right: 8%;
-  height: 22%;
+  top: 12%;
+  left: 14%;
+  right: 14%;
+  height: 15%;
   z-index: 1;
   border-radius: 3px;
   overflow: hidden;
-  border: 3px solid rgba(60, 48, 30, 0.85);
-  border-bottom-width: 6px;
+  opacity: 0.5;
+  border: 2px solid rgba(60, 48, 30, 0.5);
+  border-bottom-width: 4px;
   box-shadow:
-    inset 0 0 30px rgba(0, 0, 0, 0.5),
-    0 0 40px rgba(0, 0, 0, 0.3),
-    inset 0 0 0 1px rgba(80, 65, 40, 0.25);
+    inset 0 0 20px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(80, 65, 40, 0.15);
 }
 
 /* Night sky base inside window */
@@ -219,15 +220,15 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding-bottom: 56px;
+  justify-content: center;
+  padding-bottom: 40px;
   perspective: 600px;
 }
 
 /* The wooden counter surface — gentle curve */
 .nc-counter-bar {
   position: absolute;
-  bottom: 56px;
+  bottom: 40px;
   left: -20px;
   right: -20px;
   height: 100px;
@@ -293,7 +294,7 @@
 /* ── Counter Edge — front face giving thickness ── */
 .nc-counter-edge {
   position: absolute;
-  bottom: 28px;
+  bottom: 12px;
   left: -15px;
   right: -15px;
   height: 28px;
@@ -357,10 +358,10 @@
 /* ── Back wall with shelves ── */
 .nc-back-wall {
   position: absolute;
-  bottom: 56px;
+  bottom: 40px;
   left: 0;
   right: 0;
-  height: 180px;
+  height: 220px;
   z-index: 1;
   background: linear-gradient(
     to bottom,
@@ -462,7 +463,7 @@
 }
 
 .cafe-seat.vacant {
-  opacity: 0.28;
+  opacity: 0.16;
 }
 
 .cafe-seat.occupied {
@@ -554,8 +555,8 @@
   bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
@@ -579,7 +580,7 @@
 
 /* Vacant seat cord dimmer */
 .light-off::before {
-  opacity: 0.3;
+  opacity: 0.12;
 }
 
 /* ── Light warmth by session duration ── */
@@ -732,16 +733,16 @@
 
 .seat-activity {
   font-size: 8px;
-  color: rgba(210, 190, 160, 0.5);
+  color: rgba(210, 190, 160, 0.45);
   white-space: nowrap;
-  max-width: 52px;
+  max-width: 80px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .seat-time {
-  font-size: 9px;
-  color: rgba(245, 180, 100, 0.6);
+  font-size: 10px;
+  color: rgba(245, 180, 100, 0.75);
   white-space: nowrap;
 }
 
@@ -759,17 +760,30 @@
 
 /* Pendant light slightly brighter for own seat */
 .cafe-seat.my-seat .pendant-svg {
-  filter: drop-shadow(0 6px 14px rgba(255, 210, 120, 0.35));
+  filter: drop-shadow(0 6px 14px rgba(255, 210, 120, 0.4));
 }
 
 /* Wider warm floor glow under own seat */
 .cafe-seat.my-seat.occupied::before {
-  background: radial-gradient(ellipse, rgba(255, 200, 100, 0.10) 0%, transparent 70%);
+  width: 90px;
+  height: 110px;
+  background: radial-gradient(ellipse, rgba(255, 200, 100, 0.16) 0%, rgba(255, 180, 80, 0.06) 40%, transparent 70%);
 }
 
-/* Name "あなた" in warmer tone */
+/* Name "あなた" in warmer tone with subtle glow */
 .cafe-seat.my-seat .seat-name {
   color: rgba(255, 220, 160, 0.95);
+  text-shadow: 0 0 8px rgba(255, 200, 120, 0.3);
+}
+
+/* Subtle warm underline glow under own seat info */
+.cafe-seat.my-seat .seat-info::after {
+  content: '';
+  display: block;
+  width: 60%;
+  height: 1px;
+  margin: 4px auto 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 200, 120, 0.2) 30%, rgba(255, 200, 120, 0.25) 50%, rgba(255, 200, 120, 0.2) 70%, transparent);
 }
 
 /* Enhanced glow bloom for own joining animation */
@@ -1257,37 +1271,37 @@
 /* ── Mobile-first responsive ── */
 @media (min-width: 480px) {
   .cafe-seat {
-    width: 72px;
-    min-width: 72px;
+    width: 86px;
+    min-width: 86px;
   }
 
   .nc-seats {
-    gap: 4px;
+    gap: 6px;
   }
 
   .seat-counter-surface {
-    width: 64px;
-    height: 36px;
+    width: 72px;
+    height: 40px;
   }
 
   .seat-tool {
-    width: 28px;
-    height: 20px;
+    width: 30px;
+    height: 22px;
   }
 
   .seat-mug-wrap {
-    width: 20px;
-    height: 24px;
+    width: 22px;
+    height: 26px;
   }
 
   .seat-light {
-    width: 32px;
-    height: 42px;
+    width: 36px;
+    height: 46px;
   }
 
   .seat-chair {
-    width: 28px;
-    height: 32px;
+    width: 30px;
+    height: 34px;
   }
 
   .seat-name {
@@ -1299,14 +1313,14 @@
   }
 
   .seat-time {
-    font-size: 10px;
+    font-size: 11px;
   }
 }
 
 @media (min-width: 768px) {
   .cafe-seat {
-    width: 110px;
-    min-width: 110px;
+    width: 120px;
+    min-width: 120px;
   }
 
   .nc-seats {
@@ -1314,7 +1328,7 @@
   }
 
   .nc-header {
-    padding-top: 64px;
+    padding-top: 48px;
   }
 
   .nc-title {
@@ -1327,45 +1341,49 @@
   }
 
   .seat-light {
-    width: 44px;
-    height: 56px;
+    width: 48px;
+    height: 60px;
   }
 
   .seat-light::before {
-    height: 220px;
+    height: 240px;
   }
 
   .light-glow {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
   }
 
   .seat-counter-surface {
-    width: 96px;
-    height: 44px;
+    width: 100px;
+    height: 46px;
   }
 
   .seat-tool {
-    width: 36px;
-    height: 26px;
-  }
-
-  .seat-mug-wrap {
-    width: 24px;
+    width: 40px;
     height: 28px;
   }
 
+  .seat-mug-wrap {
+    width: 26px;
+    height: 30px;
+  }
+
   .seat-chair {
-    width: 32px;
-    height: 36px;
+    width: 36px;
+    height: 40px;
   }
 
   .seat-name {
-    font-size: 13px;
+    font-size: 14px;
   }
 
-  .seat-activity, .seat-time {
+  .seat-activity {
     font-size: 11px;
+  }
+
+  .seat-time {
+    font-size: 13px;
   }
 
   .nc-counter-bar {
@@ -1375,13 +1393,13 @@
 
   .nc-counter-edge {
     height: 34px;
-    bottom: 22px;
+    bottom: 6px;
   }
 
   .nc-window {
-    top: 14%;
-    left: 10%;
-    right: 10%;
-    height: 26%;
+    top: 8%;
+    left: 16%;
+    right: 16%;
+    height: 16%;
   }
 }
