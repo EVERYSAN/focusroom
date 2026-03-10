@@ -147,58 +147,68 @@ function buildSeats(
 }
 
 /* ── Module-level singleton channel to survive React StrictMode ── */
+/*
+ * v2.99.0 note: supabase.channel(topic) now deduplicates — it returns the
+ * existing channel object if one with the same topic already lives in the
+ * client's internal array.  We must NOT call removeChannel() and immediately
+ * re-create with the same topic, because removeChannel is async and the
+ * channel stays in the array in a non-`closed` state, which causes
+ * subscribe() to silently skip (it requires state === closed).
+ *
+ * Instead we set up bindings + subscribe exactly once per channel object and
+ * use object identity to detect reuse.
+ */
 let _channel: RealtimeChannel | null = null
-let _channelRoom: string | null = null
+let _channelSetup = false
 let _subscribed = false
 const _syncListeners = new Set<() => void>()
 const _statusListeners = new Set<(status: string) => void>()
 
 function getOrCreateChannel(roomId: string, userId: string): RealtimeChannel {
   const topic = `cafe:${roomId}`
-  if (_channel && _channelRoom === roomId) {
-    console.log('[presence] reusing channel', topic)
-    return _channel
-  }
 
-  // clean up old channel
-  if (_channel) {
-    _channel.untrack()
-    supabase.removeChannel(_channel)
-  }
-
-  _subscribed = false
-  _channelRoom = roomId
-
-  console.log('[presence] creating channel', topic, 'userId:', userId)
-
+  // supabase.channel() returns the existing channel for the same topic (v2.99.0+).
+  // Only creates a new RealtimeChannel when none exists yet.
   const channel = supabase.channel(topic, {
     config: { presence: { key: userId } },
   })
 
-  channel
-    .on('presence', { event: 'sync' }, () => {
-      console.log('[presence] sync fired, listeners:', _syncListeners.size)
-      _syncListeners.forEach((fn) => fn())
-    })
-    .subscribe((status, err) => {
-      console.log('[presence] subscribe status:', status, err ? `error: ${err.message}` : '')
-      if (status === 'SUBSCRIBED') {
-        _subscribed = true
-      }
-      if (status === 'CHANNEL_ERROR') {
-        console.error('[presence] CHANNEL_ERROR detail:', err)
-        // Auto-retry after a short delay
-        setTimeout(() => {
-          if (_channel === channel && !_subscribed) {
-            console.log('[presence] retrying subscription...')
-            channel.subscribe()
-          }
-        }, 3000)
-      }
-      _statusListeners.forEach((fn) => fn(status))
-    })
+  // Same channel object, already wired up — nothing to do
+  if (channel === _channel && _channelSetup) {
+    return channel
+  }
 
+  // First call or a genuinely new channel object (topic changed)
   _channel = channel
+  _subscribed = false
+
+  if (!_channelSetup) {
+    console.log('[presence] setting up channel', topic, 'userId:', userId)
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        _syncListeners.forEach((fn) => fn())
+      })
+      .subscribe((status, err) => {
+        console.log('[presence] subscribe status:', status, err ?? '')
+        if (status === 'SUBSCRIBED') {
+          _subscribed = true
+        }
+        if (status === 'CHANNEL_ERROR') {
+          console.error('[presence] CHANNEL_ERROR:', err)
+          setTimeout(() => {
+            if (_channel === channel && !_subscribed) {
+              console.log('[presence] retrying subscription…')
+              channel.subscribe()
+            }
+          }, 3000)
+        }
+        _statusListeners.forEach((fn) => fn(status))
+      })
+
+    _channelSetup = true
+  }
+
   return channel
 }
 
@@ -381,18 +391,14 @@ export function useCafePresence(roomId = 'default') {
         tool: tool ?? pickToolFromActivity(activity),
       }
 
-      console.log('[presence] sitDown called, _subscribed:', _subscribed, '_channel:', !!_channel)
       if (_subscribed && _channel) {
-        console.log('[presence] tracking payload now')
         try {
           await _channel.track(payload)
-          console.log('[presence] track succeeded')
         } catch (err) {
           console.error('[presence] track failed:', err)
         }
       } else {
         // channel not ready yet — queue for when SUBSCRIBED fires
-        console.log('[presence] channel not ready, queuing payload')
         pendingTrackRef.current = payload
       }
     },

@@ -3,9 +3,6 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL as string
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
-console.log('[supabase] url:', url ? url.substring(0, 30) + '...' : '(empty)')
-console.log('[supabase] key:', key ? key.substring(0, 10) + '...' : '(empty)')
-
 if (!url || !key) {
   console.warn(
     'Supabase credentials missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env'
