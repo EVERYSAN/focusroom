@@ -14,24 +14,56 @@
   flex-direction: column;
 }
 
-/* ── Background ── */
+/* SVG defs — hidden */
+.nc-svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ── Background — warmer, more saturated ── */
 .nc-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 140% 50% at 50% 60%, rgba(140, 90, 30, 0.18) 0%, transparent 60%),
-    linear-gradient(to bottom, rgba(10, 8, 5, 0.95) 0%, rgba(20, 15, 8, 0.9) 40%, rgba(35, 25, 14, 0.75) 100%);
+    radial-gradient(ellipse 120% 60% at 50% 50%, rgba(180, 110, 30, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 40% at 30% 45%, rgba(160, 80, 20, 0.10) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 40% at 70% 55%, rgba(140, 100, 40, 0.08) 0%, transparent 50%),
+    linear-gradient(to bottom, rgba(8, 6, 3, 0.97) 0%, rgba(18, 13, 6, 0.93) 35%, rgba(40, 28, 14, 0.78) 100%);
   background-color: #1a1208;
 }
 
-/* vignette */
+/* vignette — stronger for more cinematic depth */
 .nc-vignette {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  box-shadow: inset 0 0 180px 80px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 0 0 200px 100px rgba(0, 0, 0, 0.7),
+    inset 0 0 60px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Film grain overlay ── */
+.nc-grain {
+  position: absolute;
+  inset: -20%;
+  z-index: 99;
+  pointer-events: none;
+  opacity: 0.035;
+  filter: url(#noiseFilter);
+  mix-blend-mode: overlay;
+  animation: grain-shift 0.8s steps(4) infinite;
+}
+
+@keyframes grain-shift {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-2%, -1%); }
+  50%  { transform: translate(1%, 2%); }
+  75%  { transform: translate(-1%, -2%); }
+  100% { transform: translate(2%, 1%); }
 }
 
 /* ═══════════════════════════════════
@@ -56,47 +88,71 @@
   );
 }
 
-/* ── Bokeh city lights — rich & colorful ── */
+/* ── Bokeh city lights — ambient background haze ── */
 .nc-city-glow {
   position: absolute;
   inset: 0;
   background:
-    /* Warm amber bokeh (buildings) */
-    radial-gradient(circle 18px at 8% 45%, rgba(255, 190, 70, 0.35) 0%, transparent 100%),
-    radial-gradient(circle 12px at 15% 55%, rgba(255, 200, 80, 0.25) 0%, transparent 100%),
-    radial-gradient(circle 22px at 24% 38%, rgba(255, 170, 50, 0.30) 0%, transparent 100%),
-    radial-gradient(circle 10px at 30% 62%, rgba(255, 220, 100, 0.20) 0%, transparent 100%),
-    radial-gradient(circle 16px at 38% 42%, rgba(255, 200, 90, 0.28) 0%, transparent 100%),
-    /* Cool blue-white (streetlights) */
-    radial-gradient(circle 14px at 48% 50%, rgba(180, 210, 255, 0.25) 0%, transparent 100%),
-    radial-gradient(circle 10px at 55% 35%, rgba(200, 220, 255, 0.18) 0%, transparent 100%),
-    radial-gradient(circle 18px at 62% 55%, rgba(160, 190, 255, 0.22) 0%, transparent 100%),
-    /* Red / pink accents (signs) */
-    radial-gradient(circle 8px at 70% 40%, rgba(255, 100, 120, 0.18) 0%, transparent 100%),
-    radial-gradient(circle 12px at 78% 52%, rgba(255, 150, 100, 0.16) 0%, transparent 100%),
-    /* Green accent (signal) */
-    radial-gradient(circle 6px at 84% 58%, rgba(100, 255, 150, 0.12) 0%, transparent 100%),
-    /* More warm scattered */
-    radial-gradient(circle 20px at 90% 40%, rgba(255, 180, 60, 0.22) 0%, transparent 100%),
-    radial-gradient(circle 14px at 5% 65%, rgba(255, 210, 100, 0.18) 0%, transparent 100%),
-    radial-gradient(circle 16px at 42% 28%, rgba(255, 160, 80, 0.20) 0%, transparent 100%),
-    radial-gradient(circle 8px at 52% 68%, rgba(220, 200, 255, 0.14) 0%, transparent 100%),
-    radial-gradient(circle 12px at 66% 30%, rgba(255, 200, 120, 0.18) 0%, transparent 100%),
-    radial-gradient(circle 10px at 20% 70%, rgba(200, 180, 255, 0.12) 0%, transparent 100%),
-    radial-gradient(circle 14px at 75% 65%, rgba(255, 160, 70, 0.20) 0%, transparent 100%),
-    radial-gradient(circle 20px at 95% 55%, rgba(255, 220, 140, 0.16) 0%, transparent 100%),
-    /* Large ambient glow patches */
-    radial-gradient(ellipse 30% 25% at 30% 45%, rgba(255, 200, 120, 0.06) 0%, transparent 100%),
-    radial-gradient(ellipse 25% 20% at 70% 50%, rgba(180, 200, 255, 0.04) 0%, transparent 100%);
-  filter: blur(8px);
-  opacity: 0.95;
-  animation: bokeh-drift 35s ease-in-out infinite alternate;
+    /* Large ambient warm glow patches */
+    radial-gradient(ellipse 40% 35% at 25% 45%, rgba(255, 180, 80, 0.08) 0%, transparent 100%),
+    radial-gradient(ellipse 35% 30% at 60% 50%, rgba(255, 200, 100, 0.06) 0%, transparent 100%),
+    radial-gradient(ellipse 30% 25% at 80% 40%, rgba(255, 170, 60, 0.05) 0%, transparent 100%),
+    /* Cool ambient patches */
+    radial-gradient(ellipse 25% 20% at 50% 55%, rgba(150, 180, 255, 0.04) 0%, transparent 100%),
+    /* Horizon glow */
+    linear-gradient(to top, rgba(255, 180, 80, 0.06) 0%, transparent 40%);
+  filter: blur(20px);
+  opacity: 0.9;
+  animation: bokeh-drift 40s ease-in-out infinite alternate;
+}
+
+/* ── Bokeh orbs — distinct circular lens bokeh ── */
+.nc-bokeh-orbs {
+  position: absolute;
+  inset: 0;
+  animation: bokeh-drift-2 45s ease-in-out infinite alternate;
+  background:
+    /* === Large warm orbs (hero bokeh) — bigger & brighter === */
+    radial-gradient(circle 50px at 10% 42%, rgba(255, 185, 60, 0.55) 0%, rgba(255, 185, 60, 0.18) 50%, transparent 100%),
+    radial-gradient(circle 70px at 26% 52%, rgba(255, 200, 80, 0.48) 0%, rgba(255, 200, 80, 0.14) 55%, transparent 100%),
+    radial-gradient(circle 45px at 40% 35%, rgba(255, 170, 50, 0.40) 0%, rgba(255, 170, 50, 0.10) 55%, transparent 100%),
+    radial-gradient(circle 80px at 62% 48%, rgba(255, 210, 100, 0.52) 0%, rgba(255, 210, 100, 0.15) 50%, transparent 100%),
+    radial-gradient(circle 38px at 78% 55%, rgba(255, 180, 60, 0.42) 0%, rgba(255, 180, 60, 0.10) 55%, transparent 100%),
+    radial-gradient(circle 60px at 92% 40%, rgba(255, 195, 75, 0.38) 0%, rgba(255, 195, 75, 0.10) 55%, transparent 100%),
+    /* === Medium warm orbs === */
+    radial-gradient(circle 28px at 6% 65%, rgba(255, 210, 100, 0.38) 0%, rgba(255, 210, 100, 0.08) 60%, transparent 100%),
+    radial-gradient(circle 35px at 35% 68%, rgba(255, 160, 60, 0.34) 0%, rgba(255, 160, 60, 0.08) 55%, transparent 100%),
+    radial-gradient(circle 22px at 50% 28%, rgba(255, 200, 120, 0.30) 0%, rgba(255, 200, 120, 0.07) 60%, transparent 100%),
+    radial-gradient(circle 32px at 85% 30%, rgba(255, 180, 70, 0.35) 0%, rgba(255, 180, 70, 0.08) 55%, transparent 100%),
+    /* === Cool blue-white orbs (streetlights) === */
+    radial-gradient(circle 40px at 48% 46%, rgba(170, 200, 255, 0.40) 0%, rgba(170, 200, 255, 0.10) 55%, transparent 100%),
+    radial-gradient(circle 25px at 72% 62%, rgba(190, 215, 255, 0.30) 0%, rgba(190, 215, 255, 0.06) 60%, transparent 100%),
+    radial-gradient(circle 20px at 18% 30%, rgba(200, 220, 255, 0.25) 0%, rgba(200, 220, 255, 0.05) 60%, transparent 100%),
+    /* === Accent orbs (signs, signals) === */
+    radial-gradient(circle 18px at 68% 38%, rgba(255, 100, 110, 0.28) 0%, rgba(255, 100, 110, 0.05) 60%, transparent 100%),
+    radial-gradient(circle 12px at 55% 70%, rgba(100, 255, 150, 0.20) 0%, transparent 100%),
+    radial-gradient(circle 20px at 88% 65%, rgba(255, 140, 80, 0.28) 0%, rgba(255, 140, 80, 0.06) 60%, transparent 100%),
+    /* === Small scattered twinkles === */
+    radial-gradient(circle 10px at 4% 50%, rgba(255, 220, 140, 0.28) 0%, transparent 100%),
+    radial-gradient(circle 8px at 15% 75%, rgba(255, 200, 100, 0.24) 0%, transparent 100%),
+    radial-gradient(circle 9px at 30% 25%, rgba(200, 190, 255, 0.20) 0%, transparent 100%),
+    radial-gradient(circle 11px at 44% 60%, rgba(255, 190, 80, 0.24) 0%, transparent 100%),
+    radial-gradient(circle 7px at 58% 35%, rgba(255, 220, 160, 0.22) 0%, transparent 100%),
+    radial-gradient(circle 10px at 75% 72%, rgba(255, 170, 60, 0.26) 0%, transparent 100%),
+    radial-gradient(circle 8px at 95% 52%, rgba(200, 210, 255, 0.18) 0%, transparent 100%);
 }
 
 @keyframes bokeh-drift {
   0%   { transform: translate(0, 0) scale(1); }
-  50%  { transform: translate(-3px, 2px) scale(1.01); }
-  100% { transform: translate(2px, -1px) scale(0.99); }
+  50%  { transform: translate(-4px, 3px) scale(1.02); }
+  100% { transform: translate(3px, -2px) scale(0.98); }
+}
+
+@keyframes bokeh-drift-2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(3px, -2px) scale(1.01); }
+  66%  { transform: translate(-2px, 3px) scale(0.99); }
+  100% { transform: translate(1px, -1px) scale(1.005); }
 }
 
 /* ── Rain streaks ── */
@@ -110,40 +166,40 @@
   background: repeating-linear-gradient(
     178deg,
     transparent 0px,
-    transparent 35px,
-    rgba(180, 200, 220, 0.07) 35px,
-    rgba(180, 200, 220, 0.03) 37px
+    transparent 30px,
+    rgba(190, 210, 230, 0.09) 30px,
+    rgba(190, 210, 230, 0.04) 32px
   ),
   repeating-linear-gradient(
     176deg,
     transparent 0px,
-    transparent 55px,
-    rgba(180, 200, 220, 0.05) 55px,
-    rgba(180, 200, 220, 0.02) 56px
+    transparent 48px,
+    rgba(190, 210, 230, 0.07) 48px,
+    rgba(190, 210, 230, 0.03) 49px
   );
   background-size: 100% 200%;
-  animation: rain-fall-1 1.2s linear infinite;
-  opacity: 0.8;
+  animation: rain-fall-1 1.1s linear infinite;
+  opacity: 0.85;
 }
 
 .nc-rain-2 {
   background: repeating-linear-gradient(
     177deg,
     transparent 0px,
-    transparent 50px,
-    rgba(180, 200, 220, 0.05) 50px,
-    rgba(180, 200, 220, 0.02) 52px
+    transparent 42px,
+    rgba(190, 210, 230, 0.06) 42px,
+    rgba(190, 210, 230, 0.025) 44px
   ),
   repeating-linear-gradient(
     179deg,
     transparent 0px,
-    transparent 70px,
-    rgba(180, 200, 220, 0.04) 70px,
-    rgba(180, 200, 220, 0.01) 71px
+    transparent 62px,
+    rgba(190, 210, 230, 0.05) 62px,
+    rgba(190, 210, 230, 0.015) 63px
   );
   background-size: 100% 300%;
-  animation: rain-fall-2 1.8s linear infinite;
-  opacity: 0.5;
+  animation: rain-fall-2 1.6s linear infinite;
+  opacity: 0.55;
 }
 
 @keyframes rain-fall-1 {
@@ -156,61 +212,146 @@
   to   { background-position: 0 100%; }
 }
 
-/* ── Glass water drops ── */
+/* ── Glass water drops (sliding down glass) ── */
 .nc-glass-drop {
   position: absolute;
   top: -15%;
-  width: 2px;
-  height: 20px;
+  width: 2.5px;
+  height: 22px;
   background: linear-gradient(
     to bottom,
     transparent,
-    rgba(180, 200, 220, 0.4) 30%,
-    rgba(180, 200, 220, 0.7) 60%,
-    rgba(180, 200, 220, 0.3)
+    rgba(200, 215, 230, 0.5) 25%,
+    rgba(200, 215, 230, 0.8) 55%,
+    rgba(200, 215, 230, 0.4) 80%,
+    rgba(200, 215, 230, 0.15)
   );
-  border-radius: 0 0 2px 2px;
+  border-radius: 1px 1px 2px 2px;
   animation: glass-drip 6s ease-in infinite;
   opacity: 0;
   z-index: 3;
+  /* Slight refraction glow */
+  box-shadow: 0 0 3px rgba(200, 215, 230, 0.15);
+}
+
+/* Small trail left behind by the drop */
+.nc-glass-drop::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(200, 215, 230, 0.06) 50%,
+    rgba(200, 215, 230, 0.12) 100%
+  );
 }
 
 @keyframes glass-drip {
-  0%   { top: -15%; height: 12px; opacity: 0; }
-  8%   { opacity: 0.9; }
-  35%  { height: 30px; opacity: 0.6; }
-  70%  { height: 18px; opacity: 0.3; }
+  0%   { top: -15%; height: 14px; opacity: 0; }
+  6%   { opacity: 0.95; }
+  30%  { height: 35px; opacity: 0.7; }
+  65%  { height: 20px; opacity: 0.35; }
   100% { top: 110%; height: 8px; opacity: 0; }
 }
 
-/* ── Glass condensation haze ── */
+/* ── Static water droplets on glass ── */
+.nc-droplet {
+  position: absolute;
+  border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      rgba(255, 255, 255, 0.25) 0%,
+      rgba(200, 210, 220, 0.12) 30%,
+      rgba(150, 170, 190, 0.06) 60%,
+      transparent 100%
+    );
+  box-shadow:
+    inset 0 -1px 2px rgba(0, 0, 0, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.12),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+  animation: droplet-shimmer 8s ease-in-out infinite;
+}
+
+.nc-droplet::after {
+  content: '';
+  position: absolute;
+  top: 15%;
+  left: 20%;
+  width: 35%;
+  height: 25%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.20);
+  filter: blur(0.5px);
+}
+
+@keyframes droplet-shimmer {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 0.85; }
+}
+
+/* ── Glass condensation haze — enhanced ── */
 .nc-condensation {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 40%;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(180, 200, 220, 0.02) 40%,
-    rgba(180, 200, 220, 0.05) 100%
-  );
+  height: 50%;
+  background:
+    /* Visible haze band */
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(180, 200, 220, 0.015) 20%,
+      rgba(180, 200, 220, 0.04) 50%,
+      rgba(180, 200, 220, 0.08) 80%,
+      rgba(180, 200, 220, 0.10) 100%
+    ),
+    /* Patchy condensation spots */
+    radial-gradient(ellipse 15% 20% at 20% 80%, rgba(180, 200, 220, 0.06) 0%, transparent 100%),
+    radial-gradient(ellipse 12% 18% at 45% 90%, rgba(180, 200, 220, 0.05) 0%, transparent 100%),
+    radial-gradient(ellipse 18% 15% at 70% 85%, rgba(180, 200, 220, 0.07) 0%, transparent 100%),
+    radial-gradient(ellipse 10% 12% at 90% 75%, rgba(180, 200, 220, 0.04) 0%, transparent 100%);
   pointer-events: none;
   z-index: 2;
 }
 
-/* ── Window frame (thick wooden border) ── */
+/* ── Window frame (thick wooden border, richer) ── */
 .nc-window-frame {
   position: absolute;
   inset: 0;
   border: 8px solid #3D2510;
   border-bottom: 12px solid #4A2E14;
   box-shadow:
-    inset 0 0 30px rgba(0, 0, 0, 0.5),
-    inset 0 0 4px rgba(255, 200, 120, 0.06);
+    inset 0 0 40px rgba(0, 0, 0, 0.6),
+    inset 0 0 8px rgba(255, 200, 120, 0.05),
+    inset 0 -20px 40px rgba(0, 0, 0, 0.2);
   pointer-events: none;
   z-index: 5;
+}
+
+/* Wood texture on frame */
+.nc-window-frame::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border: inherit;
+  pointer-events: none;
+  opacity: 0.06;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 10px,
+    rgba(120, 80, 30, 0.4) 10px,
+    transparent 11px,
+    transparent 18px
+  );
 }
 
 .nc-window-mullion {
@@ -220,8 +361,8 @@
   bottom: 0;
   width: 5px;
   margin-left: -2.5px;
-  background: linear-gradient(180deg, #3D2510 0%, #4A2E14 50%, #3D2510 100%);
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(180deg, #3D2510 0%, #4A2E14 40%, #3D2510 100%);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4), 1px 0 0 rgba(255, 200, 120, 0.04);
 }
 
 /* ── Pendant light row (inside window zone, at bottom) ── */
@@ -277,7 +418,7 @@
 }
 
 .light-on .pendant-svg {
-  filter: drop-shadow(0 8px 16px rgba(255, 210, 120, 0.45));
+  filter: drop-shadow(0 8px 20px rgba(255, 210, 120, 0.55));
 }
 
 .light-off .pendant-svg {
@@ -289,50 +430,75 @@
   bottom: -14px;
   left: 50%;
   transform: translateX(-50%);
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(255, 220, 130, 0.25) 0%,
-    rgba(255, 200, 100, 0.10) 35%,
-    rgba(255, 180, 80, 0.03) 60%,
+    rgba(255, 215, 120, 0.35) 0%,
+    rgba(255, 195, 90, 0.15) 30%,
+    rgba(255, 180, 70, 0.06) 55%,
     transparent 75%
   );
   pointer-events: none;
   animation: glow-pulse 5s ease-in-out infinite;
 }
 
-@keyframes glow-pulse {
-  0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
-  50% { opacity: 1; transform: translateX(-50%) scale(1.06); }
+/* Light cone extending downward from each pendant */
+.light-on .light-glow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160px;
+  height: 400px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 210, 120, 0.10) 0%,
+    rgba(255, 200, 100, 0.04) 30%,
+    rgba(255, 190, 80, 0.015) 60%,
+    transparent 100%
+  );
+  clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
+  pointer-events: none;
 }
 
-/* Warmth levels for pendant lights */
-.warmth-1 .pendant-svg { filter: drop-shadow(0 8px 14px rgba(255, 210, 120, 0.35)); }
-.warmth-2 .pendant-svg { filter: drop-shadow(0 8px 18px rgba(255, 210, 120, 0.45)); }
-.warmth-3 .pendant-svg { filter: drop-shadow(0 10px 22px rgba(255, 210, 120, 0.55)); }
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.75; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
+}
+
+/* Warmth levels for pendant lights — stronger glow progression */
+.warmth-1 .pendant-svg { filter: drop-shadow(0 8px 16px rgba(255, 210, 120, 0.40)); }
+.warmth-2 .pendant-svg { filter: drop-shadow(0 10px 22px rgba(255, 210, 120, 0.55)); }
+.warmth-3 .pendant-svg { filter: drop-shadow(0 12px 28px rgba(255, 210, 120, 0.70)); }
+
+.warmth-1 .light-glow {
+  width: 95px;
+  height: 95px;
+}
 
 .warmth-2 .light-glow {
-  width: 90px;
-  height: 90px;
+  width: 105px;
+  height: 105px;
   background: radial-gradient(
     circle,
-    rgba(255, 220, 130, 0.30) 0%,
-    rgba(255, 200, 100, 0.12) 35%,
-    rgba(255, 180, 80, 0.04) 60%,
+    rgba(255, 215, 120, 0.40) 0%,
+    rgba(255, 195, 90, 0.18) 30%,
+    rgba(255, 180, 70, 0.06) 55%,
     transparent 75%
   );
 }
 
 .warmth-3 .light-glow {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   background: radial-gradient(
     circle,
-    rgba(255, 220, 130, 0.35) 0%,
-    rgba(255, 200, 100, 0.15) 35%,
-    rgba(255, 180, 80, 0.05) 60%,
+    rgba(255, 215, 120, 0.50) 0%,
+    rgba(255, 195, 90, 0.22) 30%,
+    rgba(255, 180, 70, 0.08) 55%,
     transparent 75%
   );
 }
@@ -463,35 +629,54 @@
 .nc-counter-surface {
   position: absolute;
   inset: 0;
-  background-color: #5C3A1E;
+  background-color: #6B4A28;
   background-image:
-    /* Wood grain lines */
+    /* Rich wood grain — multiple layers for realism */
     repeating-linear-gradient(
       90deg,
       transparent,
-      transparent 35px,
-      rgba(0, 0, 0, 0.04) 35px,
-      rgba(0, 0, 0, 0.04) 37px
+      transparent 28px,
+      rgba(0, 0, 0, 0.06) 28px,
+      rgba(0, 0, 0, 0.03) 30px,
+      transparent 32px
     ),
     repeating-linear-gradient(
-      87deg,
+      89deg,
       transparent,
-      transparent 70px,
-      rgba(255, 200, 120, 0.025) 70px,
-      rgba(255, 200, 120, 0.025) 72px
+      transparent 55px,
+      rgba(0, 0, 0, 0.04) 55px,
+      rgba(0, 0, 0, 0.02) 57px,
+      transparent 60px
     ),
-    /* Top surface light reflection */
+    repeating-linear-gradient(
+      91deg,
+      transparent,
+      transparent 90px,
+      rgba(255, 200, 120, 0.04) 90px,
+      rgba(255, 200, 120, 0.02) 92px,
+      transparent 95px
+    ),
+    repeating-linear-gradient(
+      88deg,
+      transparent,
+      transparent 120px,
+      rgba(80, 50, 20, 0.06) 120px,
+      rgba(80, 50, 20, 0.03) 124px,
+      transparent 128px
+    ),
+    /* Top surface light reflection — warmer */
     linear-gradient(
       180deg,
-      rgba(255, 220, 160, 0.16) 0%,
-      rgba(255, 220, 160, 0.04) 15%,
-      transparent 35%,
-      rgba(0, 0, 0, 0.08) 80%,
-      rgba(0, 0, 0, 0.15) 100%
+      rgba(255, 215, 150, 0.22) 0%,
+      rgba(255, 215, 150, 0.08) 12%,
+      rgba(255, 200, 130, 0.02) 30%,
+      transparent 45%,
+      rgba(0, 0, 0, 0.06) 70%,
+      rgba(0, 0, 0, 0.18) 100%
     );
 }
 
-/* Counter top highlight edge */
+/* Counter top highlight edge — brighter */
 .nc-counter-surface::before {
   content: '';
   position: absolute;
@@ -501,12 +686,62 @@
   height: 2px;
   background: linear-gradient(
     90deg,
-    transparent 3%,
-    rgba(255, 220, 150, 0.08) 20%,
-    rgba(255, 220, 150, 0.14) 50%,
-    rgba(255, 220, 150, 0.08) 80%,
-    transparent 97%
+    transparent 2%,
+    rgba(255, 215, 140, 0.12) 15%,
+    rgba(255, 215, 140, 0.22) 50%,
+    rgba(255, 215, 140, 0.12) 85%,
+    transparent 98%
   );
+  box-shadow: 0 0 8px rgba(255, 200, 120, 0.06);
+}
+
+/* Wood grain texture overlay (SVG noise) */
+.nc-counter-woodgrain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.08;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(120, 80, 30, 0.3) 0px,
+      transparent 1px,
+      transparent 3px,
+      rgba(120, 80, 30, 0.2) 4px,
+      transparent 5px,
+      transparent 8px,
+      rgba(120, 80, 30, 0.15) 9px,
+      transparent 10px,
+      transparent 15px
+    ),
+    repeating-linear-gradient(
+      88deg,
+      transparent 0px,
+      transparent 22px,
+      rgba(80, 50, 15, 0.3) 23px,
+      transparent 24px,
+      transparent 40px,
+      rgba(80, 50, 15, 0.2) 41px,
+      transparent 42px,
+      transparent 55px
+    );
+}
+
+/* Light cones falling onto counter from pendants above */
+.nc-light-cones {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    /* 6 warm elliptical pools of light on counter surface */
+    radial-gradient(ellipse 50px 80% at calc(50% - 140px) 0%, rgba(255, 210, 120, 0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 50px 80% at calc(50% - 84px) 0%, rgba(255, 210, 120, 0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 50px 80% at calc(50% - 28px) 0%, rgba(255, 210, 120, 0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 50px 80% at calc(50% + 28px) 0%, rgba(255, 210, 120, 0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 50px 80% at calc(50% + 84px) 0%, rgba(255, 210, 120, 0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 50px 80% at calc(50% + 140px) 0%, rgba(255, 210, 120, 0.12) 0%, transparent 100%);
 }
 
 .nc-counter-edge {
@@ -514,15 +749,15 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 10px;
+  height: 12px;
   z-index: 4;
   background: linear-gradient(
     to bottom,
-    #3d2e1f 0%,
-    #2a1f14 60%,
+    #4a3520 0%,
+    #2e2014 50%,
     #1a140e 100%
   );
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
 /* Counter items row */
@@ -711,15 +946,18 @@
   opacity: 0.8;
 }
 
-/* Floor gradient at bottom of stool zone */
+/* Floor gradient at bottom of stool zone — deeper */
 .nc-floor-gradient {
   flex: 1;
-  background: linear-gradient(
-    180deg,
-    rgba(26, 18, 8, 0) 0%,
-    rgba(18, 12, 5, 0.8) 40%,
-    #120c05 100%
-  );
+  background:
+    /* Warm ambient light from above */
+    radial-gradient(ellipse 60% 30% at 50% 0%, rgba(255, 200, 100, 0.03) 0%, transparent 100%),
+    linear-gradient(
+      180deg,
+      rgba(26, 18, 8, 0) 0%,
+      rgba(20, 14, 6, 0.85) 30%,
+      #0e0904 100%
+    );
 }
 
 /* ═══════════════════════════════════
@@ -962,7 +1200,7 @@
 }
 
 /* ═══════════════════════════════════
-   Dust particles (ambient)
+   Dust particles (ambient) — warmer, more visible
    ═══════════════════════════════════ */
 .nightcafe::after {
   content: '';
@@ -971,19 +1209,25 @@
   z-index: 4;
   pointer-events: none;
   background:
-    radial-gradient(circle 1.5px at 15% 25%, rgba(255, 220, 160, 0.08) 0%, transparent 100%),
-    radial-gradient(circle 1px at 40% 60%, rgba(255, 220, 160, 0.06) 0%, transparent 100%),
-    radial-gradient(circle 1.2px at 65% 35%, rgba(255, 220, 160, 0.05) 0%, transparent 100%),
-    radial-gradient(circle 0.8px at 80% 70%, rgba(255, 220, 160, 0.07) 0%, transparent 100%),
-    radial-gradient(circle 1px at 25% 80%, rgba(255, 220, 160, 0.04) 0%, transparent 100%);
-  animation: dust-drift 25s ease-in-out infinite alternate;
+    radial-gradient(circle 2px at 12% 22%, rgba(255, 210, 140, 0.12) 0%, transparent 100%),
+    radial-gradient(circle 1.5px at 28% 55%, rgba(255, 210, 140, 0.08) 0%, transparent 100%),
+    radial-gradient(circle 1.8px at 45% 30%, rgba(255, 220, 160, 0.07) 0%, transparent 100%),
+    radial-gradient(circle 1px at 62% 65%, rgba(255, 210, 140, 0.10) 0%, transparent 100%),
+    radial-gradient(circle 1.5px at 78% 40%, rgba(255, 220, 160, 0.06) 0%, transparent 100%),
+    radial-gradient(circle 1.2px at 35% 75%, rgba(255, 200, 120, 0.08) 0%, transparent 100%),
+    radial-gradient(circle 0.8px at 88% 58%, rgba(255, 220, 160, 0.09) 0%, transparent 100%),
+    radial-gradient(circle 1.3px at 8% 70%, rgba(255, 200, 120, 0.06) 0%, transparent 100%),
+    radial-gradient(circle 1px at 55% 82%, rgba(255, 210, 140, 0.05) 0%, transparent 100%),
+    radial-gradient(circle 1.6px at 92% 25%, rgba(255, 220, 160, 0.07) 0%, transparent 100%);
+  animation: dust-drift 28s ease-in-out infinite alternate;
 }
 
 @keyframes dust-drift {
   0%   { transform: translate(0, 0); }
-  33%  { transform: translate(4px, -8px); }
-  66%  { transform: translate(-3px, 5px); }
-  100% { transform: translate(6px, -4px); }
+  25%  { transform: translate(5px, -6px); }
+  50%  { transform: translate(-4px, 4px); }
+  75%  { transform: translate(3px, -8px); }
+  100% { transform: translate(-2px, 6px); }
 }
 
 /* ═══════════════════════════════════
@@ -1047,8 +1291,27 @@
   }
 
   .light-glow {
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    height: 100px;
+  }
+
+  /* Larger bokeh circles for tablet */
+  .nc-bokeh-orbs {
+    background-size: 100%;
+  }
+
+  .nc-light-cones {
+    background:
+      radial-gradient(ellipse 65px 80% at calc(50% - 172px) 0%, rgba(255, 210, 120, 0.14) 0%, transparent 100%),
+      radial-gradient(ellipse 65px 80% at calc(50% - 86px) 0%, rgba(255, 210, 120, 0.14) 0%, transparent 100%),
+      radial-gradient(ellipse 65px 80% at 50% 0%, rgba(255, 210, 120, 0.14) 0%, transparent 100%),
+      radial-gradient(ellipse 65px 80% at calc(50% + 86px) 0%, rgba(255, 210, 120, 0.14) 0%, transparent 100%),
+      radial-gradient(ellipse 65px 80% at calc(50% + 172px) 0%, rgba(255, 210, 120, 0.14) 0%, transparent 100%),
+      radial-gradient(ellipse 65px 80% at calc(50% + 258px) 0%, rgba(255, 210, 120, 0.14) 0%, transparent 100%);
+  }
+
+  .nc-droplet {
+    animation-duration: 10s;
   }
 }
 
@@ -1125,8 +1388,24 @@
   }
 
   .light-glow {
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
+  }
+
+  /* Bigger light cone on desktop */
+  .light-on .light-glow::after {
+    width: 200px;
+    height: 500px;
+  }
+
+  .nc-light-cones {
+    background:
+      radial-gradient(ellipse 90px 80% at calc(50% - 242px) 0%, rgba(255, 210, 120, 0.16) 0%, transparent 100%),
+      radial-gradient(ellipse 90px 80% at calc(50% - 122px) 0%, rgba(255, 210, 120, 0.16) 0%, transparent 100%),
+      radial-gradient(ellipse 90px 80% at calc(50% - 2px) 0%, rgba(255, 210, 120, 0.16) 0%, transparent 100%),
+      radial-gradient(ellipse 90px 80% at calc(50% + 118px) 0%, rgba(255, 210, 120, 0.16) 0%, transparent 100%),
+      radial-gradient(ellipse 90px 80% at calc(50% + 238px) 0%, rgba(255, 210, 120, 0.16) 0%, transparent 100%),
+      radial-gradient(ellipse 90px 80% at calc(50% + 358px) 0%, rgba(255, 210, 120, 0.16) 0%, transparent 100%);
   }
 
   .nc-status-overlay {
@@ -1152,5 +1431,15 @@
 
   .nc-counter-edge {
     height: 14px;
+  }
+
+  /* Desktop: larger droplets */
+  .nc-droplet {
+    transform: scale(1.3);
+  }
+
+  /* Desktop: richer counter grain */
+  .nc-counter-woodgrain {
+    opacity: 0.10;
   }
 }

@@ -82,9 +82,20 @@ export function NightCafe() {
 
   return (
     <div className="nightcafe">
+      {/* ══ SVG filter definitions ══ */}
+      <svg className="nc-svg-defs" aria-hidden="true">
+        <defs>
+          <filter id="noiseFilter" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+        </defs>
+      </svg>
+
       {/* ══ Background layers ══ */}
       <div className="nc-bg" />
       <div className="nc-vignette" />
+      <div className="nc-grain" />
 
       {/* ══════════════════════════════════
           ZONE 1 — Window (hero, top ~50%)
@@ -93,6 +104,7 @@ export function NightCafe() {
         {/* Night sky + city bokeh */}
         <div className="nc-window-scene">
           <div className="nc-city-glow" />
+          <div className="nc-bokeh-orbs" />
         </div>
 
         {/* Rain layers */}
@@ -105,6 +117,22 @@ export function NightCafe() {
         <div className="nc-glass-drop" style={{ left: '44%', animationDelay: '4.5s', animationDuration: '5.6s' }} />
         <div className="nc-glass-drop" style={{ left: '62%', animationDelay: '1.4s', animationDuration: '7.2s' }} />
         <div className="nc-glass-drop" style={{ left: '80%', animationDelay: '3.8s', animationDuration: '6.0s' }} />
+
+        {/* Static water droplets on glass */}
+        <div className="nc-droplet" style={{ left: '7%', top: '25%', width: '5px', height: '5px' }} />
+        <div className="nc-droplet" style={{ left: '14%', top: '62%', width: '3px', height: '4px' }} />
+        <div className="nc-droplet" style={{ left: '19%', top: '38%', width: '6px', height: '7px' }} />
+        <div className="nc-droplet" style={{ left: '24%', top: '72%', width: '4px', height: '4px' }} />
+        <div className="nc-droplet" style={{ left: '31%', top: '18%', width: '3px', height: '3px' }} />
+        <div className="nc-droplet" style={{ left: '38%', top: '55%', width: '7px', height: '8px' }} />
+        <div className="nc-droplet" style={{ left: '46%', top: '42%', width: '4px', height: '5px' }} />
+        <div className="nc-droplet" style={{ left: '53%', top: '68%', width: '5px', height: '6px' }} />
+        <div className="nc-droplet" style={{ left: '59%', top: '22%', width: '3px', height: '3px' }} />
+        <div className="nc-droplet" style={{ left: '67%', top: '48%', width: '6px', height: '6px' }} />
+        <div className="nc-droplet" style={{ left: '73%', top: '75%', width: '4px', height: '5px' }} />
+        <div className="nc-droplet" style={{ left: '80%', top: '33%', width: '5px', height: '5px' }} />
+        <div className="nc-droplet" style={{ left: '86%', top: '58%', width: '3px', height: '4px' }} />
+        <div className="nc-droplet" style={{ left: '93%', top: '20%', width: '4px', height: '4px' }} />
 
         {/* Glass condensation haze */}
         <div className="nc-condensation" />
@@ -172,6 +200,8 @@ export function NightCafe() {
           ══════════════════════════════════ */}
       <div className="nc-counter-zone">
         <div className="nc-counter-surface" />
+        <div className="nc-counter-woodgrain" />
+        <div className="nc-light-cones" />
 
         {/* Items on counter (tool + mug per seat) */}
         <div className="nc-counter-items">
