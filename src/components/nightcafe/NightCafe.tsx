@@ -1,11 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useElapsedTick } from './useElapsed'
 import { useCafePresence } from './useCafePresence'
-import {
-  PendantLight, ToolIcon, CoffeeMug, Stool, EditPencil,
-  getWarmthLevel, formatElapsed,
-} from './CafeSeat'
-import { WindowScene } from './three/WindowScene'
+import { formatElapsed, EditPencil } from './CafeSeat'
+import { CafeScene } from './three/CafeScene'
 import './nightcafe.css'
 
 /* ── Layout: 6 seats ── */
@@ -93,38 +90,18 @@ export function NightCafe() {
         </defs>
       </svg>
 
-      {/* ══ Background layers ══ */}
-      <div className="nc-bg" />
-      <div className="nc-vignette" />
+      {/* ══ Full-screen 3D Canvas ══ */}
+      <CafeScene seats={seats} />
+
+      {/* ══ Film grain overlay (CSS, on top of everything) ══ */}
       <div className="nc-grain" />
 
       {/* ══════════════════════════════════
-          ZONE 1 — Window (hero, top ~50%)
-          Three.js Canvas + CSS overlays
+          HTML Overlays (pointer-events: none except interactive)
+          All positioned over the 3D scene
           ══════════════════════════════════ */}
-      <div className="nc-window-zone">
-        {/* 3D scene: bokeh, rain, glass, pendant lights */}
-        <WindowScene seats={seats} />
 
-        {/* Wooden window frame (CSS overlay on top of Canvas) */}
-        <div className="nc-window-frame">
-          <div className="nc-window-mullion" />
-        </div>
-
-        {/* Pendant light SVGs (CSS overlay, z-index above Canvas) */}
-        <div className="nc-pendant-row">
-          {seats.map((seat, i) => {
-            const warmth = seat.occupied ? getWarmthLevel(seat.joinedAt) : 0
-            return (
-              <div key={seat.id} className="nc-pendant-slot">
-                <PendantLight on={seat.occupied} warmth={warmth} />
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* ══ Status overlay ON the window ══ */}
+      {/* ══ Status overlay — center of screen ══ */}
       {(isSeated || showFullToast) && (
         <div className="nc-status-overlay">
           <p className="nc-status-title">
@@ -164,69 +141,33 @@ export function NightCafe() {
         </div>
       )}
 
-      {/* ══════════════════════════════════
-          ZONE 2 — Counter (wood surface + items)
-          ══════════════════════════════════ */}
-      <div className="nc-counter-zone">
-        <div className="nc-counter-surface" />
-        <div className="nc-counter-woodgrain" />
-        <div className="nc-light-cones" />
-
-        {/* Items on counter (tool + mug per seat) */}
-        <div className="nc-counter-items">
-          {seats.map((seat, i) => (
-            <div
-              key={seat.id}
-              className={`nc-counter-item ${seat.occupied ? 'occupied' : 'vacant'}`}
-            >
-              {seat.occupied && seat.tool && seat.tool !== 'none' && (
-                <div className="nc-item-tool">
-                  <ToolIcon tool={seat.tool} />
-                </div>
-              )}
-              {seat.occupied && <CoffeeMug />}
-            </div>
-          ))}
-        </div>
-
-        <div className="nc-counter-edge" />
-      </div>
-
-      {/* ══════════════════════════════════
-          ZONE 3 — Stools + labels
-          ══════════════════════════════════ */}
-      <div className="nc-stool-zone">
-        <div className="nc-stools">
-          {seats.map((seat, i) => (
-            <div
-              key={seat.id}
-              className={`nc-stool-seat ${seat.occupied ? 'occupied' : 'vacant'} ${mySeatIndex === i ? 'my-seat' : ''}`}
-            >
-              <Stool occupied={seat.occupied} />
-              {seat.occupied && seat.name ? (
-                <div className="nc-stool-label">
-                  <span className="nc-stool-name">{mySeatIndex === i ? 'あなた' : seat.name}</span>
-                  {seat.joinedAt && (
-                    <span className="nc-stool-time">🔥 {formatElapsed(seat.joinedAt)}</span>
-                  )}
-                  {seat.activity && (
-                    <span className="nc-stool-activity">
-                      {seat.activity}
-                      {mySeatIndex === i && (
-                        <button className="nc-stool-edit" onClick={() => setEditOpen(true)} aria-label="活動を変更">
-                          <EditPencil />
-                        </button>
-                      )}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <div className="nc-stool-label vacant-label" />
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="nc-floor-gradient" />
+      {/* ══ Stool labels (HTML overlay at bottom) ══ */}
+      <div className="nc-stool-labels">
+        {seats.map((seat, i) => (
+          <div
+            key={seat.id}
+            className={`nc-stool-label-item ${seat.occupied ? 'occupied' : 'vacant'} ${mySeatIndex === i ? 'my-seat' : ''}`}
+          >
+            {seat.occupied && seat.name && (
+              <>
+                <span className="nc-stool-name">{mySeatIndex === i ? 'あなた' : seat.name}</span>
+                {seat.joinedAt && (
+                  <span className="nc-stool-time">🔥 {formatElapsed(seat.joinedAt)}</span>
+                )}
+                {seat.activity && (
+                  <span className="nc-stool-activity">
+                    {seat.activity}
+                    {mySeatIndex === i && (
+                      <button className="nc-stool-edit" onClick={() => setEditOpen(true)} aria-label="活動を変更">
+                        <EditPencil />
+                      </button>
+                    )}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* ══ Bottom nav bar ══ */}

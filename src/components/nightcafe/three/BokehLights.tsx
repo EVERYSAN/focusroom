@@ -47,15 +47,15 @@ function generateOrbs(): Orb[] {
   ]
   for (let i = 0; i < 15; i++) {
     orbs.push({
-      x: (Math.random() - 0.5) * 7,
-      y: (Math.random() - 0.3) * 4,
-      z: -3 + Math.random() * 2,
-      scale: 0.25 + Math.random() * 0.55,
+      x: (Math.random() - 0.5) * 8,
+      y: (Math.random() - 0.2) * 5 + 1.0,
+      z: -2 + Math.random() * 2,
+      scale: 0.35 + Math.random() * 0.7,
       color: warmColors[i % warmColors.length],
       driftSpeed: 0.15 + Math.random() * 0.2,
       driftAmp: 0.01 + Math.random() * 0.02,
       phase: Math.random() * Math.PI * 2,
-      opacity: 0.5 + Math.random() * 0.5,
+      opacity: 0.6 + Math.random() * 0.4,
     })
   }
 
@@ -68,15 +68,15 @@ function generateOrbs(): Orb[] {
   ]
   for (let i = 0; i < 7; i++) {
     orbs.push({
-      x: (Math.random() - 0.5) * 7,
-      y: (Math.random() - 0.3) * 4,
-      z: -3 + Math.random() * 2,
-      scale: 0.15 + Math.random() * 0.35,
+      x: (Math.random() - 0.5) * 8,
+      y: (Math.random() - 0.2) * 5 + 1.0,
+      z: -2 + Math.random() * 2,
+      scale: 0.2 + Math.random() * 0.45,
       color: coolColors[i % coolColors.length],
       driftSpeed: 0.12 + Math.random() * 0.18,
       driftAmp: 0.008 + Math.random() * 0.015,
       phase: Math.random() * Math.PI * 2,
-      opacity: 0.4 + Math.random() * 0.4,
+      opacity: 0.5 + Math.random() * 0.4,
     })
   }
 
@@ -90,25 +90,25 @@ function generateOrbs(): Orb[] {
   ]
   for (let i = 0; i < 5; i++) {
     orbs.push({
-      x: (Math.random() - 0.5) * 6,
-      y: (Math.random() - 0.4) * 3.5,
-      z: -2.5 + Math.random() * 1.5,
-      scale: 0.12 + Math.random() * 0.2,
+      x: (Math.random() - 0.5) * 7,
+      y: (Math.random() - 0.2) * 4 + 0.8,
+      z: -2 + Math.random() * 1.5,
+      scale: 0.15 + Math.random() * 0.25,
       color: accentColors[i],
       driftSpeed: 0.1 + Math.random() * 0.15,
       driftAmp: 0.005 + Math.random() * 0.01,
       phase: Math.random() * Math.PI * 2,
-      opacity: 0.35 + Math.random() * 0.35,
+      opacity: 0.4 + Math.random() * 0.35,
     })
   }
 
   // Tiny twinkle dots (8)
   for (let i = 0; i < 8; i++) {
     orbs.push({
-      x: (Math.random() - 0.5) * 8,
-      y: (Math.random() - 0.3) * 5,
-      z: -3.5 + Math.random() * 2,
-      scale: 0.06 + Math.random() * 0.1,
+      x: (Math.random() - 0.5) * 9,
+      y: (Math.random() - 0.2) * 5 + 0.5,
+      z: -3 + Math.random() * 2,
+      scale: 0.08 + Math.random() * 0.12,
       color: `rgba(255,${200 + Math.floor(Math.random() * 55)},${150 + Math.floor(Math.random() * 80)},0.8)`,
       driftSpeed: 0.2 + Math.random() * 0.3,
       driftAmp: 0.003 + Math.random() * 0.005,
