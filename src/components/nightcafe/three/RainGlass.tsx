@@ -120,7 +120,7 @@ function drawTrail(
 export function RainGlass() {
   const meshRef = useRef<THREE.Mesh>(null)
 
-  const { canvas, ctx, normalTexture, largeDrops, smallDrops } = useMemo(() => {
+  const { ctx, normalTexture, largeDrops, smallDrops } = useMemo(() => {
     const cvs = document.createElement('canvas')
     cvs.width = CANVAS_SIZE
     cvs.height = CANVAS_SIZE

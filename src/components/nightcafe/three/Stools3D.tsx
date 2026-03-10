@@ -12,7 +12,6 @@ const X_START = -3.6
 const X_END = 3.6
 const STOOL_Y = -3.2    // stool seat height
 const STOOL_Z = 3.8     // in front of counter
-const FLOOR_Y = -4.5    // floor level
 
 /* ── Single Stool ── */
 function BarStool({ position, occupied }: { position: [number, number, number]; occupied: boolean }) {

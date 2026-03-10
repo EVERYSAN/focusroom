@@ -5,15 +5,12 @@ import { formatElapsed, EditPencil } from './CafeSeat'
 import { CafeScene } from './three/CafeScene'
 import './nightcafe.css'
 
-/* ── Layout: 6 seats ── */
-const SEAT_COUNT = 6
-
 export function NightCafe() {
   useElapsedTick()
 
   /* ── Realtime presence ── */
   const {
-    seats, joiningIndices, mySeatIndex, occupiedCount, isFull,
+    seats, mySeatIndex, occupiedCount, isFull,
     sitDown, updateActivity, events, clearEvent,
   } = useCafePresence('default')
 
