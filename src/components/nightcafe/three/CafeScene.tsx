@@ -32,17 +32,18 @@ export function CafeScene({ seats }: CafeSceneProps) {
       style={{ position: 'fixed', inset: 0, zIndex: 1 }}
     >
       {/* Warm ambient fill */}
-      <ambientLight intensity={0.12} color="#ffd8a0" />
+      <ambientLight intensity={0.15} color="#ffd8a0" />
 
       {/* Subtle fill from below (floor bounce) */}
       <hemisphereLight
         color="#3a2510"
         groundColor="#0a0604"
-        intensity={0.08}
+        intensity={0.1}
       />
 
       <color attach="background" args={['#080604']} />
-      <fog attach="fog" args={['#080604', 14, 30]} />
+      {/* Fog pushed far back — only fades distant background, not interior */}
+      <fog attach="fog" args={['#080604', 22, 50]} />
 
       <Suspense fallback={null}>
         {/* Background city bokeh */}
