@@ -183,7 +183,14 @@ function getOrCreateChannel(roomId: string, userId: string): RealtimeChannel {
   _subscribed = false
 
   if (!_channelSetup) {
-    console.log('[presence] setting up channel', topic, 'userId:', userId)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rt = (channel as any).socket
+    console.log('[presence] setting up channel', topic, {
+      channelState: (channel as any).state,
+      socketConnState: rt?.connectionState?.(),
+      socketConn: !!rt?.conn,
+      endpointURL: rt?.endpointURL?.(),
+    })
 
     channel
       .on('presence', { event: 'sync' }, () => {
@@ -205,6 +212,13 @@ function getOrCreateChannel(roomId: string, userId: string): RealtimeChannel {
         }
         _statusListeners.forEach((fn) => fn(status))
       })
+
+    // Log post-subscribe state
+    console.log('[presence] post-subscribe', {
+      channelState: (channel as any).state,
+      socketConnState: rt?.connectionState?.(),
+      socketConn: !!rt?.conn,
+    })
 
     _channelSetup = true
   }

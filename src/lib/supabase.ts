@@ -15,3 +15,6 @@ export const supabase = createClient(
   url || 'https://placeholder.supabase.co',
   key || 'placeholder-key',
 )
+
+// Expose for production diagnostics (temporary)
+;(window as unknown as Record<string, unknown>).__supabase = supabase
