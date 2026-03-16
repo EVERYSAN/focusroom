@@ -1,0 +1,546 @@
+/* ============================================
+   Night Cafe UI — Full 3D Scene + HTML Overlays
+   Canvas fills entire screen, HTML overlays on top
+   ============================================ */
+
+/* ── Reset & Base ── */
+.nightcafe {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: 'Helvetica Neue', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  color: #ece2d0;
+}
+
+/* SVG defs — hidden */
+.nc-svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ── Film grain overlay ── */
+.nc-grain {
+  position: fixed;
+  inset: -20%;
+  z-index: 99;
+  pointer-events: none;
+  opacity: 0.03;
+  filter: url(#noiseFilter);
+  mix-blend-mode: overlay;
+  animation: grain-shift 0.8s steps(4) infinite;
+}
+
+@keyframes grain-shift {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-2%, -1%); }
+  50%  { transform: translate(1%, 2%); }
+  75%  { transform: translate(-1%, -2%); }
+  100% { transform: translate(2%, 1%); }
+}
+
+/* ═══════════════════════════════════
+   Status Overlay (floating on scene)
+   ═══════════════════════════════════ */
+.nc-status-overlay {
+  position: fixed;
+  top: 28%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  text-align: center;
+  background: rgba(10, 15, 20, 0.4);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 16px 24px;
+  max-width: 92%;
+  pointer-events: none;
+}
+
+.nc-status-title {
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(236, 226, 208, 0.8);
+  margin: 0 0 10px;
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+.nc-status-count {
+  font-weight: 600;
+  color: rgba(255, 200, 100, 0.95);
+}
+
+.nc-status-members {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 16px;
+}
+
+.nc-status-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: rgba(236, 226, 208, 0.7);
+}
+
+.nc-status-card.is-me {
+  color: rgba(255, 220, 160, 0.9);
+}
+
+.nc-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(120, 200, 120, 0.7);
+  flex-shrink: 0;
+}
+
+.nc-status-name {
+  font-weight: 500;
+}
+
+.nc-status-fire {
+  color: rgba(255, 180, 80, 0.8);
+  font-size: 11px;
+}
+
+.nc-status-activity {
+  color: rgba(200, 195, 180, 0.5);
+  font-size: 11px;
+}
+
+.nc-status-events {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nc-status-event {
+  font-size: 11px;
+  color: rgba(200, 195, 180, 0.55);
+  animation: event-fade 4s ease-out forwards;
+}
+
+@keyframes event-fade {
+  0%   { opacity: 0; transform: translateY(-4px); }
+  8%   { opacity: 1; transform: translateY(0); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Subtitle when not seated */
+.nc-window-subtitle {
+  position: fixed;
+  top: 28%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  text-align: center;
+  pointer-events: none;
+}
+
+.nc-window-subtitle p {
+  font-size: 12px;
+  color: rgba(200, 190, 170, 0.4);
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  margin: 0;
+}
+
+/* ═══════════════════════════════════
+   Stool Labels (floating at bottom)
+   ═══════════════════════════════════ */
+.nc-stool-labels {
+  position: fixed;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 4%;
+  pointer-events: none;
+}
+
+.nc-stool-label-item {
+  width: 56px;
+  text-align: center;
+  line-height: 1.3;
+  transition: opacity 0.6s ease;
+}
+
+.nc-stool-label-item.vacant {
+  opacity: 0;
+}
+
+.nc-stool-label-item.occupied {
+  opacity: 1;
+}
+
+.nc-stool-name {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(236, 226, 208, 0.75);
+  white-space: nowrap;
+}
+
+.my-seat .nc-stool-name {
+  color: rgba(255, 220, 160, 0.95);
+  text-shadow: 0 0 8px rgba(255, 200, 120, 0.25);
+}
+
+.nc-stool-time {
+  display: block;
+  font-size: 9px;
+  color: rgba(255, 180, 80, 0.75);
+  white-space: nowrap;
+}
+
+.nc-stool-activity {
+  display: block;
+  font-size: 9px;
+  color: rgba(200, 195, 180, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60px;
+}
+
+.nc-stool-edit {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+  pointer-events: auto;
+}
+
+.nc-stool-edit:hover {
+  opacity: 0.8;
+}
+
+/* ═══════════════════════════════════
+   Bottom Bar
+   ═══════════════════════════════════ */
+.nc-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(14, 10, 6, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(80, 60, 30, 0.12);
+}
+
+.nc-nav-btn {
+  background: none;
+  border: none;
+  color: rgba(200, 180, 150, 0.35);
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.3s ease;
+}
+
+.nc-nav-btn:hover {
+  color: rgba(200, 180, 150, 0.6);
+}
+
+.nc-nav-main {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(80, 60, 30, 0.15);
+  color: rgba(230, 210, 170, 0.55);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.nc-nav-main:hover {
+  background: rgba(80, 60, 30, 0.3);
+  color: rgba(230, 210, 170, 0.8);
+}
+
+/* ═══════════════════════════════════
+   Overlays (Entry, Edit, Toast)
+   ═══════════════════════════════════ */
+
+/* Entry overlay */
+.nc-entry-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 8, 4, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity 0.4s ease;
+}
+
+.nc-entry-overlay.fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nc-entry-card {
+  max-width: 300px;
+  width: 88%;
+  padding: 28px 24px;
+  border-radius: 14px;
+  background: rgba(30, 24, 16, 0.95);
+  border: 1px solid rgba(100, 80, 40, 0.15);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+.nc-entry-greeting {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(236, 226, 208, 0.8);
+  margin: 0 0 8px;
+  letter-spacing: 0.05em;
+}
+
+.nc-entry-label {
+  font-size: 12px;
+  color: rgba(200, 190, 170, 0.5);
+  margin: 0 0 20px;
+}
+
+.nc-entry-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(100, 80, 40, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ece2d0;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+.nc-entry-input:focus {
+  border-color: rgba(200, 160, 80, 0.35);
+}
+
+.nc-entry-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(120, 85, 40, 0.5);
+  color: rgba(236, 226, 208, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.nc-entry-btn:hover:not(:disabled) {
+  background: rgba(140, 100, 50, 0.6);
+}
+
+.nc-entry-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Edit overlay */
+.nc-edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(10, 8, 4, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: edit-fade-in 250ms ease-out;
+}
+
+@keyframes edit-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.nc-edit-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 22px 20px 32px;
+  border-radius: 14px 14px 0 0;
+  background: rgba(30, 24, 16, 0.97);
+  border-top: 1px solid rgba(100, 80, 40, 0.15);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  animation: edit-slide-up 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes edit-slide-up {
+  from { transform: translateY(16px); opacity: 0.5; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.nc-edit-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(236, 226, 208, 0.7);
+  margin: 0 0 14px;
+  text-align: center;
+}
+
+.nc-edit-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(100, 80, 40, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ece2d0;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.nc-edit-input:focus {
+  border-color: rgba(200, 160, 80, 0.35);
+}
+
+.nc-edit-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(120, 85, 40, 0.5);
+  color: rgba(236, 226, 208, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.nc-edit-btn:hover:not(:disabled) {
+  background: rgba(140, 100, 50, 0.6);
+}
+
+.nc-edit-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Full toast */
+.nc-full-toast {
+  position: fixed;
+  bottom: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  padding: 10px 24px;
+  border-radius: 20px;
+  background: rgba(30, 24, 16, 0.9);
+  border: 1px solid rgba(100, 80, 40, 0.15);
+  color: rgba(236, 226, 208, 0.7);
+  font-size: 13px;
+  white-space: nowrap;
+  animation: toast-enter 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toast-enter {
+  from { transform: translateX(-50%) translateY(12px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+/* ═══════════════════════════════════
+   Responsive: Tablet (480px+)
+   ═══════════════════════════════════ */
+@media (min-width: 480px) {
+  .nc-stool-label-item {
+    width: 86px;
+  }
+
+  .nc-stool-name {
+    font-size: 11px;
+  }
+
+  .nc-stool-time {
+    font-size: 10px;
+  }
+
+  .nc-stool-activity {
+    font-size: 9px;
+    max-width: 72px;
+  }
+
+  .nc-status-title {
+    font-size: 16px;
+  }
+
+  .nc-status-card {
+    font-size: 13px;
+  }
+}
+
+/* ═══════════════════════════════════
+   Responsive: Desktop (768px+)
+   ═══════════════════════════════════ */
+@media (min-width: 768px) {
+  .nc-stool-label-item {
+    width: 120px;
+  }
+
+  .nc-stool-labels {
+    gap: 4px;
+  }
+
+  .nc-stool-name {
+    font-size: 13px;
+  }
+
+  .nc-stool-time {
+    font-size: 12px;
+  }
+
+  .nc-stool-activity {
+    font-size: 10px;
+    max-width: 100px;
+  }
+
+  .nc-status-overlay {
+    padding: 20px 32px;
+    border-radius: 18px;
+  }
+
+  .nc-status-title {
+    font-size: 18px;
+  }
+
+  .nc-status-card {
+    font-size: 14px;
+  }
+
+  .nc-status-fire {
+    font-size: 13px;
+  }
+
+  .nc-status-activity {
+    font-size: 12px;
+  }
+}
