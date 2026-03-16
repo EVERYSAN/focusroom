@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Switch,
   StyleSheet,
   Alert,
 } from 'react-native';
@@ -14,9 +15,17 @@ type Props = {
   userId: string;
   profile: Profile | null;
   onSignOut: () => Promise<void>;
+  workStartNotificationsEnabled?: boolean;
+  onToggleWorkStartNotifications?: (value: boolean) => void;
 };
 
-export default function ProfileScreen({ userId, profile, onSignOut }: Props) {
+export default function ProfileScreen({
+  userId,
+  profile,
+  onSignOut,
+  workStartNotificationsEnabled = true,
+  onToggleWorkStartNotifications,
+}: Props) {
   const [stats, setStats] = useState({ followers: 0, following: 0, statuses: 0 });
 
   useEffect(() => {
@@ -83,6 +92,24 @@ export default function ProfileScreen({ userId, profile, onSignOut }: Props) {
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{stats.statuses}</Text>
           <Text style={styles.statLabel}>ステータス</Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>通知設定</Text>
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Text style={styles.settingLabel}>作業開始通知</Text>
+            <Text style={styles.settingDesc}>
+              フォロー中の人が作業を始めたら通知
+            </Text>
+          </View>
+          <Switch
+            value={workStartNotificationsEnabled}
+            onValueChange={onToggleWorkStartNotifications}
+            trackColor={{ false: colors.bgTertiary, true: colors.primary + '80' }}
+            thumbColor={workStartNotificationsEnabled ? colors.primary : colors.textMuted}
+          />
         </View>
       </View>
 
@@ -159,6 +186,36 @@ const styles = StyleSheet.create({
   },
   section: {
     padding: spacing.lg,
+  },
+  sectionTitle: {
+    color: colors.textSecondary,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: spacing.sm,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgSecondary,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  settingInfo: {
+    flex: 1,
+  },
+  settingLabel: {
+    color: colors.text,
+    fontSize: fontSize.md,
+    fontWeight: '500',
+  },
+  settingDesc: {
+    color: colors.textMuted,
+    fontSize: fontSize.sm,
+    marginTop: 2,
   },
   signOutButton: {
     backgroundColor: colors.bgSecondary,

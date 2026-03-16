@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { colors, spacing, fontSize, borderRadius } from '../lib/theme';
-import { WorkTogetherRequestWithProfiles } from '../types/database';
+import { WorkTogetherRequestWithProfiles, StatusWithProfile } from '../types/database';
 
 type Props = {
   userId: string;
@@ -24,8 +24,13 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hours / 24)}日前`;
 }
 
+type NotificationItem =
+  | { type: 'work_together'; data: WorkTogetherRequestWithProfiles }
+  | { type: 'work_start'; data: StatusWithProfile };
+
 export default function NotificationsScreen({ userId }: Props) {
   const [requests, setRequests] = useState<WorkTogetherRequestWithProfiles[]>([]);
+  const [workStarts, setWorkStarts] = useState<StatusWithProfile[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchRequests = useCallback(async () => {
@@ -46,9 +51,36 @@ export default function NotificationsScreen({ userId }: Props) {
       .eq('is_read', false);
   }, [userId]);
 
+  const fetchWorkStarts = useCallback(async () => {
+    // Get followed user IDs
+    const { data: followData } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', userId);
+
+    const followingIds = (followData ?? []).map((f) => f.following_id);
+    if (followingIds.length === 0) {
+      setWorkStarts([]);
+      return;
+    }
+
+    // Recent active statuses from followed users (last 24h)
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await supabase
+      .from('statuses')
+      .select('*, profiles(*)')
+      .in('user_id', followingIds)
+      .gte('started_at', since)
+      .order('started_at', { ascending: false })
+      .limit(20);
+
+    setWorkStarts((data ?? []) as StatusWithProfile[]);
+  }, [userId]);
+
   useEffect(() => {
     fetchRequests();
-  }, [fetchRequests]);
+    fetchWorkStarts();
+  }, [fetchRequests, fetchWorkStarts]);
 
   useEffect(() => {
     const channel = supabase
@@ -72,15 +104,80 @@ export default function NotificationsScreen({ userId }: Props) {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchRequests();
+    await Promise.all([fetchRequests(), fetchWorkStarts()]);
     setRefreshing(false);
+  };
+
+  // Merge and sort all notifications by time
+  const allNotifications: NotificationItem[] = [
+    ...requests.map((r) => ({ type: 'work_together' as const, data: r })),
+    ...workStarts.map((s) => ({ type: 'work_start' as const, data: s })),
+  ].sort((a, b) => {
+    const timeA = a.type === 'work_together' ? a.data.created_at : a.data.started_at;
+    const timeB = b.type === 'work_together' ? b.data.created_at : b.data.started_at;
+    return new Date(timeB).getTime() - new Date(timeA).getTime();
+  });
+
+  const renderNotification = ({ item }: { item: NotificationItem }) => {
+    if (item.type === 'work_together') {
+      const req = item.data;
+      const senderName = req.sender.display_name ?? req.sender.username;
+      return (
+        <View style={[styles.card, !req.is_read && styles.cardUnread]}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {senderName.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+          <View style={styles.content}>
+            <Text style={styles.text}>
+              <Text style={styles.bold}>{senderName}</Text>
+              {' が「一緒にやろう」と言っています'}
+            </Text>
+            {req.statuses && (
+              <Text style={styles.statusRef} numberOfLines={1}>
+                {req.statuses.content}
+              </Text>
+            )}
+            <Text style={styles.time}>{timeAgo(req.created_at)}</Text>
+          </View>
+        </View>
+      );
+    }
+
+    // work_start
+    const status = item.data;
+    const name = status.profiles.display_name ?? status.profiles.username;
+    return (
+      <View style={[styles.card, styles.cardWorkStart]}>
+        <View style={[styles.avatar, styles.avatarWorkStart]}>
+          <Text style={styles.avatarText}>
+            {name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        <View style={styles.content}>
+          <Text style={styles.text}>
+            <Text style={styles.bold}>{name}</Text>
+            {'が'}
+            <Text style={styles.bold}>{status.content}</Text>
+            {'を始めました 💪'}
+          </Text>
+          <Text style={styles.time}>{timeAgo(status.started_at)}</Text>
+        </View>
+        {status.is_active && <View style={styles.activeDot} />}
+      </View>
+    );
   };
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={requests}
-        keyExtractor={(item) => item.id}
+        data={allNotifications}
+        keyExtractor={(item) =>
+          item.type === 'work_together'
+            ? `wt-${item.data.id}`
+            : `ws-${item.data.id}`
+        }
         contentContainerStyle={styles.list}
         refreshControl={
           <RefreshControl
@@ -89,35 +186,12 @@ export default function NotificationsScreen({ userId }: Props) {
             tintColor={colors.textMuted}
           />
         }
-        renderItem={({ item }) => {
-          const senderName = item.sender.display_name ?? item.sender.username;
-          return (
-            <View style={[styles.card, !item.is_read && styles.cardUnread]}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {senderName.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-              <View style={styles.content}>
-                <Text style={styles.text}>
-                  <Text style={styles.bold}>{senderName}</Text>
-                  {' が「一緒にやろう」と言っています'}
-                </Text>
-                {item.statuses && (
-                  <Text style={styles.statusRef} numberOfLines={1}>
-                    {item.statuses.content}
-                  </Text>
-                )}
-                <Text style={styles.time}>{timeAgo(item.created_at)}</Text>
-              </View>
-            </View>
-          );
-        }}
+        renderItem={renderNotification}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>通知はありません</Text>
             <Text style={styles.emptyText}>
-              誰かが「一緒にやろう」と言うとここに表示されます
+              フォロー中の人が作業を始めるとここに表示されます
             </Text>
           </View>
         }
@@ -181,6 +255,19 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: fontSize.xs,
     marginTop: 4,
+  },
+  cardWorkStart: {
+    borderColor: colors.statusActive + '30',
+  },
+  avatarWorkStart: {
+    backgroundColor: colors.statusActive + '20',
+  },
+  activeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.statusActive,
+    alignSelf: 'center',
   },
   empty: {
     alignItems: 'center',
