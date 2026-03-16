@@ -6,6 +6,7 @@ import {
   Switch,
   StyleSheet,
   Alert,
+  Platform,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { colors, spacing, fontSize, borderRadius } from '../lib/theme';
@@ -29,6 +30,7 @@ export default function ProfileScreen({
   const [stats, setStats] = useState({ followers: 0, following: 0, statuses: 0 });
 
   useEffect(() => {
+    if (!userId) return;
     const fetchStats = async () => {
       const [followers, following, statuses] = await Promise.all([
         supabase
@@ -56,10 +58,16 @@ export default function ProfileScreen({
   }, [userId]);
 
   const handleSignOut = () => {
-    Alert.alert('ログアウト', '本当にログアウトしますか？', [
-      { text: 'キャンセル', style: 'cancel' },
-      { text: 'ログアウト', style: 'destructive', onPress: onSignOut },
-    ]);
+    if (Platform.OS === 'web') {
+      if (window.confirm('本当にログアウトしますか？')) {
+        onSignOut();
+      }
+    } else {
+      Alert.alert('ログアウト', '本当にログアウトしますか？', [
+        { text: 'キャンセル', style: 'cancel' },
+        { text: 'ログアウト', style: 'destructive', onPress: onSignOut },
+      ]);
+    }
   };
 
   const displayName = profile?.display_name ?? profile?.username ?? '...';
