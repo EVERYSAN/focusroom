@@ -28,6 +28,10 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "scheme": "alone"
+    "scheme": "alone",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
   }
 }
